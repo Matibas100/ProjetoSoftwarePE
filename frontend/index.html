@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma ENEM</title>
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <header class="cabecalho">
+      <div class="container">
+        <p class="marca">Plataforma ENEM</p>
+        <h1>Gerenciamento de matérias</h1>
+        <p>Cadastre e mantenha as matérias utilizadas na plataforma.</p>
+        <p id="api-status" class="status">Verificando a API...</p>
+      </div>
+    </header>
+
+    <main class="container conteudo">
+      <section class="painel" aria-labelledby="titulo-formulario">
+        <div class="secao-cabecalho">
+          <div>
+            <p class="legenda">Cadastro</p>
+            <h2 id="titulo-formulario">Nova matéria</h2>
+          </div>
+        </div>
+
+        <form id="materia-form">
+          <input id="materia-id" type="hidden">
+
+          <div class="campo">
+            <label for="nome">Nome <span aria-hidden="true">*</span></label>
+            <input id="nome" name="nome" maxlength="100" required>
+          </div>
+
+          <div class="campo">
+            <label for="descricao">Descrição</label>
+            <textarea id="descricao" name="descricao" rows="4"></textarea>
+          </div>
+
+          <div class="acoes-formulario">
+            <button id="salvar-button" class="button button--primario" type="submit">
+              Cadastrar matéria
+            </button>
+            <button id="cancelar-button" class="button button--secundario" type="button" hidden>
+              Cancelar edição
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <p id="mensagem" class="mensagem" role="status" aria-live="polite" hidden></p>
+
+      <section class="painel" aria-labelledby="titulo-lista">
+        <div class="secao-cabecalho">
+          <div>
+            <p class="legenda">Conteúdo</p>
+            <h2 id="titulo-lista">Matérias cadastradas</h2>
+          </div>
+          <button id="recarregar-button" class="button button--secundario" type="button">
+            Atualizar lista
+          </button>
+        </div>
+
+        <p id="lista-status" class="lista-status">Carregando matérias...</p>
+        <div id="materias-lista" class="materias-lista"></div>
+      </section>
+
+      <section class="divisor-recurso" aria-labelledby="titulo-assuntos">
+        <p class="legenda">Segundo recurso</p>
+        <h2 id="titulo-assuntos">Gerenciamento de assuntos</h2>
+        <p>Organize os assuntos e vincule cada um a uma matéria cadastrada.</p>
+      </section>
+
+      <section class="painel" aria-labelledby="titulo-assunto-formulario">
+        <div class="secao-cabecalho">
+          <div>
+            <p class="legenda">Cadastro</p>
+            <h2 id="titulo-assunto-formulario">Novo assunto</h2>
+          </div>
+        </div>
+
+        <form id="assunto-form">
+          <input id="assunto-id" type="hidden">
+
+          <div class="campo">
+            <label for="assunto-nome">Nome <span aria-hidden="true">*</span></label>
+            <input id="assunto-nome" name="nome" maxlength="150" required>
+          </div>
+
+          <div class="campo">
+            <label for="assunto-materia-id">Matéria <span aria-hidden="true">*</span></label>
+            <select id="assunto-materia-id" name="materia_id" required>
+              <option value="">Carregando matérias...</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="assunto-descricao">Descrição</label>
+            <textarea id="assunto-descricao" name="descricao" rows="4"></textarea>
+          </div>
+
+          <div class="acoes-formulario">
+            <button id="assunto-salvar-button" class="button button--primario" type="submit">
+              Cadastrar assunto
+            </button>
+            <button id="assunto-cancelar-button" class="button button--secundario" type="button" hidden>
+              Cancelar edição
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <p id="assunto-mensagem" class="mensagem" role="status" aria-live="polite" hidden></p>
+
+      <section class="painel" aria-labelledby="titulo-assuntos-lista">
+        <div class="secao-cabecalho">
+          <div>
+            <p class="legenda">Conteúdo</p>
+            <h2 id="titulo-assuntos-lista">Assuntos cadastrados</h2>
+          </div>
+          <button id="assuntos-recarregar-button" class="button button--secundario" type="button">
+            Atualizar lista
+          </button>
+        </div>
+
+        <p id="assuntos-lista-status" class="lista-status">Carregando assuntos...</p>
+        <div id="assuntos-lista" class="assuntos-lista"></div>
+      </section>
+
+      <section class="divisor-recurso" aria-labelledby="titulo-questoes">
+        <p class="legenda">Conteúdo avaliativo</p>
+        <h2 id="titulo-questoes">Gerenciamento de questões</h2>
+        <p>Cadastre questões e consulte o conteúdo organizado por assunto.</p>
+      </section>
+
+      <section class="painel" aria-labelledby="titulo-questao-formulario">
+        <div class="secao-cabecalho">
+          <div>
+            <p class="legenda">Cadastro</p>
+            <h2 id="titulo-questao-formulario">Nova questão</h2>
+          </div>
+        </div>
+
+        <form id="questao-form">
+          <div class="campo">
+            <label for="questao-assunto-id">Assunto <span aria-hidden="true">*</span></label>
+            <select id="questao-assunto-id" name="assunto_id" required>
+              <option value="">Carregando assuntos...</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="questao-enunciado">Enunciado <span aria-hidden="true">*</span></label>
+            <textarea id="questao-enunciado" name="enunciado" rows="5" required></textarea>
+          </div>
+
+          <div class="alternativas-grid">
+            <div class="campo">
+              <label for="alternativa-a">Alternativa A</label>
+              <textarea id="alternativa-a" name="alternativa_a" rows="2" required></textarea>
+            </div>
+            <div class="campo">
+              <label for="alternativa-b">Alternativa B</label>
+              <textarea id="alternativa-b" name="alternativa_b" rows="2" required></textarea>
+            </div>
+            <div class="campo">
+              <label for="alternativa-c">Alternativa C</label>
+              <textarea id="alternativa-c" name="alternativa_c" rows="2" required></textarea>
+            </div>
+            <div class="campo">
+              <label for="alternativa-d">Alternativa D</label>
+              <textarea id="alternativa-d" name="alternativa_d" rows="2" required></textarea>
+            </div>
+            <div class="campo">
+              <label for="alternativa-e">Alternativa E</label>
+              <textarea id="alternativa-e" name="alternativa_e" rows="2" required></textarea>
+            </div>
+          </div>
+
+          <div class="campos-inline">
+            <div class="campo">
+              <label for="resposta-correta">Resposta correta</label>
+              <select id="resposta-correta" name="resposta_correta" required>
+                <option value="">Selecione</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="questao-dificuldade">Dificuldade</label>
+              <select id="questao-dificuldade" name="dificuldade" required>
+                <option value="">Selecione</option>
+                <option value="facil">Fácil</option>
+                <option value="media">Média</option>
+                <option value="dificil">Difícil</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="questao-explicacao">Explicação</label>
+            <textarea id="questao-explicacao" name="explicacao" rows="4"></textarea>
+          </div>
+
+          <button id="questao-salvar-button" class="button button--primario" type="submit">
+            Cadastrar questão
+          </button>
+        </form>
+      </section>
+
+      <p id="questao-mensagem" class="mensagem" role="status" aria-live="polite" hidden></p>
+
+      <section class="painel" aria-labelledby="titulo-busca-questoes">
+        <div class="secao-cabecalho">
+          <div>
+            <p class="legenda">Consulta especializada</p>
+            <h2 id="titulo-busca-questoes">Questões por assunto</h2>
+          </div>
+        </div>
+
+        <form id="busca-questoes-form" class="busca-form">
+          <div class="campo">
+            <label for="busca-assunto-id">Assunto</label>
+            <select id="busca-assunto-id" required>
+              <option value="">Carregando assuntos...</option>
+            </select>
+          </div>
+          <button id="buscar-questoes-button" class="button button--primario" type="submit">
+            Buscar questões
+          </button>
+        </form>
+
+        <p id="questoes-lista-status" class="lista-status">
+          Selecione um assunto para buscar suas questões.
+        </p>
+        <div id="questoes-lista" class="questoes-lista"></div>
+      </section>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/assuntos.js"></script>
+    <script src="js/questoes.js"></script>
+  </body>
+</html>

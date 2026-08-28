@@ -1,0 +1,27 @@
+# Variaveis de ambiente e credenciais
+.env
+**/.env
+
+# Ambientes virtuais Python
+.venv/
+venv/
+env/
+
+# Cache e artefatos Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Arquivos locais do Flask
+instance/
+
+# Editores e sistema operacional
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
