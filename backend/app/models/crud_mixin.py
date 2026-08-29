@@ -1,8 +1,10 @@
 from app.extensions import db
 
 
-class CrudMixin:
+class CrudMixin(db.Model):
     """Operacoes simples compartilhadas pelas Models do dominio."""
+
+    __abstract__ = True
 
     def salvar(self):
         try:

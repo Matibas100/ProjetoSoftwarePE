@@ -2,7 +2,7 @@ from app.extensions import db
 from app.models.crud_mixin import CrudMixin
 
 
-class Questao(CrudMixin, db.Model):
+class Questao(CrudMixin):
     __tablename__ = "questoes"
     __table_args__ = (
         db.CheckConstraint(

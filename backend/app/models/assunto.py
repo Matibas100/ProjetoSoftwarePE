@@ -2,7 +2,7 @@ from app.extensions import db
 from app.models.crud_mixin import CrudMixin
 
 
-class Assunto(CrudMixin, db.Model):
+class Assunto(CrudMixin):
     __tablename__ = "assuntos"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
