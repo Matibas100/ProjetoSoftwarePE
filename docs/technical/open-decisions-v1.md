@@ -4,13 +4,20 @@
 
 Este registro reúne decisões que exigem validação do professor e/ou da equipe antes da implementação da versão definitiva. As recomendações são preliminares, não constituem autorização para modificar código, banco ou infraestrutura.
 
+## Situação após o Pacote de Decisões Arquiteturais 1
+
+- 6 decisões foram aceitas: ADR-002 a ADR-007.
+- 1 decisão foi aceita condicionalmente: ADR-001.
+- 10 decisões permanecem abertas.
+- O histórico das opções e recomendações preliminares permanece registrado abaixo.
+
 ## OD-01 — Ferramenta e runner de migrations
 
 - **Contexto:** o MVP utiliza scripts SQL de criação e uma migration manual para a Stored Procedure. A evolução modular exigirá mudanças incrementais, reproduzíveis e reversíveis.
 - **Opções:** manter scripts SQL numerados com runner controlado; adotar Alembic/Flask-Migrate; usar ferramenta institucional indicada pelo professor.
 - **Impactos:** rastreabilidade do schema, ordem de implantação, rollback, compatibilidade entre ambientes e aderência à disciplina.
 - **Recomendação preliminar:** confirmar primeiro a ferramenta permitida; se não houver restrição, adotar Flask-Migrate/Alembic sem descartar os scripts SQL auditáveis.
-- **Status:** A decidir.
+- **Status:** AGUARDANDO CONFIRMAÇÃO DO PROFESSOR — ADR-001 aceito condicionalmente: [ADR-001](adr/ADR-001-estrategia-de-migrations.md).
 
 ## OD-02 — Estratégia de autenticação
 
@@ -18,7 +25,7 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 - **Opções:** sessão segura mantida pelo servidor; tokens de acesso curtos com renovação; solução institucional externa.
 - **Impactos:** proteção contra CSRF/XSS, revogação, escalabilidade, armazenamento no cliente e experiência de sessão expirada.
 - **Recomendação preliminar:** para uma aplicação web de mesma origem, avaliar primeiro sessão de servidor com cookie `HttpOnly`, `Secure` e `SameSite`; confirmar arquitetura de implantação antes da escolha.
-- **Status:** A decidir.
+- **Status:** ACEITA — decisão registrada no [ADR-002](adr/ADR-002-estrategia-de-autenticacao.md).
 
 ## OD-03 — Exclusão de Matéria com Assuntos
 
@@ -26,7 +33,7 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 - **Opções:** `RESTRICT` e transferência prévia; arquivamento lógico; cascade explícito sob operação administrativa crítica.
 - **Impactos:** integridade, histórico, UX administrativa e preservação de questões vinculadas.
 - **Recomendação preliminar:** impedir exclusão enquanto houver dependências e oferecer arquivamento/transferência em caso de uso separado, sujeito a aprovação.
-- **Status:** A decidir.
+- **Status:** ACEITA — decisão registrada no [ADR-003](adr/ADR-003-politica-de-exclusao-catalogo.md).
 
 ## OD-04 — Unicidade de Assunto por Matéria
 
@@ -34,7 +41,7 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 - **Opções:** permitir duplicidade; unicidade textual exata; unicidade composta por matéria e nome normalizado.
 - **Impactos:** pesquisa, importação, taxonomia, deduplicação e necessidade de saneamento dos dados antes de criar constraint.
 - **Recomendação preliminar:** unicidade composta por `materia_id` e nome normalizado, somente após definição de normalização e auditoria dos dados existentes.
-- **Status:** A decidir.
+- **Status:** ACEITA — decisão registrada no [ADR-004](adr/ADR-004-unicidade-de-assunto.md).
 
 ## OD-05 — Armazenamento de imagens e arquivos
 
@@ -42,7 +49,7 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 - **Opções:** sistema de arquivos local; armazenamento de objetos; serviço gerenciado de mídia.
 - **Impactos:** backup, URLs, segurança, tamanho do banco, disponibilidade e portabilidade.
 - **Recomendação preliminar:** definir uma interface de armazenamento e usar armazenamento de objetos em produção; manter o provedor configurável.
-- **Status:** A decidir.
+- **Status:** ACEITA — decisão registrada no [ADR-007](adr/ADR-007-armazenamento-de-midias.md).
 
 ## OD-06 — Serviço de e-mail
 
@@ -82,7 +89,7 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 - **Opções:** cópias imutáveis por versão; histórico de alterações; snapshots apenas na publicação.
 - **Impactos:** rollback, comparação, autoria, tamanho do banco e consistência de simulados já realizados.
 - **Recomendação preliminar:** versões imutáveis com identidade estável do conteúdo e referência explícita à versão publicada.
-- **Status:** A decidir.
+- **Status:** ACEITA — decisão registrada no [ADR-005](adr/ADR-005-versionamento-editorial.md).
 
 ## OD-11 — Política de transações
 
@@ -90,7 +97,7 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 - **Opções:** commits internos mantidos; transação coordenada por caso de uso; Unit of Work explícita.
 - **Impactos:** atomicidade, testes, rollback e preservação da API Active Record ensinada na disciplina.
 - **Recomendação preliminar:** manter a interface Active Record para CRUD simples e definir uma fronteira transacional coordenada para casos compostos, sem SQL nos Services.
-- **Status:** A decidir.
+- **Status:** ACEITA — decisão registrada no [ADR-006](adr/ADR-006-fronteira-de-transacoes.md).
 
 ## OD-12 — Estratégia futura do frontend
 
