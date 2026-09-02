@@ -132,6 +132,7 @@ python -m venv .venv
 python -m pip install --upgrade pip
 python -m pip install -r backend\requirements-dev.txt
 npm ci
+npm run hooks:install
 Copy-Item .env.example .env
 ```
 
@@ -223,6 +224,22 @@ Com GNU Make disponível, os atalhos são:
 
 Os gates por stack são 90% de linhas e 85% de branches agregados, além de
 reprovar qualquer arquivo executável zerado.
+
+## Validação antes do push
+
+O comando `npm run hooks:install` configura o hook versionado de `pre-push`
+para este clone do repositório. Antes de cada push, ele executa a suíte completa
+do backend, incluindo as integrações no MySQL real, e depois a suíte completa
+do frontend. O hook usa o Python da `.venv` quando disponível e informa
+`RUN_MYSQL_INTEGRATION=1` somente ao processo do runner de backend.
+
+Qualquer falha de teste, cobertura, dependência ou acesso ao MySQL interrompe o
+push. Por isso, mantenha o ambiente preparado e o MySQL 8 em execução. Para
+reinstalar o hook neste clone, execute novamente:
+
+```powershell
+npm run hooks:install
+```
 
 Resultado validado no Windows em 2 de setembro de 2026:
 
