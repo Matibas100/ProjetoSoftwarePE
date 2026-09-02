@@ -15,6 +15,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
+coverage-backend.json
+coverage-frontend/
 htmlcov/
 
 # Arquivos locais do Flask
@@ -25,3 +28,7 @@ instance/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Dependencias e caches Node
+node_modules/
+.vitest/

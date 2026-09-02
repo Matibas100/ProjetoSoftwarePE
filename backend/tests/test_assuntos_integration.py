@@ -1,19 +1,12 @@
 import unittest
 from uuid import uuid4
 
-from app import create_app
 from app.models.questao import Questao
+from tests.integration_support import MySQLIntegrationTestCase
 
 
-class AssuntosApiIntegrationTest(unittest.TestCase):
+class AssuntosApiIntegrationTest(MySQLIntegrationTestCase):
     """Exercita Assunto contra o MySQL real, sem mocks ou SQLite."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config.update(TESTING=True)
-        cls.app.logger.disabled = True
-        cls.client = cls.app.test_client()
 
     def _nome_unico(self, recurso):
         return f"{recurso} teste {uuid4().hex[:12]}"
