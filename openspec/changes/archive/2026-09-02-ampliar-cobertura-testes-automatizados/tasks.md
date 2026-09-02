@@ -1,0 +1,32 @@
+## 1. Infraestrutura de testes
+
+- [x] 1.1 Adicionar dependências Python de desenvolvimento, configuração do `coverage.py` e validador do relatório JSON, enumerando todos os arquivos `.py` de `backend/app/` e `backend/run.py`; verificar instalação e geração de relatório sem ler ou exibir o `.env`.
+- [x] 1.2 Adicionar `package.json` com `engines.node: ">=22.9.0"` e `packageManager: "npm@11.6.2"`, lockfile, Vitest, jsdom, cobertura V8 e validador Node de `coverage-summary.json` como dependências e ferramentas de desenvolvimento; incluir explicitamente todos os arquivos de `frontend/js/` no relatório e verificar em Node `25.2.1` que os scripts npm de teste e cobertura iniciam em ambiente limpo.
+- [x] 1.3 Adicionar o `Makefile` da raiz com `test-unit`, `test-integration`, `test-backend`, `test-frontend`, `test-coverage` e `test`, usando somente dependências entre alvos e chamadas portáveis a executáveis ou scripts versionados; confirmar GNU Make com `make --version`; configurar limites agregados e independentes de 90% de linhas e 85% de branches por stack, detecção de arquivo com instruções executáveis e zero linhas cobertas e exclusão de relatórios/caches do Git; verificar no Windows que `make test-coverage` falha para cada violação simulada.
+
+## 2. Cobertura do backend com unittest
+
+- [x] 2.1 Organizar testes unitários em `backend/tests/unit/`, criar um launcher Python que bloqueie o `.env`, defina uma `DATABASE_URL` fictícia antes de importar `app` e execute sem abrir conexão, preservar os 29 testes originais com o padrão `*_integration.py` e criar utilidades compartilhadas e preflight seguro do MySQL; exigir `RUN_MYSQL_INTEGRATION=1` antes da conexão, verificar conexão, tabelas e `sp_questoes_por_assunto` com erro explícito quando a infraestrutura estiver indisponível e nunca exibir configuração sensível.
+- [x] 2.2 Adicionar testes de `Config`, application factory, registro das onze rotas e `/api/health`; verificar valores padrão, URL completa, variáveis ausentes, CORS e resposta HTTP de saúde, e confirmar em processo limpo que a suíte unitária funciona sem `.env` e sem MySQL disponível.
+- [x] 2.3 Completar os testes de Matéria para validações de entrada, duplicidade, vínculo, respostas inesperadas e persistência; verificar a regressão específica de Matéria no MySQL real.
+- [x] 2.4 Completar os testes de Assunto para tipos, limites, campos de atualização, conflitos e respostas inesperadas; verificar a regressão específica de Assunto no MySQL real.
+- [x] 2.5 Completar os testes de Questão para todos os campos obrigatórios, dificuldade, resposta correta, explicação, identificador e conflitos; verificar a regressão específica de Questão no MySQL real.
+- [x] 2.6 Adicionar testes de caracterização para Models e `CrudMixin`, cobrindo serialização, filtro de campos, commit e rollback; verificar que os testes de integração registram e removem somente pelas chaves primárias exatas dos dados temporários que criaram, sem exclusão automática por prefixo ou limpeza ampla.
+- [x] 2.7 Completar a validação de `QuestaoRepository`: provar unitariamente o fechamento do resultado no sucesso e na falha de mapeamento, e provar no MySQL real a ordenação e o conjunto vazio da Stored Procedure; verificar que nenhum SQL foi movido para Service ou Controller.
+- [x] 2.8 Executar a suíte backend completa e confirmar que os 29 testes originais e todos os novos testes passam; gerar o relatório e verificar os limites de cobertura definidos.
+
+## 3. Cobertura do frontend com Vitest
+
+- [x] 3.1 Criar o ambiente jsdom e um helper que reconstrua `frontend/index.html` e execute os quatro scripts clássicos no mesmo contexto global e na ordem original, sem conversão para ES Modules; adicionar testes de contrato para elementos obrigatórios, IDs e ordem dos scripts.
+- [x] 3.2 Adicionar testes de `frontend/js/api.js` para sucesso JSON, `204`, erro HTTP, mensagem padrão, cabeçalhos e JSON inválido; caracterizar que sucesso não parseável retorna `{}` e erro não parseável lança `ApiError` com mensagem padrão e status, sem alterar o contrato atual.
+- [x] 3.3 Adicionar testes de `frontend/js/app.js` para health, carregamento, estados vazio/erro, cadastro, edição, cancelamento, exclusão e escape de conteúdo; verificar interações DOM e chamadas HTTP esperadas.
+- [x] 3.4 Adicionar testes de `frontend/js/assuntos.js` para seletores, eventos, listagem, estados vazio/erro, cadastro, edição, cancelamento, exclusão e escape; verificar interações DOM e chamadas HTTP esperadas.
+- [x] 3.5 Adicionar testes de `frontend/js/questoes.js` para seletores, cadastro, buscas sem seleção/vazias/com resultado, falhas e escape; verificar interações DOM e chamadas HTTP esperadas.
+- [x] 3.6 Fazer adaptações de produção somente se o helper de scripts clássicos não for suficiente, sem converter para ES Modules e preservando IDs, eventos, endpoints, semântica do cliente HTTP e resultado visual; verificar com os testes de caracterização e revisão do diff de produção.
+- [x] 3.7 Executar a suíte frontend completa, gerar `coverage-summary.json` com cobertura V8 e executar o validador Node; verificar separadamente os limites agregados de linhas e branches e confirmar que nenhum arquivo executável em `frontend/js/` ficou zerado.
+
+## 4. Documentação e validação final
+
+- [x] 4.1 Atualizar `docs/conventions/testes.md` e `README.md` com organização, Node `>=22.9.0`, npm `11.6.2`, GNU Make como pré-requisito manual dos atalhos, comandos Python/npm equivalentes a cada alvo, opt-in `RUN_MYSQL_INTEGRATION=1` informado apenas no processo e contagem final; atualizar `openspec/config.yaml` somente para distinguir os 29 testes de integração originais da suíte ampliada, sem registrar nele uma contagem total volátil; verificar que não há números ou instruções contraditórios.
+- [x] 4.2 Após disponibilizar GNU Make e autorizar explicitamente as integrações no processo, executar no Windows `make test-unit`, `make test-integration`, `make test-backend`, `make test-frontend` e `make test-coverage`; registrar comandos, totais, cobertura e limitações reais sem expor credenciais, confirmar que `make test` reproduz a validação completa e verificar pelo menos uma vez os comandos Python/npm equivalentes documentados.
+- [x] 4.3 Revisar a matriz do design e confirmar cobertura das onze rotas, dez casos de uso, módulos Python, scripts JavaScript e contrato HTML; verificar que contratos HTTP, schema, migrations e artefatos do Desktop V1 não foram alterados.
