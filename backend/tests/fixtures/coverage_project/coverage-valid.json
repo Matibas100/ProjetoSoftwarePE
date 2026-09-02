@@ -1,0 +1,20 @@
+{
+  "files": {
+    "backend/app/module.py": {
+      "summary": {
+        "covered_lines": 10,
+        "num_statements": 10,
+        "covered_branches": 10,
+        "num_branches": 10
+      }
+    },
+    "backend/run.py": {
+      "summary": {
+        "covered_lines": 10,
+        "num_statements": 10,
+        "covered_branches": 10,
+        "num_branches": 10
+      }
+    }
+  }
+}

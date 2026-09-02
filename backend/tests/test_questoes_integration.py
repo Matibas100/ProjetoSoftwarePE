@@ -1,19 +1,12 @@
 import unittest
 from uuid import uuid4
 
-from app import create_app
 from app.models.questao import Questao
+from tests.integration_support import MySQLIntegrationTestCase
 
 
-class QuestoesApiIntegrationTest(unittest.TestCase):
+class QuestoesApiIntegrationTest(MySQLIntegrationTestCase):
     """Exercita as duas funcionalidades de Questao no MySQL real."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config.update(TESTING=True)
-        cls.app.logger.disabled = True
-        cls.client = cls.app.test_client()
 
     def _nome_unico(self, recurso):
         return f"{recurso} teste {uuid4().hex[:12]}"
@@ -147,6 +140,20 @@ class QuestoesApiIntegrationTest(unittest.TestCase):
         self.assertEqual(resposta.status_code, 200, resposta.get_json())
         ids = [item["id"] for item in resposta.get_json()]
         self.assertIn(questao["id"], ids)
+
+    def test_busca_ordena_questoes_por_id(self):
+        assunto = self._cadastrar_assunto()
+        primeira = self._cadastrar_questao(assunto["id"])
+        segunda = self._cadastrar_questao(assunto["id"])
+
+        resposta = self.client.get(
+            f"/api/questoes/por-assunto?assunto_id={assunto['id']}"
+        )
+        self.assertEqual(resposta.status_code, 200, resposta.get_json())
+        self.assertEqual(
+            [item["id"] for item in resposta.get_json()],
+            [primeira["id"], segunda["id"]],
+        )
 
     def test_busca_nao_retorna_questao_de_outro_assunto(self):
         assunto_consultado = self._cadastrar_assunto()

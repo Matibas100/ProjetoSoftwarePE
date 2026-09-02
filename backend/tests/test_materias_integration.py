@@ -1,18 +1,11 @@
 import unittest
 from uuid import uuid4
 
-from app import create_app
+from tests.integration_support import MySQLIntegrationTestCase
 
 
-class MateriasApiIntegrationTest(unittest.TestCase):
+class MateriasApiIntegrationTest(MySQLIntegrationTestCase):
     """Exercita a API contra o MySQL configurado, sem mocks ou SQLite."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config.update(TESTING=True)
-        cls.app.logger.disabled = True
-        cls.client = cls.app.test_client()
 
     def _nome_unico(self):
         return f"Materia teste {uuid4().hex[:12]}"

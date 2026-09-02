@@ -1,0 +1,1 @@
+"""Fixture sem instrucoes executaveis."""

@@ -1,0 +1,21 @@
+{
+  "name": "plataforma-enem-tests",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.9.0"
+  },
+  "packageManager": "npm@11.6.2",
+  "scripts": {
+    "hooks:install": "node scripts/install-git-hooks.mjs",
+    "test": "vitest run",
+    "test:unit": "vitest run --coverage=false",
+    "test:frontend": "vitest run --coverage=false",
+    "test:coverage": "vitest run --coverage && node scripts/validate_frontend_coverage.mjs"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "4.1.11",
+    "jsdom": "29.0.0",
+    "vitest": "4.1.11"
+  }
+}

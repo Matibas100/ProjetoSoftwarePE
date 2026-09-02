@@ -31,3 +31,8 @@ async function apiRequest(caminho, opcoes = {}) {
 
   return dados;
 }
+
+// Mantem o script classico e permite que o mesmo contrato seja exercitado
+// pelo transformador de cobertura do ambiente de testes.
+globalThis.ApiError = ApiError;
+globalThis.apiRequest = apiRequest;

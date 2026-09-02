@@ -1,0 +1,13 @@
+[run]
+branch = True
+parallel = True
+source =
+    backend
+
+[report]
+show_missing = True
+skip_covered = False
+
+[json]
+output = coverage-backend.json
+pretty_print = True

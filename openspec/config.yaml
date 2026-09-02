@@ -1,0 +1,57 @@
+schema: spec-driven
+
+context: |
+  Idioma padrão: português brasileiro em UTF-8.
+  Keywords normativas como SHALL, MUST, SHOULD, MAY, GIVEN, WHEN e THEN
+  permanecem em inglês. Nomes de changes usam kebab-case.
+
+  Este é um projeto existente da Plataforma ENEM, não um projeto novo.
+  Stack atual: Python, Flask, Flask-SQLAlchemy, PyMySQL, MySQL 8,
+  Flask-CORS, python-dotenv e frontend HTML/CSS/JavaScript simples.
+
+  Arquitetura obrigatória:
+  Frontend -> Route -> Controller -> Service -> Model/Repository -> MySQL.
+  Controllers e Services não acessam db.session nem executam SQL.
+  CRUD simples permanece nas Models Active Record. Repository é reservado
+  para acesso especializado e todo CALL de Stored Procedure fica nele.
+
+  Preserve os contratos atuais, as 10 funcionalidades, os 29 testes de
+  integração originais e a suíte automatizada ampliada, os dados existentes
+  e os artefatos congelados do Desktop V1.
+  Antes de propor ou aplicar uma change, leia AGENTS.md, as conventions
+  acionadas pelo escopo, docs/technical/architecture-master-v1.md e os ADRs
+  relevantes em docs/technical/adr/.
+
+rules:
+  proposal:
+    - "Declare objetivo, motivação, escopo, fora de escopo, impactos, dependências e compatibilidade com o MVP."
+    - "Identifique funcionalidades, telas, rotas, módulos e ADRs afetados sem inventar contrato definitivo ausente."
+    - "Não proponha reescrita ampla quando evolução incremental preservar o sistema."
+
+  design:
+    - "Registre arquitetura, fluxo de dados, fronteiras de transação, segurança, migrations, Stored Procedures, compatibilidade e riscos aplicáveis."
+    - "Preserve Route -> Controller -> Service -> Model/Repository -> MySQL e justifique qualquer evolução futura dessa fronteira."
+    - "Não transforme Repository em duplicação de CRUD nem espalhe SQL por Controller ou Service."
+
+  specs:
+    - "Descreva requisitos observáveis e cenários testáveis, incluindo validações, erros, permissões e compatibilidade."
+    - "Use SHALL nos requisitos e GIVEN/WHEN/THEN nos cenários."
+    - "Não trate detalhes existentes apenas na conversa como contrato suficiente."
+
+  tasks:
+    - "Divida o trabalho por caso de uso e informe superfícies prováveis, testes e validações finais."
+    - "Inclua regressão das funcionalidades existentes afetadas e proteção contra exposição de segredos."
+    - "Não deixe decisões de produto, schema, segurança ou arquitetura para o implementador resolver durante o apply."
+
+operations:
+  apply:
+    guidance:
+      - "Faça preflight somente leitura dos artefatos, código, ADRs e conventions antes da primeira edição."
+      - "Implemente somente tasks aprovadas e mantenha mudanças mínimas."
+      - "Pause e atualize os artefatos se surgir conflito, ambiguidade ou ampliação de escopo."
+      - "Marque uma task como concluída somente após implementação e validação correspondentes."
+
+  archive:
+    guidance:
+      - "Não arquive com tasks incompletas ou achados críticos na verificação."
+      - "Confirme sync das specs quando houver delta aplicável e registre as validações executadas."
