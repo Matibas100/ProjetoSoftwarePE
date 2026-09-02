@@ -1,0 +1,7 @@
+interface:
+  display_name: "Questions"
+  short_description: "Resolve dúvidas uma por vez com confirmação"
+  default_prompt: "Use $questions para listar minhas dúvidas e resolvê-las uma por vez."
+
+policy:
+  allow_implicit_invocation: false
