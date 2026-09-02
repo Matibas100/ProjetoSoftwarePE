@@ -12,7 +12,8 @@ e JavaScript que consome uma API Flask persistida em MySQL.
 - PyMySQL
 - MySQL Server 8.0
 - HTML5, CSS3 e JavaScript sem framework
-- `unittest` para testes de integração
+- `unittest` e `coverage.py` para testes Python
+- Vitest, jsdom e cobertura V8 para testes do frontend
 
 ## Arquitetura
 
@@ -117,6 +118,9 @@ Stored Procedure:
 - MySQL Server 8.0 em execução.
 - Cliente de linha de comando `mysql` ou MySQL Workbench para executar os
   scripts SQL.
+- Node `>=22.9.0` e npm `11.6.2` para os testes do frontend.
+- GNU Make, opcional, para usar os atalhos do `Makefile`; confirme com
+  `make --version`.
 
 ## Preparação do ambiente
 
@@ -126,7 +130,8 @@ No PowerShell, a partir da raiz do projeto:
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r backend\requirements.txt
+python -m pip install -r backend\requirements-dev.txt
+npm ci
 Copy-Item .env.example .env
 ```
 
@@ -181,16 +186,54 @@ python -m http.server 5500 --directory frontend
 Abra `http://127.0.0.1:5500`. As origens autorizadas podem ser alteradas por
 `CORS_ORIGINS` no `.env`.
 
-## Testes de integração
+## Testes automatizados
 
-Os testes usam o MySQL configurado no `.env`. Não são utilizados mocks ou
-SQLite. O banco e a Stored Procedure devem existir antes da execução.
+Os testes unitários Python bloqueiam o `.env`, usam uma URL fictícia apenas
+para inicializar o Flask e não abrem conexão. As 29 integrações originais
+continuam no MySQL 8 real, sem mocks ou SQLite. O frontend usa jsdom sem
+converter os quatro scripts clássicos para ES Modules.
 
 ```powershell
-Set-Location backend
-..\.venv\Scripts\python.exe -m unittest discover -s tests -v
+python backend/tests/run_unit.py
+npm run test:unit
+npm run test:coverage
 ```
 
-Resultado validado em 28 de agosto de 2026: **29 testes executados e 29
-aprovados**. A suíte cobre 7 testes de Matéria, 10 de Assunto e 12 de Questão,
-com remoção dos registros temporários ao final.
+Para autorizar integrações, informe o opt-in somente no processo:
+
+```powershell
+$env:RUN_MYSQL_INTEGRATION = "1"
+python backend/tests/run_integration.py
+Remove-Item Env:RUN_MYSQL_INTEGRATION
+```
+
+O preflight valida conexão, tabelas e `sp_questoes_por_assunto`. Os runners
+nunca exibem valores de configuração sensível.
+
+Com GNU Make disponível, os atalhos são:
+
+| Alvo | Equivalente direto |
+| --- | --- |
+| `make test-unit` | `python backend/tests/run_unit.py` e `npm run test:unit` |
+| `make test-integration` | `python backend/tests/run_integration.py` |
+| `make test-backend` | `python backend/tests/run_backend_coverage.py` |
+| `make test-frontend` | `npm run test:coverage` |
+| `make test-coverage` | runner backend e cobertura frontend |
+| `make test` | igual a `make test-coverage` |
+
+Os gates por stack são 90% de linhas e 85% de branches agregados, além de
+reprovar qualquer arquivo executável zerado.
+
+Resultado validado no Windows em 2 de setembro de 2026:
+
+- backend: **54 testes unitários + 30 integrações**, 100% de linhas e 99,02%
+  de branches;
+- frontend: **21 testes**, 99,39% de linhas e 85,19% de branches;
+- `make test-unit`, `make test-integration`, `make test-backend`,
+  `make test-frontend`, `make test-coverage` e `make test` aprovados;
+- gates de linhas, branches e arquivo executável zerado verificados com
+  simulações que reprovaram `make test-coverage` como esperado.
+
+As 30 integrações preservam as 29 originais (7 de Matéria, 10 de Assunto e 12
+de Questão) e acrescentam a ordenação da Stored Procedure. Limitações: jsdom
+não substitui um navegador real e a suíte de integração exige MySQL 8 preparado.

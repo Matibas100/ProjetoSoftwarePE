@@ -13,7 +13,7 @@ backend/
     models/                entidades e CRUD Active Record
     repositories/          consultas especializadas e procedures
   database/                bootstrap e migrations SQL
-  tests/                   integração com MySQL real
+  tests/                   testes unitários e integração com MySQL real
 docs/
   design/desktop-v1/       fonte visual oficial e congelada
   technical/               arquitetura, ADRs e planejamento
