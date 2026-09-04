@@ -4,7 +4,7 @@ Este índice consolida as sete decisões analisadas antes da Modelagem Mestre do
 
 | ADR | Título | Status | Data | Resumo da decisão |
 |---|---|---|---|---|
-| [ADR-001](ADR-001-estrategia-de-migrations.md) | Estratégia de migrations | **Aceito condicionalmente** | 2026-08-29 | Flask-Migrate/Alembic será o histórico único; SQL MySQL explícito será aplicado pelas próprias revisions. Depende de confirmação do professor. |
+| [ADR-001](ADR-001-estrategia-de-migrations.md) | Estratégia de migrations | **Aceito** | 2026-09-04 | Runner próprio, histórico em `schema_migrations` e migrations MySQL em SQL puro, sem Alembic ou Flask-Migrate. |
 | [ADR-002](ADR-002-estrategia-de-autenticacao.md) | Estratégia de autenticação | **Aceito** | 2026-08-29 | Sessões reais no servidor, identificadas por cookie opaco e protegidas por CSRF, expiração e revogação. |
 | [ADR-003](ADR-003-politica-de-exclusao-catalogo.md) | Política de exclusão do catálogo | **Aceito** | 2026-08-29 | Bloqueio de exclusão vinculada, arquivamento e transferência explícita e auditada preservam o histórico. |
 | [ADR-004](ADR-004-unicidade-de-assunto.md) | Unicidade de Assunto | **Aceito** | 2026-08-29 | Assunto terá nome original e normalizado, único por Matéria inclusive diante de registro arquivado. |
@@ -14,4 +14,4 @@ Este índice consolida as sete decisões analisadas antes da Modelagem Mestre do
 
 ## Pendência condicionante
 
-O ADR-001 aguarda resposta do professor à pergunta registrada no próprio documento. Se Flask-Migrate/Alembic não for autorizado, será usado o fallback de runner SQL versionado com tabela `schema_migrations`.
+O ADR-001 oficializa o runner SQL versionado com ordem, checksum, lock, baseline e bloqueio seguro após falha.

@@ -43,6 +43,7 @@ Plataforma ENEM/
     │   ├── extensions.py            db compartilhado e CORS
     │   └── routes.py                registro das rotas
     ├── database/
+    │   ├── migrate.py                   runner oficial de migrations SQL
     │   ├── migrations/
     │   └── create_database.sql
     ├── tests/
@@ -144,27 +145,60 @@ O `.env` está listado no `.gitignore` e não deve ser enviado ao repositório.
 
 ## Criação e atualização do banco MySQL
 
-Para uma instalação nova, execute o script completo. A opção `--password`
-solicita a senha no terminal sem colocá-la no comando:
+As migrations oficiais são arquivos SQL em `backend/database/migrations/`.
+`migrate.py` controla ordem, checksum SHA-256, lock e histórico na tabela
+`schema_migrations`, sem Alembic ou Flask-Migrate.
+
+O schema configurado deve existir antes do runner. Para uma instalação nova,
+crie-o vazio com `utf8mb4_unicode_ci`, configure o `.env` e execute:
 
 ```powershell
-mysql --user=root --password --execute="source backend/database/create_database.sql"
+python backend/database/migrate.py status
+python backend/database/migrate.py up
 ```
 
-O script cria o banco `plataforma_enem`, as tabelas `materias`, `assuntos` e
-`questoes`, suas chaves, restrições e a procedure
-`sp_questoes_por_assunto`.
+`up` aplica `000`, `001` e `002` em ordem. Chamá-lo novamente não reexecuta
+migrations aplicadas. `create_database.sql` permanece como snapshot consolidado
+para compatibilidade; uma instalação feita por ele deve adotar o histórico como
+um banco existente.
 
-Para atualizar um banco criado em entregas anteriores, execute as migrações na
-ordem:
+### Adoção de um banco MVP existente
+
+Faça e valide um backup antes da adoção. Em seguida:
 
 ```powershell
-mysql --user=root --password --execute="source backend/database/migrations/001_restrict_delete_assuntos.sql"
-mysql --user=root --password --execute="source backend/database/migrations/002_create_sp_questoes_por_assunto.sql"
+python backend/database/migrate.py status
+python backend/database/migrate.py baseline --confirm
+python backend/database/migrate.py up
 ```
 
-A primeira impede que excluir um Assunto remova Questões automaticamente. A
-segunda cria ou atualiza a Stored Procedure.
+`baseline` compara tabelas, colunas, índices, constraints, foreign keys e
+`sp_questoes_por_assunto` com os estados históricos conhecidos. Ele registra
+somente o prefixo comprovado e não altera dados funcionais. Schema divergente é
+recusado; não corrija o histórico manualmente para contornar essa proteção.
+
+### Falhas e recuperação
+
+DDL do MySQL pode confirmar mudanças antes do fim do arquivo. Por isso uma
+migration `FAILED` ou `RUNNING` bloqueia todas as seguintes. Após inspecionar o
+schema e restaurar o backup ou aplicar uma correção segura, autorize nova
+tentativa explicitamente:
+
+```powershell
+python backend/database/migrate.py status
+python backend/database/migrate.py reconcile 003 --confirm
+python backend/database/migrate.py up
+```
+
+`reconcile` não desfaz SQL. Ele apenas registra que a reconciliação externa foi
+feita. Nunca altere uma migration `APPLIED`; checksum, remoção ou renomeação do
+arquivo bloqueiam o runner.
+
+O usuário operacional deve ter acesso ao schema configurado, leitura de
+`information_schema`, uso de `GET_LOCK`, DDL exigido pelas migrations e leitura/
+escrita em `schema_migrations`. Prefira um usuário separado do usuário da API e
+conceda apenas os privilégios necessários. Credenciais ficam somente no
+ambiente e nunca nos scripts SQL ou argumentos do terminal.
 
 ## Executando o backend
 
@@ -211,10 +245,27 @@ Remove-Item Env:RUN_MYSQL_INTEGRATION
 O preflight valida conexão, tabelas e `sp_questoes_por_assunto`. Os runners
 nunca exibem valores de configuração sensível.
 
+As integrações destrutivas do runner criam e removem somente schemas com nome
+aleatório rigidamente validado e exigem um segundo opt-in no mesmo processo:
+
+```powershell
+$env:RUN_MYSQL_INTEGRATION = "1"
+$env:RUN_MYSQL_MIGRATION_INTEGRATION = "1"
+python backend/tests/run_integration.py
+Remove-Item Env:RUN_MYSQL_MIGRATION_INTEGRATION
+Remove-Item Env:RUN_MYSQL_INTEGRATION
+```
+
+O usuário de teste precisa poder criar e remover esses schemas descartáveis.
+
 Com GNU Make disponível, os atalhos são:
 
 | Alvo | Equivalente direto |
 | --- | --- |
+| `make db-status` | `python backend/database/migrate.py status` |
+| `make db-up` | `python backend/database/migrate.py up` |
+| `make db-baseline` | baseline confirmado do schema existente |
+| `make db-reconcile VERSION=003` | reconciliação confirmada da versão informada |
 | `make test-unit` | `python backend/tests/run_unit.py` e `npm run test:unit` |
 | `make test-integration` | `python backend/tests/run_integration.py` |
 | `make test-backend` | `python backend/tests/run_backend_coverage.py` |

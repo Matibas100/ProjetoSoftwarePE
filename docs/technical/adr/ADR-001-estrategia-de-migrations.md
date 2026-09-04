@@ -2,11 +2,13 @@
 
 ## 1. Status
 
-**ACEITO CONDICIONALMENTE**
+**ACEITO**
 
 ## 2. Data da decisão
 
 2026-08-29
+
+Decisão final atualizada em 2026-09-04.
 
 ## 3. Contexto
 
@@ -75,32 +77,33 @@ Credenciais não entram em scripts. O executor deve usar privilégio mínimo, re
 
 ## 16. Recomendação técnica
 
-Fica aceito condicionalmente o **modelo híbrido com histórico único no Flask-Migrate/Alembic**:
+Fica aceita a **opção B — runner próprio com migrations MySQL em SQL puro**:
 
-- Flask-Migrate/Alembic será o histórico único de migrations;
-- tabelas, colunas, índices e constraints serão versionados por revisions Alembic;
-- Stored Procedures e outros recursos específicos do MySQL permanecerão em SQL explícito e versionado, aplicado pela revision correspondente;
-- não existirão dois runners independentes;
-- `autogenerate` produzirá somente um candidato, sempre sujeito a revisão humana;
-- `create_database.sql` permanecerá como bootstrap e referência consolidada do schema;
-- bancos existentes evoluirão exclusivamente pelas migrations versionadas;
-- migrations críticas no MySQL exigirão backup e validações pré e pós-execução.
+- `backend/database/migrate.py` será o único runner oficial;
+- arquivos `NNN_descricao_em_snake_case.sql` formarão uma sequência única e consecutiva;
+- `schema_migrations` registrará versão, arquivo, checksum SHA-256, estado e datas;
+- ordem, reexecução, drift e concorrência serão verificados antes de qualquer migration pendente;
+- `GET_LOCK` serializará runners oficiais por schema;
+- Stored Procedures e outros recursos específicos do MySQL permanecerão em SQL explícito com suporte a `DELIMITER`;
+- bancos existentes serão adotados somente por baseline explícito após fingerprint do estado histórico;
+- `create_database.sql` permanecerá como snapshot consolidado e deverá ser equivalente à sequência;
+- falha ou interrupção bloqueará o avanço até reconciliação consciente;
+- migrations críticas exigirão backup e validações pré e pós-execução.
 
-A condição para adoção é a confirmação do professor quanto ao uso da ferramenta.
+Alembic e Flask-Migrate não serão utilizados.
 
 ## 17. Consequências da recomendação
 
-Haverá uma sequência única de revisions e convenções para SQL externo, checksums, upgrade e downgrade. `create_database.sql` deixa de ser alterado isoladamente: deverá representar o mesmo estado final das migrations ou ser gerado/revisado em processo definido.
+O projeto passa a manter o próprio runner pequeno e seus testes. Não haverá downgrade automático: reversões usarão restauração de backup ou migration compensatória documentada. `create_database.sql` não será alterado isoladamente e deverá representar o mesmo estado final das migrations.
 
 ## 18. Estratégia de adoção gradual
 
-1. Confirmar ferramenta permitida.
-2. Inventariar schema real e scripts já aplicados.
-3. Criar baseline sem alterar dados.
-4. Vincular SQL de procedures a revisions explícitas.
-5. Validar banco vazio e cópia do MVP.
-6. Exigir revisão manual de todo autogenerate.
-7. Executar regressão antes de cada merge.
+1. Criar e testar o runner sem acoplá-lo ao startup Flask.
+2. Formalizar a migration `000` e incorporar `001` e `002` ao histórico.
+3. Validar banco vazio e equivalência com `create_database.sql`.
+4. Fazer backup e ensaiar o baseline em cópia do MVP.
+5. Adotar o histórico no banco existente sem reexecutar DDL comprovado.
+6. Executar regressão antes de cada merge.
 
 ## 19. Critérios de aceite
 
@@ -111,14 +114,10 @@ Haverá uma sequência única de revisions e convenções para SQL externo, chec
 - Upgrade é repetível; rollback ou irreversibilidade é documentado.
 - Os 29 testes continuam aprovados.
 
-## 20. Pontos que dependem do professor ou da equipe
+## 20. Pontos operacionais
 
-Pergunta pendente ao professor:
-
-> “Podemos utilizar Flask-Migrate/Alembic para versionar tabelas, colunas, índices e constraints, mantendo Stored Procedures em SQL MySQL explícito e versionado dentro das próprias migrations?”
-
-Se o uso não for autorizado, o fallback será um runner SQL versionado com tabela `schema_migrations`, ordem, checksum e execução controlada. Também permanecem operacionais para definição da equipe: política de downgrade, baseline, ambiente e responsáveis pela revisão das revisions.
+Cada ambiente deverá definir responsáveis por backup, revisão dos scripts e autorização do baseline. Toda migration futura deverá registrar pré-condições, preservação/backfill e irreversibilidade ou compensação, sem alterar a decisão pela infraestrutura SQL.
 
 ## 21. Decisão final
 
-**ACEITO CONDICIONALMENTE — aguardando confirmação do professor sobre Flask-Migrate/Alembic.**
+**ACEITO — runner próprio com migrations MySQL em SQL puro, sem Alembic ou Flask-Migrate.**

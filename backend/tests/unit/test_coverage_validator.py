@@ -1,7 +1,12 @@
 import unittest
 from pathlib import Path
 
-from scripts.validate_backend_coverage import has_executable_statements, validate
+from scripts.validate_backend_coverage import (
+    ROOT,
+    has_executable_statements,
+    production_files,
+    validate,
+)
 
 
 class BackendCoverageValidatorTest(unittest.TestCase):
@@ -24,6 +29,12 @@ class BackendCoverageValidatorTest(unittest.TestCase):
         )
         self.assertFalse(
             has_executable_statements(self.statement_fixtures / "docstring_only.py")
+        )
+
+    def test_inclui_runner_de_migrations_na_cobertura(self):
+        self.assertIn(
+            ROOT / "backend" / "database" / "migrate.py",
+            production_files(),
         )
 
 

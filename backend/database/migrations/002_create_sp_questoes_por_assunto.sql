@@ -1,4 +1,6 @@
-USE plataforma_enem;
+-- Pre-condicao: migrations 000 e 001 aplicadas.
+-- Preservacao: substitui apenas a definicao da Stored Procedure.
+-- Reversao: restaurar a definicao anterior explicitamente, quando existir.
 
 DROP PROCEDURE IF EXISTS sp_questoes_por_assunto;
 

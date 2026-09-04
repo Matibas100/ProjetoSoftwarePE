@@ -2,13 +2,13 @@
 
 ## Escopo
 
-Este pacote consolida sete decisões revisadas antes da Modelagem Mestre do MySQL: seis aceitas e uma aceita condicionalmente. A aprovação documental não autoriza, por si só, código, schema, migration, dependência ou integração externa. Todas preservam o MVP, a arquitetura da disciplina e os contratos atuais durante uma adoção gradual.
+Este pacote consolida sete decisões aceitas antes da Modelagem Mestre do MySQL. A aprovação documental não autoriza, por si só, schema ou evolução funcional fora de change. Todas preservam o MVP, a arquitetura da disciplina e os contratos atuais durante uma adoção gradual.
 
 ## Síntese
 
 | ADR | Decisão analisada | Opções principais | Decisão incorporada | Impacto dominante | Dependências | Status |
 |---|---|---|---|---|---|---|
-| [ADR-001](adr/ADR-001-estrategia-de-migrations.md) | Estratégia de migrations | Alembic; runner SQL; híbrido; manual | Histórico único Alembic; SQL MySQL explícito aplicado pela revision | Governança de todas as mudanças do banco | Confirmação da ferramenta pelo professor | **Aceito condicionalmente** |
+| [ADR-001](adr/ADR-001-estrategia-de-migrations.md) | Estratégia de migrations | Alembic; runner SQL; híbrido; manual | Runner próprio com `schema_migrations`; migrations MySQL em SQL puro | Governança de todas as mudanças do banco | Operação exige backup e baseline validado | **Aceito** |
 | [ADR-002](adr/ADR-002-estrategia-de-autenticacao.md) | Autenticação | Sessão; JWT+refresh; híbrido | Sessão de servidor e cookie opaco seguro; mobile terá ADR próprio | Usuários, sessões, segurança e todas as telas protegidas | Implantação, CORS e autorização | **Aceito** |
 | [ADR-003](adr/ADR-003-politica-de-exclusao-catalogo.md) | Exclusão de Matéria/Assunto | Cascade; bloqueio; soft delete; transferência; combinação | `RESTRICT` + arquivamento + transferência explícita; delete físico apenas sem uso/vínculo | Integridade do catálogo e preservação histórica | ADR-001; semântica de “utilizado”; ADR-005 | **Aceito** |
 | [ADR-004](adr/ADR-004-unicidade-de-assunto.md) | Unicidade de Assunto | Livre; unique textual; normalizado; código interno | `UNIQUE(materia_id, nome_normalizado)` e reativação de arquivado | Taxonomia, importação e conflitos | ADR-003; normalização; ADR-001 | **Aceito** |

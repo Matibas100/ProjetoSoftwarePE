@@ -1,4 +1,16 @@
-.PHONY: test-unit test-integration test-backend test-frontend test-coverage test
+.PHONY: db-status db-up db-baseline db-reconcile test-unit test-integration test-backend test-frontend test-coverage test
+
+db-status:
+	python backend/database/migrate.py status
+
+db-up:
+	python backend/database/migrate.py up
+
+db-baseline:
+	python backend/database/migrate.py baseline --confirm
+
+db-reconcile:
+	python backend/database/migrate.py reconcile $(VERSION) --confirm
 
 test-unit:
 	python backend/tests/run_unit.py

@@ -16,9 +16,11 @@ MIN_BRANCHES = 85.0
 
 
 def production_files(root: Path = ROOT) -> list[Path]:
-    return sorted((root / "backend" / "app").rglob("*.py")) + [
-        root / "backend" / "run.py"
-    ]
+    return (
+        sorted((root / "backend" / "app").rglob("*.py"))
+        + sorted((root / "backend" / "database").glob("*.py"))
+        + [root / "backend" / "run.py"]
+    )
 
 
 def has_executable_statements(path: Path) -> bool:

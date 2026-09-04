@@ -6,8 +6,7 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 
 ## Situação após o Pacote de Decisões Arquiteturais 1
 
-- 6 decisões foram aceitas: ADR-002 a ADR-007.
-- 1 decisão foi aceita condicionalmente: ADR-001.
+- 7 decisões foram aceitas: ADR-001 a ADR-007.
 - 10 decisões permanecem abertas.
 - O histórico das opções e recomendações preliminares permanece registrado abaixo.
 
@@ -16,8 +15,8 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 - **Contexto:** o MVP utiliza scripts SQL de criação e uma migration manual para a Stored Procedure. A evolução modular exigirá mudanças incrementais, reproduzíveis e reversíveis.
 - **Opções:** manter scripts SQL numerados com runner controlado; adotar Alembic/Flask-Migrate; usar ferramenta institucional indicada pelo professor.
 - **Impactos:** rastreabilidade do schema, ordem de implantação, rollback, compatibilidade entre ambientes e aderência à disciplina.
-- **Recomendação preliminar:** confirmar primeiro a ferramenta permitida; se não houver restrição, adotar Flask-Migrate/Alembic sem descartar os scripts SQL auditáveis.
-- **Status:** AGUARDANDO CONFIRMAÇÃO DO PROFESSOR — ADR-001 aceito condicionalmente: [ADR-001](adr/ADR-001-estrategia-de-migrations.md).
+- **Decisão:** runner próprio com `schema_migrations`, ordem, checksum, lock e migrations MySQL em SQL puro; Alembic e Flask-Migrate não serão usados.
+- **Status:** ACEITA — decisão registrada no [ADR-001](adr/ADR-001-estrategia-de-migrations.md).
 
 ## OD-02 — Estratégia de autenticação
 
