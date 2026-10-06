@@ -2,6 +2,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.exceptions import ConflitoError, RecursoNaoEncontradoError
 from app.models.assunto import Assunto
+from app.repositories.catalogo_repository import CatalogoRepository
 
 
 class DeletarAssuntoService:
@@ -10,6 +11,13 @@ class DeletarAssuntoService:
         assunto = Assunto.buscar_por_id(assunto_id)
         if assunto is None:
             raise RecursoNaoEncontradoError("Assunto nao encontrado.")
+
+        impacto = CatalogoRepository.impacto_assunto(assunto_id)
+        if impacto["questoes"] or impacto["transferencias"]:
+            raise ConflitoError(
+                "O assunto nao pode ser excluido porque possui vinculos.",
+                detalhes={"impacto": impacto},
+            )
 
         try:
             assunto.deletar()

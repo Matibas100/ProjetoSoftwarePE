@@ -15,17 +15,21 @@ from app.repositories.questao_repository import QuestaoRepository
 
 class ModelSerializationTest(unittest.TestCase):
     def test_materia_to_dict(self):
-        materia = Materia(id=1, nome="Matematica", descricao=None)
-        self.assertEqual(
-            materia.to_dict(), {"id": 1, "nome": "Matematica", "descricao": None}
-        )
+        materia = Materia(id=1, nome="Matematica", descricao=None, area_enem_id=4, status="ativa")
+        result = materia.to_dict()
+        self.assertEqual(result["area_enem_id"], 4)
+        self.assertEqual(result["status"], "ativa")
+        self.assertTrue({"id", "nome", "descricao"}.issubset(result))
 
     def test_assunto_to_dict(self):
-        assunto = Assunto(id=2, nome="Algebra", descricao="Basica", materia_id=1)
-        self.assertEqual(
-            assunto.to_dict(),
-            {"id": 2, "nome": "Algebra", "descricao": "Basica", "materia_id": 1},
+        assunto = Assunto(
+            id=2, nome="Algebra", nome_normalizado="algebra", descricao="Basica",
+            materia_id=1, status="ativa"
         )
+        result = assunto.to_dict()
+        self.assertEqual(result["nome_normalizado"], "algebra")
+        self.assertEqual(result["status"], "ativa")
+        self.assertTrue({"id", "nome", "descricao", "materia_id"}.issubset(result))
 
     def test_questao_to_dict(self):
         data = {
@@ -56,6 +60,15 @@ class CrudMixinTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             materia.salvar()
         session.rollback.assert_called_once_with()
+
+    @patch("app.models.crud_mixin.db.session")
+    def test_operacoes_sem_commit_usam_flush(self, session):
+        materia = Materia(nome="Fisica")
+        self.assertIs(materia.salvar(confirmar=False), materia)
+        materia.atualizar(confirmar=False, nome="Quimica")
+        materia.deletar(confirmar=False)
+        self.assertEqual(session.flush.call_count, 3)
+        session.commit.assert_not_called()
 
     @patch("app.models.crud_mixin.db.session")
     def test_atualizar_filtra_campos_commit_e_rollback(self, session):

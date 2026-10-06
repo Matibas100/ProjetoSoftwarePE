@@ -17,6 +17,7 @@ class AssuntosApiIntegrationTest(MySQLIntegrationTestCase):
             json={
                 "nome": self._nome_unico("Materia"),
                 "descricao": "Dado temporario do teste de Assunto",
+                "area_enem_id": 4,
             },
         )
         self.assertEqual(resposta.status_code, 201, resposta.get_json())
@@ -157,7 +158,7 @@ class AssuntosApiIntegrationTest(MySQLIntegrationTestCase):
 
         resposta = self.client.delete(f"/api/assuntos/{assunto['id']}")
         self.assertEqual(resposta.status_code, 409, resposta.get_json())
-        self.assertIn("questoes vinculadas", resposta.get_json()["erro"])
+        self.assertIn("possui vinculos", resposta.get_json()["erro"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Assuntos | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-page--assuntos">
+    <div class="admin-shell">
+      <aside class="sidebar" aria-label="Navegação administrativa">
+        <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+        <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+        <p class="nav-label">Administração</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Dashboard</span>
+        <p class="nav-label">Conteúdo</p>
+        <a class="nav-link" href="materias.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Matérias</a>
+        <a class="nav-link" href="assuntos.html" aria-current="page"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#list"></use></svg>Assuntos</a>
+        <a class="nav-link" href="../index.html#titulo-questoes"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Questões</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Resumos</span>
+        <p class="nav-label">Avaliações</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Simulados</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Temas de Redação</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Redações</span>
+        <p class="nav-label">Gestão</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Usuários</span>
+        <p class="nav-label">Minha conta</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Perfil</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#arrow"></use></svg>Área do aluno</span>
+        <div class="sidebar-user">
+          <div class="user-row"><span class="avatar">A</span><span><strong>Administrador</strong><small>Ambiente local</small></span></div>
+          <a class="switch-link" href="../index.html">Trocar de ambiente</a>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="topbar"><strong class="topbar-title">Assuntos</strong><div class="topbar-actions"><span class="environment-badge">Ambiente administrativo</span><span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span><span class="avatar">A</span></div></header>
+        <main class="main-content">
+          <header class="page-heading"><div><h1>Gestão de Assuntos</h1><p>Gerencie assuntos e seus vínculos com matérias.</p></div><button id="novo-assunto" class="button button--primary" type="button">Novo assunto</button></header>
+
+          <form id="assuntos-filtros" class="card filters filters--assuntos" role="search">
+            <div class="field"><label for="assuntos-busca">Busca</label><div class="search-wrap"><svg class="search-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#search"></use></svg><input id="assuntos-busca" maxlength="100" placeholder="Buscar assunto"></div></div>
+            <div class="field"><label for="assuntos-area-filtro">Área</label><select id="assuntos-area-filtro"><option value="">Todas</option></select></div>
+            <div class="field"><label for="assuntos-materia-filtro">Matéria</label><select id="assuntos-materia-filtro"><option value="">Todas</option></select></div>
+            <div class="field"><label for="assuntos-status">Status</label><select id="assuntos-status"><option value="">Todos</option><option value="ativa">Ativos</option><option value="inativa">Inativos</option><option value="arquivada">Arquivados</option></select></div>
+            <div class="filters-foot"><span id="assuntos-filtros-aplicados">Nenhum filtro aplicado</span><button id="assuntos-limpar" class="button button--text" type="button">Limpar filtros</button></div>
+          </form>
+
+          <section class="card table-card" aria-labelledby="assuntos-lista-titulo">
+            <h2 id="assuntos-lista-titulo" hidden>Assuntos cadastrados</h2>
+            <div class="table-scroll"><table><thead><tr><th>Nome</th><th>Área</th><th>Matéria</th><th>Descrição</th><th>Questões</th><th>Resumos</th><th>Status</th><th>Ações</th></tr></thead><tbody id="assuntos-corpo"></tbody></table></div>
+            <p id="assuntos-estado" class="table-state" role="status">Carregando assuntos...</p>
+            <nav class="pagination" aria-label="Paginação de assuntos"><span id="assuntos-total">0 assuntos</span><span><button id="assuntos-anterior" class="button button--text" type="button">Anterior</button><span id="assuntos-pagina">Página 1</span><button id="assuntos-proxima" class="button button--text" type="button">Próxima</button></span></nav>
+          </section>
+
+          <div class="editor-grid">
+            <section id="assunto-editor" class="card editor-card" aria-labelledby="assunto-editor-titulo">
+              <h2 id="assunto-editor-titulo">Criar assunto <span id="assunto-unsaved" class="unsaved" hidden>Alterações não salvas</span></h2>
+              <form id="assunto-form" novalidate>
+                <input id="assunto-id" name="id" type="hidden">
+                <div class="editor-fields">
+                  <div class="field"><label for="assunto-nome">Nome</label><input id="assunto-nome" name="nome" aria-describedby="assunto-nome-erro" maxlength="150" required><p id="assunto-nome-erro" class="field-error" role="alert"></p></div>
+                  <div class="field"><label for="assunto-materia">Matéria</label><select id="assunto-materia" name="materia_id" required><option value="">Selecione</option></select><p class="field-error"></p></div>
+                  <div class="field field--wide"><label for="assunto-descricao">Descrição</label><textarea id="assunto-descricao" name="descricao"></textarea></div>
+                </div>
+                <div id="assunto-impacto" class="notice notice--warning" hidden></div>
+                <div id="assunto-mensagem" class="notice" role="status" aria-live="polite" hidden></div>
+                <div class="form-actions"><button id="assunto-cancelar" class="button button--outline" type="button">Cancelar</button><button id="assunto-salvar" class="button button--primary" type="submit">Salvar assunto</button></div>
+              </form>
+            </section>
+            <aside class="card state-card" aria-labelledby="assunto-ajuda"><h2 id="assunto-ajuda">Regras e estados</h2><div id="assunto-contexto" class="notice notice--info">Selecione um assunto para editar ou crie um novo.</div><p>Resumos: <strong aria-label="Indisponível nesta versão">—</strong>. A transferência altera apenas a classificação e preserva questões.</p></aside>
+          </div>
+          <p class="screen-note">O assunto sempre pertence a uma matéria; vínculos existentes nunca são alterados silenciosamente.</p>
+        </main>
+      </div>
+    </div>
+
+    <dialog id="admin-modal" aria-labelledby="admin-modal-titulo"><div class="modal-body"><h2 id="admin-modal-titulo"></h2><p id="admin-modal-texto"></p><div class="modal-actions"><button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button><button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button></div></div></dialog>
+    <script src="../js/api.js"></script><script src="../js/admin-common.js"></script><script src="../js/admin-assuntos.js"></script>
+  </body>
+</html>

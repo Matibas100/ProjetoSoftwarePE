@@ -1,0 +1,38 @@
+{
+  "materias": {
+    "lighthouse": "13.4.1",
+    "data": "2026-10-06T13:32:12.730Z",
+    "modo": "snapshot",
+    "url": "http://127.0.0.1:5500/admin/materias.html",
+    "pontuacoes": {
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 0.8,
+      "agentic-browsing": 1
+    },
+    "auditorias_reprovadas": [
+      {
+        "id": "meta-description",
+        "titulo": "Document does not have a meta description"
+      }
+    ]
+  },
+  "assuntos": {
+    "lighthouse": "13.4.1",
+    "data": "2026-10-06T13:32:15.651Z",
+    "modo": "snapshot",
+    "url": "http://127.0.0.1:5500/admin/assuntos.html",
+    "pontuacoes": {
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 0.8,
+      "agentic-browsing": 1
+    },
+    "auditorias_reprovadas": [
+      {
+        "id": "meta-description",
+        "titulo": "Document does not have a meta description"
+      }
+    ]
+  }
+}

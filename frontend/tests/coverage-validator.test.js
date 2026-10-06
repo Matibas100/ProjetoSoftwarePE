@@ -12,7 +12,10 @@ function metric(covered = 100, total = 100) {
 
 function report(overrides = {}) {
   return Object.fromEntries(
-    ["api.js", "app.js", "assuntos.js", "questoes.js"].map((name) => {
+    [
+      "api.js", "app.js", "assuntos.js", "questoes.js",
+      "admin-common.js", "admin-materias.js", "admin-assuntos.js",
+    ].map((name) => {
       const file = path.join(root, "frontend", "js", name);
       return [file, { lines: metric(), branches: metric(), ...overrides[name] }];
     }),

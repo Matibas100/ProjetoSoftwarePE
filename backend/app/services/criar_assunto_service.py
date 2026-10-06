@@ -3,6 +3,9 @@ from sqlalchemy.exc import IntegrityError
 from app.exceptions import ConflitoError, DadosInvalidosError, RecursoNaoEncontradoError
 from app.models.assunto import Assunto
 from app.models.materia import Materia
+from app.domain.catalogo import normalizar_nome_assunto
+from app.repositories.catalogo_repository import CatalogoRepository
+from app.services.catalogo_validacao import validar_descricao, validar_id, validar_nome
 
 
 class CriarAssuntoService:
@@ -11,40 +14,31 @@ class CriarAssuntoService:
         if not isinstance(dados, dict):
             raise DadosInvalidosError("Envie os dados do assunto em formato JSON.")
 
-        nome = dados.get("nome")
-        if not isinstance(nome, str) or not nome.strip():
-            raise DadosInvalidosError("O nome do assunto e obrigatorio.")
-
-        nome = nome.strip()
-        if len(nome) > 150:
-            raise DadosInvalidosError("O nome deve possuir no maximo 150 caracteres.")
-
-        materia_id = dados.get("materia_id")
-        if (
-            not isinstance(materia_id, int)
-            or isinstance(materia_id, bool)
-            or materia_id <= 0
-        ):
-            raise DadosInvalidosError("materia_id deve ser um numero inteiro valido.")
-
-        if Materia.buscar_por_id(materia_id) is None:
+        nome = validar_nome(dados.get("nome"), "do assunto", 150)
+        nome_normalizado = normalizar_nome_assunto(nome)
+        materia_id = validar_id(dados.get("materia_id"), "materia_id")
+        materia = Materia.buscar_por_id(materia_id)
+        if materia is None:
             raise RecursoNaoEncontradoError("Materia nao encontrada.")
-
-        descricao = dados.get("descricao")
-        if descricao is not None and not isinstance(descricao, str):
-            raise DadosInvalidosError("A descricao deve ser um texto ou nula.")
+        if materia.status != "ativa":
+            raise DadosInvalidosError("A materia precisa estar ativa para receber assuntos.")
+        if CatalogoRepository.existe_assunto_equivalente(materia_id, nome_normalizado):
+            raise ConflitoError("Ja existe um assunto equivalente nesta materia.")
+        descricao = validar_descricao(dados.get("descricao"))
 
         assunto = Assunto(
             nome=nome,
-            descricao=descricao.strip() if isinstance(descricao, str) else None,
+            nome_normalizado=nome_normalizado,
+            descricao=descricao,
             materia_id=materia_id,
+            status="ativa",
         )
 
         try:
             assunto.salvar()
         except IntegrityError as erro:
             raise ConflitoError(
-                "Nao foi possivel cadastrar o assunto por conflito de integridade."
+                "Ja existe um assunto equivalente nesta materia."
             ) from erro
 
         return assunto.to_dict()

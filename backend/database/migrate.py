@@ -610,9 +610,101 @@ def _check_tokens(value: str) -> list[str]:
     return [token for token in _sql_tokens(without_charset) if token not in {"(", ")"}]
 
 
+def _detect_catalogo_prefix(connection, tables: set[str]) -> str:
+    expected = {"areas_enem", "materias", "assuntos", "questoes", "assunto_transferencias"}
+    if tables != expected:
+        raise MigrationError("Schema nao corresponde as tabelas conhecidas do catalogo.")
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, codigo, nome, ordem FROM areas_enem ORDER BY ordem")
+        areas = [tuple(row.values()) for row in cursor.fetchall()]
+        if areas != [
+            (1, "linguagens", "Linguagens", 1),
+            (2, "ciencias-humanas", "Ciências Humanas", 2),
+            (3, "ciencias-natureza", "Ciências da Natureza", 3),
+            (4, "matematica", "Matemática", 4),
+        ]:
+            raise MigrationError("Catalogo fixo de Areas do ENEM diverge do esperado.")
+        cursor.execute(
+            "SELECT TABLE_NAME AS table_name, COLUMN_NAME AS column_name, "
+            "IS_NULLABLE AS is_nullable, COLLATION_NAME AS collation_name "
+            "FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() "
+            "AND (TABLE_NAME, COLUMN_NAME) IN "
+            "(('materias', 'area_enem_id'), ('materias', 'status'), "
+            "('assuntos', 'nome_normalizado'), ('assuntos', 'status'))"
+        )
+        columns = {
+            (row["table_name"], row["column_name"]): (
+                row["is_nullable"], row["collation_name"]
+            )
+            for row in cursor.fetchall()
+        }
+        if set(columns) != {
+            ("materias", "area_enem_id"),
+            ("materias", "status"),
+            ("assuntos", "nome_normalizado"),
+            ("assuntos", "status"),
+        } or columns[("assuntos", "nome_normalizado")][1] != "utf8mb4_0900_ai_ci":
+            raise MigrationError("Colunas principais do catalogo divergem do esperado.")
+        cursor.execute(
+            "SELECT rc.TABLE_NAME AS table_name, rc.DELETE_RULE AS delete_rule, "
+            "kcu.COLUMN_NAME AS column_name FROM information_schema.REFERENTIAL_CONSTRAINTS rc "
+            "JOIN information_schema.KEY_COLUMN_USAGE kcu "
+            "ON kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA "
+            "AND kcu.TABLE_NAME = rc.TABLE_NAME "
+            "AND kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME "
+            "WHERE rc.CONSTRAINT_SCHEMA = DATABASE()"
+        )
+        delete_rules = {
+            (row["table_name"], row["column_name"]): row["delete_rule"]
+            for row in cursor.fetchall()
+        }
+        cursor.execute(
+            "SELECT COUNT(*) AS total FROM information_schema.ROUTINES "
+            "WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = 'PROCEDURE' "
+            "AND ROUTINE_NAME = 'sp_questoes_por_assunto'"
+        )
+        if cursor.fetchone()["total"] != 1:
+            raise MigrationError("Stored Procedure obrigatoria diverge do esperado.")
+        cursor.execute(
+            "SELECT COUNT(*) AS total FROM information_schema.STATISTICS "
+            "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'assuntos' "
+            "AND INDEX_NAME = 'uq_assuntos_materia_nome_normalizado' AND NON_UNIQUE = 0"
+        )
+        unique_final = cursor.fetchone()["total"] == 2
+
+    preparatorio = (
+        columns[("materias", "area_enem_id")][0] == "YES"
+        and columns[("assuntos", "nome_normalizado")][0] == "YES"
+        and delete_rules.get(("assuntos", "materia_id")) == "CASCADE"
+        and not unique_final
+    )
+    final = (
+        columns[("materias", "area_enem_id")][0] == "NO"
+        and columns[("assuntos", "nome_normalizado")][0] == "NO"
+        and delete_rules.get(("materias", "area_enem_id")) == "RESTRICT"
+        and delete_rules.get(("assuntos", "materia_id")) == "RESTRICT"
+        and delete_rules.get(("questoes", "assunto_id")) == "RESTRICT"
+        and unique_final
+    )
+    if preparatorio:
+        return "003"
+    if final:
+        return "004"
+    raise MigrationError("Schema combina estados historicos incompatíveis.")
+
+
 def detect_legacy_prefix(connection) -> str:
     expected_tables = set(EXPECTED_COLUMNS)
-    if _user_tables(connection) != expected_tables:
+    user_tables = _user_tables(connection)
+    if user_tables != expected_tables:
+        if user_tables == {
+            "areas_enem",
+            "materias",
+            "assuntos",
+            "questoes",
+            "assunto_transferencias",
+        }:
+            return _detect_catalogo_prefix(connection, user_tables)
         raise MigrationError("Schema nao corresponde as tabelas MVP esperadas.")
 
     with connection.cursor() as cursor:

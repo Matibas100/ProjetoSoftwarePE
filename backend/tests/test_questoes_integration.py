@@ -14,7 +14,7 @@ class QuestoesApiIntegrationTest(MySQLIntegrationTestCase):
     def _cadastrar_materia(self):
         resposta = self.client.post(
             "/api/materias",
-            json={"nome": self._nome_unico("Materia")},
+            json={"nome": self._nome_unico("Materia"), "area_enem_id": 4},
         )
         self.assertEqual(resposta.status_code, 201, resposta.get_json())
         materia = resposta.get_json()

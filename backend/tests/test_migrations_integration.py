@@ -8,24 +8,85 @@ from tests.migration_integration_support import MySQLMigrationTestCase
 FAILURE_MIGRATIONS = (
     Path(__file__).resolve().parent / "fixtures" / "migrations_failure"
 )
+UPGRADE_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "catalogo_upgrade"
 
 
 class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
+    def _execute_file(self, path):
+        sql = path.read_text(encoding="utf-8")
+        migrate.execute_statements(
+            self.connection, migrate.validate_statements(migrate.split_sql(sql))
+        )
+
+    def test_upgrade_preserva_dados_e_aplica_backfill_fechado(self):
+        self.apply_without_history("002")
+        self._execute_file(UPGRADE_FIXTURES / "validos.sql")
+        self._execute_file(self.migrations[3].path)
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "003")
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id, nome, descricao, area_enem_id FROM materias "
+                "WHERE id IN (910001, 910002) ORDER BY id"
+            )
+            self.assertEqual(
+                cursor.fetchall(),
+                [
+                    {"id": 910001, "nome": "Matemática", "descricao": "Descrição preservada", "area_enem_id": 4},
+                    {"id": 910002, "nome": "História", "descricao": None, "area_enem_id": 2},
+                ],
+            )
+            cursor.execute("SELECT nome_normalizado FROM assuntos WHERE id = 920001")
+            self.assertEqual(cursor.fetchone()["nome_normalizado"], "geometria plana")
+            cursor.execute("SELECT assunto_id FROM questoes WHERE id = 930001")
+            self.assertEqual(cursor.fetchone()["assunto_id"], 920001)
+        self._execute_file(self.migrations[4].path)
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "004")
+
+    def test_precheck_preserva_materia_nao_classificada(self):
+        self.apply_without_history("002")
+        self._execute_file(UPGRADE_FIXTURES / "materia_nao_classificavel.sql")
+        self._execute_file(self.migrations[3].path)
+        with self.assertRaisesRegex(Exception, "CATALOGO_004_MATERIAS_NAO_CLASSIFICADAS"):
+            self._execute_file(self.migrations[4].path)
+        with self.connection.cursor() as cursor:
+            cursor.execute("SELECT nome, area_enem_id FROM materias WHERE id = 910003")
+            self.assertEqual(
+                cursor.fetchone(), {"nome": "Astronomia Avançada", "area_enem_id": None}
+            )
+
+    def test_precheck_preserva_assuntos_conflitantes(self):
+        self.apply_without_history("002")
+        self._execute_file(UPGRADE_FIXTURES / "assuntos_conflitantes.sql")
+        self._execute_file(self.migrations[3].path)
+        with self.assertRaisesRegex(
+            Exception, "CATALOGO_004_ASSUNTOS_NORMALIZADOS_CONFLITANTES"
+        ):
+            self._execute_file(self.migrations[4].path)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id, nome FROM assuntos WHERE id IN (920003, 920004) ORDER BY id"
+            )
+            self.assertEqual([row["id"] for row in cursor.fetchall()], [920003, 920004])
+
     def test_instalacao_idempotencia_historico_e_procedure(self):
-        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 3)
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 5)
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
 
         history = migrate.fetch_history(self.connection)
-        self.assertEqual([row["version"] for row in history], ["000", "001", "002"])
+        self.assertEqual(
+            [row["version"] for row in history], ["000", "001", "002", "003", "004"]
+        )
         self.assertTrue(all(row["status"] == "APPLIED" for row in history))
-        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "002")
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "004")
 
         with self.connection.cursor() as cursor:
-            cursor.execute("INSERT INTO materias (nome) VALUES ('Materia migration')")
+            cursor.execute(
+                "INSERT INTO materias (nome, area_enem_id) VALUES ('Materia migration', 4)"
+            )
             materia_id = cursor.lastrowid
             cursor.execute(
-                "INSERT INTO assuntos (nome, materia_id) VALUES ('Assunto migration', %s)",
-                (materia_id,),
+                "INSERT INTO assuntos (nome, nome_normalizado, materia_id) "
+                "VALUES ('Assunto migration', 'assunto migration', %s)", (materia_id,),
             )
             assunto_id = cursor.lastrowid
             values = (
@@ -60,12 +121,18 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
         self.assertEqual(ids, [first_id, second_id])
 
     def test_baseline_reconhece_todos_os_prefixos_sem_alterar_dados(self):
-        for prefix in ("000", "001", "002"):
+        for prefix in ("000", "001", "002", "003", "004"):
             with self.subTest(prefix=prefix):
                 self.recreate_schema()
                 self.apply_without_history(prefix)
                 with self.connection.cursor() as cursor:
-                    cursor.execute("INSERT INTO materias (nome) VALUES ('Preservada')")
+                    if int(prefix) >= 3:
+                        cursor.execute(
+                            "INSERT INTO materias (nome, area_enem_id) "
+                            "VALUES ('Matemática', 4)"
+                        )
+                    else:
+                        cursor.execute("INSERT INTO materias (nome) VALUES ('Matemática')")
                     persisted_id = cursor.lastrowid
 
                 self.assertEqual(
@@ -78,14 +145,14 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
                 self.assertEqual(history[-1]["version"], prefix)
                 with self.connection.cursor() as cursor:
                     cursor.execute("SELECT nome FROM materias WHERE id = %s", (persisted_id,))
-                    self.assertEqual(cursor.fetchone()["nome"], "Preservada")
+                    self.assertEqual(cursor.fetchone()["nome"], "Matemática")
 
-                expected_pending = 2 - int(prefix)
+                expected_pending = 4 - int(prefix)
                 self.assertEqual(
                     migrate.run_up(self.connection, self.settings, self.migrations),
                     expected_pending,
                 )
-                self.assertEqual(migrate.detect_legacy_prefix(self.connection), "002")
+                self.assertEqual(migrate.detect_legacy_prefix(self.connection), "004")
 
     def test_baseline_recusa_schema_divergente(self):
         self.apply_without_history("000")
@@ -182,7 +249,7 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
 
     def test_bootstrap_consolidado_equivale_as_migrations(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
-        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "002")
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "004")
 
         other_name = self.schema_name[:-12] + "f" * 12
         if other_name == self.schema_name:
@@ -209,7 +276,7 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
                     continue
                 selected.append(statement)
             migrate.execute_statements(other_connection, selected)
-            self.assertEqual(migrate.detect_legacy_prefix(other_connection), "002")
+            self.assertEqual(migrate.detect_legacy_prefix(other_connection), "004")
         finally:
             other_connection.close()
             with self.admin_connection.cursor() as cursor:

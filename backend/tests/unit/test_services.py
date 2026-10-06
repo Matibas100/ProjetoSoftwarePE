@@ -28,20 +28,28 @@ class MateriaServicesTest(unittest.TestCase):
             with self.subTest(data=data), self.assertRaises(DadosInvalidosError):
                 CriarMateriaService.executar(data)
 
+    @patch("app.services.criar_materia_service.AreaEnem")
     @patch("app.services.criar_materia_service.Materia")
-    def test_criar_normaliza_e_persiste(self, materia_class):
+    def test_criar_normaliza_e_persiste(self, materia_class, area_class):
+        area_class.buscar_por_id.return_value = object()
         materia = materia_class.return_value
         materia.to_dict.return_value = {"id": 1, "nome": "Fisica", "descricao": "Mecanica"}
-        result = CriarMateriaService.executar({"nome": " Fisica ", "descricao": " Mecanica "})
-        materia_class.assert_called_once_with(nome="Fisica", descricao="Mecanica")
+        result = CriarMateriaService.executar(
+            {"nome": " Fisica ", "descricao": " Mecanica ", "area_enem_id": 3}
+        )
+        materia_class.assert_called_once_with(
+            nome="Fisica", descricao="Mecanica", area_enem_id=3, status="ativa"
+        )
         materia.salvar.assert_called_once_with()
         self.assertEqual(result["id"], 1)
 
+    @patch("app.services.criar_materia_service.AreaEnem")
     @patch("app.services.criar_materia_service.Materia")
-    def test_criar_traduz_duplicidade(self, materia_class):
+    def test_criar_traduz_duplicidade(self, materia_class, area_class):
+        area_class.buscar_por_id.return_value = object()
         materia_class.return_value.salvar.side_effect = integrity_error()
         with self.assertRaises(ConflitoError):
-            CriarMateriaService.executar({"nome": "Fisica"})
+            CriarMateriaService.executar({"nome": "Fisica", "area_enem_id": 3})
 
     @patch("app.services.atualizar_materia_service.Materia")
     def test_atualizar_valida_existencia_e_payload(self, materia_class):
@@ -69,13 +77,17 @@ class MateriaServicesTest(unittest.TestCase):
         with self.assertRaises(ConflitoError):
             AtualizarMateriaService.executar(1, {"nome": "Duplicada"})
 
+    @patch("app.services.deletar_materia_service.CatalogoRepository")
     @patch("app.services.deletar_materia_service.Materia")
-    def test_deletar_existente_inexistente_e_vinculado(self, materia_class):
+    def test_deletar_existente_inexistente_e_vinculado(self, materia_class, repository):
         materia_class.buscar_por_id.return_value = None
         with self.assertRaises(RecursoNaoEncontradoError):
             DeletarMateriaService.executar(1)
         materia = MagicMock()
         materia_class.buscar_por_id.return_value = materia
+        repository.impacto_materia.return_value = {
+            "assuntos": 0, "questoes": 0, "transferencias": 0
+        }
         self.assertIsNone(DeletarMateriaService.executar(1))
         materia.deletar.side_effect = integrity_error()
         with self.assertRaises(ConflitoError):
@@ -83,13 +95,15 @@ class MateriaServicesTest(unittest.TestCase):
 
     @patch("app.services.listar_materias_service.Materia")
     def test_listar(self, materia_class):
-        materia_class.listar_todos.return_value = [MagicMock(to_dict=lambda: {"id": 1})]
+        materia_class.listar_ativos.return_value = [MagicMock(to_dict=lambda: {"id": 1})]
         self.assertEqual(ListarMateriasService.executar(), [{"id": 1}])
 
 
 class AssuntoServicesTest(unittest.TestCase):
+    @patch("app.services.criar_assunto_service.CatalogoRepository")
     @patch("app.services.criar_assunto_service.Materia")
-    def test_criar_valida_campos(self, materia_class):
+    def test_criar_valida_campos(self, materia_class, repository):
+        repository.existe_assunto_equivalente.return_value = False
         invalid = [
             None,
             {},
@@ -104,21 +118,26 @@ class AssuntoServicesTest(unittest.TestCase):
         materia_class.buscar_por_id.return_value = None
         with self.assertRaises(RecursoNaoEncontradoError):
             CriarAssuntoService.executar({"nome": "x", "materia_id": 1})
-        materia_class.buscar_por_id.return_value = object()
+        materia_class.buscar_por_id.return_value = MagicMock(status="ativa")
         with self.assertRaises(DadosInvalidosError):
             CriarAssuntoService.executar({"nome": "x", "materia_id": 1, "descricao": 2})
 
+    @patch("app.services.criar_assunto_service.CatalogoRepository")
     @patch("app.services.criar_assunto_service.Assunto")
     @patch("app.services.criar_assunto_service.Materia")
-    def test_criar_persiste_e_traduz_conflito(self, materia_class, assunto_class):
-        materia_class.buscar_por_id.return_value = object()
+    def test_criar_persiste_e_traduz_conflito(self, materia_class, assunto_class, repository):
+        materia_class.buscar_por_id.return_value = MagicMock(status="ativa")
+        repository.existe_assunto_equivalente.return_value = False
         assunto = assunto_class.return_value
         assunto.to_dict.return_value = {"id": 2}
         self.assertEqual(
             CriarAssuntoService.executar({"nome": " Algebra ", "materia_id": 1, "descricao": " A "}),
             {"id": 2},
         )
-        assunto_class.assert_called_once_with(nome="Algebra", descricao="A", materia_id=1)
+        assunto_class.assert_called_once_with(
+            nome="Algebra", nome_normalizado="algebra", descricao="A",
+            materia_id=1, status="ativa"
+        )
         assunto.salvar.side_effect = integrity_error()
         with self.assertRaises(ConflitoError):
             CriarAssuntoService.executar({"nome": "Algebra", "materia_id": 1})
@@ -138,28 +157,36 @@ class AssuntoServicesTest(unittest.TestCase):
         with self.assertRaises(RecursoNaoEncontradoError):
             AtualizarAssuntoService.executar(1, {"materia_id": 2})
 
+    @patch("app.services.atualizar_assunto_service.CatalogoRepository")
     @patch("app.services.atualizar_assunto_service.Materia")
     @patch("app.services.atualizar_assunto_service.Assunto")
-    def test_atualizar_persiste_e_traduz_conflito(self, assunto_class, materia_class):
+    def test_atualizar_persiste_e_traduz_conflito(self, assunto_class, materia_class, repository):
         assunto = assunto_class.buscar_por_id.return_value
-        materia_class.buscar_por_id.return_value = object()
+        assunto.materia_id = 2
+        assunto.nome_normalizado = "antigo"
+        materia_class.buscar_por_id.return_value = MagicMock(status="ativa")
+        repository.existe_assunto_equivalente.return_value = False
         assunto.to_dict.return_value = {"id": 1}
         self.assertEqual(
             AtualizarAssuntoService.executar(1, {"nome": " Novo ", "descricao": " D ", "materia_id": 2}),
             {"id": 1},
         )
-        assunto.atualizar.assert_called_once_with(nome="Novo", descricao="D", materia_id=2)
+        assunto.atualizar.assert_called_once_with(
+            nome="Novo", nome_normalizado="novo", descricao="D"
+        )
         assunto.atualizar.side_effect = integrity_error()
         with self.assertRaises(ConflitoError):
             AtualizarAssuntoService.executar(1, {"nome": "Duplicado"})
 
+    @patch("app.services.deletar_assunto_service.CatalogoRepository")
     @patch("app.services.deletar_assunto_service.Assunto")
-    def test_deletar_existente_inexistente_e_vinculado(self, assunto_class):
+    def test_deletar_existente_inexistente_e_vinculado(self, assunto_class, repository):
         assunto_class.buscar_por_id.return_value = None
         with self.assertRaises(RecursoNaoEncontradoError):
             DeletarAssuntoService.executar(1)
         assunto = MagicMock()
         assunto_class.buscar_por_id.return_value = assunto
+        repository.impacto_assunto.return_value = {"questoes": 0, "transferencias": 0}
         self.assertIsNone(DeletarAssuntoService.executar(1))
         assunto.deletar.side_effect = integrity_error()
         with self.assertRaises(ConflitoError):
@@ -167,7 +194,7 @@ class AssuntoServicesTest(unittest.TestCase):
 
     @patch("app.services.listar_assuntos_service.Assunto")
     def test_listar(self, assunto_class):
-        assunto_class.listar_todos.return_value = [MagicMock(to_dict=lambda: {"id": 1})]
+        assunto_class.listar_ativos.return_value = [MagicMock(to_dict=lambda: {"id": 1})]
         self.assertEqual(ListarAssuntosService.executar(), [{"id": 1}])
 
 
@@ -214,7 +241,9 @@ class QuestaoServicesTest(unittest.TestCase):
         assunto_class.buscar_por_id.return_value = None
         with self.assertRaises(RecursoNaoEncontradoError):
             CriarQuestaoService.executar(self.valid_data())
-        assunto_class.buscar_por_id.return_value = object()
+        assunto_class.buscar_por_id.return_value = MagicMock(
+            status="ativa", materia=MagicMock(status="ativa")
+        )
         data = self.valid_data()
         data["explicacao"] = 10
         with self.assertRaises(DadosInvalidosError):
@@ -223,7 +252,9 @@ class QuestaoServicesTest(unittest.TestCase):
     @patch("app.services.criar_questao_service.Questao")
     @patch("app.services.criar_questao_service.Assunto")
     def test_criar_persiste_e_traduz_conflito(self, assunto_class, questao_class):
-        assunto_class.buscar_por_id.return_value = object()
+        assunto_class.buscar_por_id.return_value = MagicMock(
+            status="ativa", materia=MagicMock(status="ativa")
+        )
         questao = questao_class.return_value
         questao.to_dict.return_value = {"id": 3}
         self.assertEqual(CriarQuestaoService.executar(self.valid_data()), {"id": 3})

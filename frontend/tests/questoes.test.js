@@ -31,12 +31,16 @@ describe("tela de questoes", () => {
 
   it("carrega e atualiza os dois seletores", () => {
     expect(app.document.querySelector("#questao-assunto-id").options).toHaveLength(2);
+    app.document.querySelector("#questao-assunto-id").value = "4";
+    app.document.querySelector("#busca-assunto-id").value = "4";
     app.document.dispatchEvent(
       new app.window.CustomEvent("assuntos:atualizados", {
-        detail: [{ id: 5, nome: "Geometria" }],
+        detail: [{ id: 4, nome: "Geometria" }],
       }),
     );
     expect(app.document.querySelector("#busca-assunto-id").textContent).toContain("Geometria");
+    expect(app.document.querySelector("#questao-assunto-id").value).toBe("4");
+    expect(app.document.querySelector("#busca-assunto-id").value).toBe("4");
   });
 
   it("exige selecao e representa busca vazia, resultado e falha", async () => {

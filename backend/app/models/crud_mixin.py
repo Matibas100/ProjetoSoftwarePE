@@ -6,32 +6,44 @@ class CrudMixin(db.Model):
 
     __abstract__ = True
 
-    def salvar(self):
+    def salvar(self, confirmar=True):
         try:
             db.session.add(self)
-            db.session.commit()
+            if confirmar:
+                db.session.commit()
+            else:
+                db.session.flush()
         except Exception:
-            db.session.rollback()
+            if confirmar:
+                db.session.rollback()
             raise
         return self
 
-    def atualizar(self, **dados):
+    def atualizar(self, confirmar=True, **dados):
         for campo, valor in dados.items():
             if campo in self.campos_atualizaveis:
                 setattr(self, campo, valor)
         try:
-            db.session.commit()
+            if confirmar:
+                db.session.commit()
+            else:
+                db.session.flush()
         except Exception:
-            db.session.rollback()
+            if confirmar:
+                db.session.rollback()
             raise
         return self
 
-    def deletar(self):
+    def deletar(self, confirmar=True):
         try:
             db.session.delete(self)
-            db.session.commit()
+            if confirmar:
+                db.session.commit()
+            else:
+                db.session.flush()
         except Exception:
-            db.session.rollback()
+            if confirmar:
+                db.session.rollback()
             raise
 
     @classmethod

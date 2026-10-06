@@ -27,7 +27,7 @@ class Questao(CrudMixin):
     dificuldade = db.Column(db.String(10), nullable=False)
     assunto_id = db.Column(
         db.Integer,
-        db.ForeignKey("assuntos.id", ondelete="RESTRICT", onupdate="CASCADE"),
+        db.ForeignKey("assuntos.id", ondelete="RESTRICT", onupdate="RESTRICT"),
         nullable=False,
         index=True,
     )

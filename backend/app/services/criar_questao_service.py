@@ -57,8 +57,11 @@ class CriarQuestaoService:
         ):
             raise DadosInvalidosError("assunto_id deve ser um numero inteiro valido.")
 
-        if Assunto.buscar_por_id(assunto_id) is None:
+        assunto = Assunto.buscar_por_id(assunto_id)
+        if assunto is None:
             raise RecursoNaoEncontradoError("Assunto nao encontrado.")
+        if assunto.status != "ativa" or assunto.materia.status != "ativa":
+            raise DadosInvalidosError("O assunto e sua materia precisam estar ativos.")
 
         explicacao = dados.get("explicacao")
         if explicacao is not None and not isinstance(explicacao, str):

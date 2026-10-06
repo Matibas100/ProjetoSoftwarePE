@@ -73,20 +73,25 @@ class ApplicationFactoryTest(unittest.TestCase):
     def setUp(self):
         self.app = create_app(TestConfig)
 
-    def test_registra_as_onze_rotas_api(self):
+    def test_registra_as_rotas_api(self):
         rules = [rule for rule in self.app.url_map.iter_rules() if rule.rule.startswith("/api/")]
-        self.assertEqual(len(rules), 11)
-        self.assertEqual(
-            {rule.rule for rule in rules},
+        self.assertEqual(len(rules), 24)
+        self.assertTrue(
             {
                 "/api/health",
+                "/api/areas-enem",
                 "/api/materias",
                 "/api/materias/<int:materia_id>",
+                "/api/admin/materias",
+                "/api/materias/<int:materia_id>/impacto-exclusao",
                 "/api/assuntos",
                 "/api/assuntos/<int:assunto_id>",
+                "/api/admin/assuntos",
+                "/api/assuntos/<int:assunto_id>/impacto-transferencia",
+                "/api/assuntos/<int:assunto_id>/transferir",
                 "/api/questoes",
                 "/api/questoes/por-assunto",
-            },
+            }.issubset({rule.rule for rule in rules})
         )
 
     def test_health_e_cors(self):

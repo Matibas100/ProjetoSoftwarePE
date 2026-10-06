@@ -13,7 +13,11 @@ class MateriasApiIntegrationTest(MySQLIntegrationTestCase):
     def _cadastrar_materia(self):
         resposta = self.client.post(
             "/api/materias",
-            json={"nome": self._nome_unico(), "descricao": "Teste de integracao"},
+            json={
+                "nome": self._nome_unico(),
+                "descricao": "Teste de integracao",
+                "area_enem_id": 4,
+            },
         )
         self.assertEqual(resposta.status_code, 201, resposta.get_json())
         materia = resposta.get_json()
@@ -29,7 +33,9 @@ class MateriasApiIntegrationTest(MySQLIntegrationTestCase):
         self.assertIn(materia["id"], ids)
 
     def test_post_sem_nome(self):
-        resposta = self.client.post("/api/materias", json={"descricao": "Sem nome"})
+        resposta = self.client.post(
+            "/api/materias", json={"descricao": "Sem nome", "area_enem_id": 4}
+        )
         self.assertEqual(resposta.status_code, 400)
         self.assertIn("erro", resposta.get_json())
 

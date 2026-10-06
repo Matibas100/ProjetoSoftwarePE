@@ -3,6 +3,16 @@ class ErroAplicacao(Exception):
 
     status_code = 500
 
+    def __init__(self, mensagem, detalhes=None):
+        super().__init__(mensagem)
+        self.detalhes = detalhes
+
+    def to_dict(self):
+        resposta = {"erro": str(self)}
+        if self.detalhes is not None:
+            resposta["detalhes"] = self.detalhes
+        return resposta
+
 
 class DadosInvalidosError(ErroAplicacao):
     status_code = 400

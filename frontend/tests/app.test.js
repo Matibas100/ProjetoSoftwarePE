@@ -13,9 +13,10 @@ describe("tela de materias", () => {
   beforeEach(async () => {
     vi.resetModules();
     prepareGlobalDom();
-    materias = [{ id: 1, nome: "<Fisica>", descricao: "Mecanica" }];
+    materias = [{ id: 1, nome: "<Fisica>", descricao: "Mecanica", area_enem_id: 3 }];
     api = vi.fn(async (path, options = {}) => {
       if (path === "/health") return { status: "online" };
+      if (path === "/areas-enem") return [{ id: 3, nome: "Ciências da Natureza" }];
       if (path === "/materias" && !options.method) return materias;
       if (path === "/materias" && options.method === "POST") return { id: 2 };
       if (path.startsWith("/materias/") && options.method === "PUT") return { id: 1 };
@@ -50,13 +51,17 @@ describe("tela de materias", () => {
 
     app.document.querySelector("#nome").value = "Quimica";
     app.document.querySelector("#descricao").value = "Atomos";
+    app.document.querySelector("#materia-area-enem-id").value = "3";
     app.document.querySelector("#materia-form").dispatchEvent(
       new app.window.Event("submit", { bubbles: true, cancelable: true }),
     );
     await settle();
     expect(api).toHaveBeenCalledWith(
       "/materias",
-      expect.objectContaining({ method: "POST", body: JSON.stringify({ nome: "Quimica", descricao: "Atomos" }) }),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ nome: "Quimica", descricao: "Atomos", area_enem_id: 3 }),
+      }),
     );
     expect(app.document.querySelector("#mensagem").className).toContain("sucesso");
 
@@ -105,6 +110,7 @@ describe("tela de materias", () => {
     prepareGlobalDom();
     api = vi.fn(async (path) => {
       if (path === "/health") throw new Error("falha health");
+      if (path === "/areas-enem") return [{ id: 3, nome: "Natureza" }];
       if (path === "/materias") return [];
       throw new Error("chamada inesperada");
     });
@@ -121,6 +127,7 @@ describe("tela de materias", () => {
 
     api.mockRejectedValueOnce(new Error("falha salvar"));
     app.document.querySelector("#nome").value = "Nova";
+    app.document.querySelector("#materia-area-enem-id").value = "3";
     app.document.querySelector("#materia-form").dispatchEvent(
       new app.window.Event("submit", { bubbles: true, cancelable: true }),
     );

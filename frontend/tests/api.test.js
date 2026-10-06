@@ -42,13 +42,26 @@ describe("apiRequest", () => {
     expect(json).not.toHaveBeenCalled();
   });
 
+  it("explica falha de conexao e permite repetir a chamada", async () => {
+    window.fetch
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce({ status: 200, ok: true, json: vi.fn().mockResolvedValue({ status: "online" }) });
+    await expect(request()).rejects.toMatchObject({
+      name: "ApiError", status: 0,
+      message: "Não foi possível conectar ao servidor. Verifique a conexão e tente novamente.",
+    });
+    await expect(request()).resolves.toEqual({ status: "online" });
+  });
+
   it("lanca ApiError com mensagem da API", async () => {
     window.fetch.mockResolvedValue({
       status: 409,
       ok: false,
-      json: vi.fn().mockResolvedValue({ erro: "Conflito" }),
+      json: vi.fn().mockResolvedValue({ erro: "Conflito", detalhes: { previa: true } }),
     });
-    await expect(request()).rejects.toMatchObject({ name: "ApiError", message: "Conflito", status: 409 });
+    await expect(request()).rejects.toMatchObject({
+      name: "ApiError", message: "Conflito", status: 409, details: { previa: true },
+    });
   });
 
   it("caracteriza JSON invalido em sucesso e erro", async () => {

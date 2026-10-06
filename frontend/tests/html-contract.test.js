@@ -15,6 +15,7 @@ describe("contrato estrutural do HTML", () => {
     const dom = new JSDOM(fs.readFileSync(htmlPath, "utf8"));
     const ids = [
       "api-status", "materia-form", "materia-id", "nome", "descricao",
+      "materia-area-enem-id",
       "salvar-button", "cancelar-button", "recarregar-button", "mensagem",
       "lista-status", "materias-lista", "assunto-form", "assunto-id",
       "assunto-nome", "assunto-materia-id", "assunto-descricao",
@@ -42,6 +43,7 @@ describe("contrato estrutural do HTML", () => {
   it("executa os quatro scripts classicos juntos e na ordem declarada", async () => {
     const apiRequest = vi.fn(async (path) => {
       if (path === "/health") return { status: "online" };
+      if (path === "/areas-enem") return [];
       if (path === "/materias" || path === "/assuntos") return [];
       throw new Error(`chamada inesperada: ${path}`);
     });
@@ -50,8 +52,9 @@ describe("contrato estrutural do HTML", () => {
     try {
       await settle();
       expect(app.executedScripts).toEqual(declaredScripts());
-      expect(apiRequest.mock.calls.slice(0, 5).map(([path]) => path)).toEqual([
+      expect(apiRequest.mock.calls.slice(0, 6).map(([path]) => path)).toEqual([
         "/health",
+        "/areas-enem",
         "/materias",
         "/materias",
         "/assuntos",

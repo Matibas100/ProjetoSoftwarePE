@@ -16,3 +16,17 @@ export function prepareGlobalDom() {
   HTMLElement.prototype.focus = () => {};
   HTMLElement.prototype.scrollIntoView = () => {};
 }
+
+export function prepareAdminGlobalDom(sourcePath) {
+  const html = fs.readFileSync(sourcePath, "utf8").replace(
+    /<script\s+src="[^"]+"><\/script>/g,
+    "",
+  );
+  document.open();
+  document.write(html);
+  document.close();
+  HTMLElement.prototype.focus = () => {};
+  HTMLElement.prototype.scrollIntoView = () => {};
+  HTMLDialogElement.prototype.showModal = function showModal() { this.open = true; };
+  HTMLDialogElement.prototype.close = function close() { this.open = false; };
+}

@@ -38,6 +38,7 @@ describe("tela de assuntos", () => {
     expect(app.document.querySelector("#assunto-materia-id").options).toHaveLength(2);
     expect(app.document.querySelector(".assunto-card h3").textContent).toBe("<Algebra>");
     expect(app.document.querySelector("#assuntos-lista").innerHTML).not.toContain("<algebra>");
+    app.document.querySelector("#assunto-materia-id").value = "1";
     app.document.dispatchEvent(
       new app.window.CustomEvent("materias:atualizadas", {
         detail: [{ id: 1, nome: "Matematica nova" }],
@@ -45,6 +46,7 @@ describe("tela de assuntos", () => {
     );
     await settle();
     expect(app.document.querySelector("#assunto-materia-id").textContent).toContain("Matematica nova");
+    expect(app.document.querySelector("#assunto-materia-id").value).toBe("1");
   });
 
   it("edita, cancela, cadastra e atualiza", async () => {

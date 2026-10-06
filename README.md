@@ -25,8 +25,8 @@ Frontend -> Route -> Controller -> Service -> Model/Repository -> MySQL
 
 Controllers adaptam requisições e respostas HTTP. Cada Service representa um
 caso de uso e concentra suas validações. As Models contêm o CRUD simples. O
-Repository é reservado para a consulta especializada que chama a Stored
-Procedure.
+Repository é reservado para consultas especializadas, contagens, impacto,
+locks e a Stored Procedure existente.
 
 ```text
 Plataforma ENEM/
@@ -57,18 +57,14 @@ Esse nível adicional apenas delimita o código da aplicação; `controllers`,
 `models`, `repositories` e `services` continuam separados e dentro de
 `backend`, enquanto `database/create_database.sql` permanece no local exigido.
 
-## Funcionalidades Implementadas
+## Funcionalidades implementadas
 
-1. Cadastrar matéria
-2. Listar matérias
-3. Atualizar matéria
-4. Excluir matéria
-5. Cadastrar assunto
-6. Listar assuntos
-7. Atualizar assunto
-8. Excluir assunto
-9. Cadastrar questão
-10. Buscar questões por assunto
+- Catálogo `Área do ENEM -> Matéria -> Assunto -> Questão`.
+- ADM-CON-001 em `/admin/materias.html` e ADM-CON-002 em
+  `/admin/assuntos.html`.
+- Filtros, paginação, criação, edição, ciclo de vida e exclusão segura.
+- Transferência explícita de Assunto com prévia de impacto e histórico.
+- Cadastro e busca de Questões do MVP preservados.
 
 ## Componentes implementados
 
@@ -76,6 +72,8 @@ Models:
 
 - `Materia`: campos da matéria, relacionamentos, serialização e CRUD simples.
 - `Assunto`: campos do assunto, vínculo com Matéria, serialização e CRUD simples.
+- `AreaEnem`: catálogo fixo e somente leitura das quatro Áreas do ENEM.
+- `AssuntoTransferencia`: auditoria das transferências entre Matérias.
 - `Questao`: alternativas, resposta, dificuldade, vínculo com Assunto,
   serialização e CRUD simples.
 
@@ -91,6 +89,8 @@ Repository:
 
 - `QuestaoRepository`: encapsula exclusivamente o `CALL` da consulta de
   questões por assunto. O cadastro de Questão não utiliza Repository.
+- `CatalogoRepository`: consultas administrativas, contagens, impacto e locks;
+  não duplica CRUD nem controla commits.
 
 Stored Procedure:
 
@@ -98,6 +98,9 @@ Stored Procedure:
   e devolve o resultado ordenado por `id`.
 
 ## Rotas da API
+
+O catálogo administrativo, suas migrations e a auditoria pré-upgrade estão
+detalhados em [Operação do catálogo acadêmico](docs/technical/operacao-catalogo-academico.md).
 
 | Método | Rota | Finalidade |
 | --- | --- | --- |
@@ -157,7 +160,7 @@ python backend/database/migrate.py status
 python backend/database/migrate.py up
 ```
 
-`up` aplica `000`, `001` e `002` em ordem. Chamá-lo novamente não reexecuta
+`up` aplica `000` a `004` em ordem. Chamá-lo novamente não reexecuta
 migrations aplicadas. `create_database.sql` permanece como snapshot consolidado
 para compatibilidade; uma instalação feita por ele deve adotar o histórico como
 um banco existente.
@@ -224,9 +227,8 @@ Abra `http://127.0.0.1:5500`. As origens autorizadas podem ser alteradas por
 ## Testes automatizados
 
 Os testes unitários Python bloqueiam o `.env`, usam uma URL fictícia apenas
-para inicializar o Flask e não abrem conexão. As 29 integrações originais
-continuam no MySQL 8 real, sem mocks ou SQLite. O frontend usa jsdom sem
-converter os quatro scripts clássicos para ES Modules.
+para inicializar o Flask e não abrem conexão. As integrações usam schemas MySQL
+8 descartáveis, sem mocks ou SQLite. O frontend usa jsdom.
 
 ```powershell
 python backend/tests/run_unit.py
@@ -292,16 +294,14 @@ reinstalar o hook neste clone, execute novamente:
 npm run hooks:install
 ```
 
-Resultado validado no Windows em 2 de setembro de 2026:
+Resultado validado no Windows em 6 de outubro de 2026:
 
-- backend: **54 testes unitários + 30 integrações**, 100% de linhas e 99,02%
-  de branches;
-- frontend: **21 testes**, 99,39% de linhas e 85,19% de branches;
-- `make test-unit`, `make test-integration`, `make test-backend`,
-  `make test-frontend`, `make test-coverage` e `make test` aprovados;
-- gates de linhas, branches e arquivo executável zerado verificados com
-  simulações que reprovaram `make test-coverage` como esperado.
+- backend: **96 testes unitários + 46 integrações**, 94,58% de linhas e
+  85,81% de branches;
+- frontend: **30 testes**, 98,80% de linhas e 86,61% de branches;
+- migrations `000` a `004`, APIs legadas, Stored Procedure e APIs
+  administrativas aprovadas no MySQL real.
 
-As 30 integrações preservam as 29 originais (7 de Matéria, 10 de Assunto e 12
-de Questão) e acrescentam a ordenação da Stored Procedure. Limitações: jsdom
-não substitui um navegador real e a suíte de integração exige MySQL 8 preparado.
+Limitações: jsdom não substitui um navegador real e a suíte de integração
+exige MySQL 8 preparado. O projeto usa somente migrations SQL puro; Alembic e
+Flask-Migrate não fazem parte do fluxo.

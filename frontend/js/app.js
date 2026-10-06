@@ -3,6 +3,7 @@ const form = document.querySelector("#materia-form");
 const materiaIdInput = document.querySelector("#materia-id");
 const nomeInput = document.querySelector("#nome");
 const descricaoInput = document.querySelector("#descricao");
+const areaSelect = document.querySelector("#materia-area-enem-id");
 const salvarButton = document.querySelector("#salvar-button");
 const cancelarButton = document.querySelector("#cancelar-button");
 const recarregarButton = document.querySelector("#recarregar-button");
@@ -11,6 +12,30 @@ const listaStatusElement = document.querySelector("#lista-status");
 const listaElement = document.querySelector("#materias-lista");
 
 let materias = [];
+
+async function carregarAreas() {
+  try {
+    const areas = await apiRequest("/areas-enem");
+    areaSelect.replaceChildren();
+    const inicial = document.createElement("option");
+    inicial.value = "";
+    inicial.textContent = "Selecione uma área";
+    areaSelect.appendChild(inicial);
+    areas.forEach((area) => {
+      const option = document.createElement("option");
+      option.value = area.id;
+      option.textContent = area.nome;
+      areaSelect.appendChild(option);
+    });
+  } catch (erro) {
+    areaSelect.replaceChildren();
+    const option = document.createElement("option");
+    option.textContent = "Não foi possível carregar as áreas";
+    areaSelect.appendChild(option);
+    areaSelect.disabled = true;
+    mostrarMensagem(erro.message, "erro");
+  }
+}
 
 async function verificarApi() {
   try {
@@ -94,6 +119,7 @@ function iniciarEdicao(materia) {
   materiaIdInput.value = materia.id;
   nomeInput.value = materia.nome;
   descricaoInput.value = materia.descricao || "";
+  areaSelect.value = materia.area_enem_id;
   document.querySelector("#titulo-formulario").textContent = "Editar matéria";
   salvarButton.textContent = "Salvar alterações";
   cancelarButton.hidden = false;
@@ -117,6 +143,7 @@ async function salvarMateria(evento) {
   const dados = {
     nome: nomeInput.value,
     descricao: descricaoInput.value,
+    area_enem_id: Number(areaSelect.value),
   };
   const editando = Boolean(materiaId);
 
@@ -182,4 +209,5 @@ cancelarButton.addEventListener("click", limparFormulario);
 recarregarButton.addEventListener("click", carregarMaterias);
 
 verificarApi();
+carregarAreas();
 carregarMaterias();

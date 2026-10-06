@@ -25,7 +25,7 @@ class ControllerDelegationTest(unittest.TestCase):
     @patch("app.controllers.materia_controller.ListarMateriasService.executar", return_value=[])
     def test_listar_materias(self, execute):
         self.assertEqual(self.client.get("/api/materias").get_json(), [])
-        execute.assert_called_once_with()
+        execute.assert_called_once_with(False)
 
     @patch("app.controllers.materia_controller.AtualizarMateriaService.executar", return_value={"id": 2})
     def test_atualizar_materia(self, execute):
@@ -45,7 +45,7 @@ class ControllerDelegationTest(unittest.TestCase):
     @patch("app.controllers.assunto_controller.ListarAssuntosService.executar", return_value=[])
     def test_listar_assuntos(self, execute):
         self.client.get("/api/assuntos")
-        execute.assert_called_once_with()
+        execute.assert_called_once_with(False, None)
 
     @patch("app.controllers.assunto_controller.AtualizarAssuntoService.executar", return_value={"id": 2})
     def test_atualizar_assunto(self, execute):

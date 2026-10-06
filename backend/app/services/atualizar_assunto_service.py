@@ -3,6 +3,10 @@ from sqlalchemy.exc import IntegrityError
 from app.exceptions import ConflitoError, DadosInvalidosError, RecursoNaoEncontradoError
 from app.models.assunto import Assunto
 from app.models.materia import Materia
+from app.domain.catalogo import normalizar_nome_assunto
+from app.repositories.catalogo_repository import CatalogoRepository
+from app.services.catalogo_validacao import validar_descricao, validar_id, validar_nome
+from app.services.transferir_assunto_service import TransferirAssuntoService
 
 
 class AtualizarAssuntoService:
@@ -24,43 +28,43 @@ class AtualizarAssuntoService:
         dados_atualizacao = {}
 
         if "nome" in dados:
-            nome = dados["nome"]
-            if not isinstance(nome, str) or not nome.strip():
-                raise DadosInvalidosError("O nome do assunto nao pode ser vazio.")
-            nome = nome.strip()
-            if len(nome) > 150:
-                raise DadosInvalidosError(
-                    "O nome deve possuir no maximo 150 caracteres."
-                )
+            nome = validar_nome(dados["nome"], "do assunto", 150)
             dados_atualizacao["nome"] = nome
+            dados_atualizacao["nome_normalizado"] = normalizar_nome_assunto(nome)
 
         if "descricao" in dados:
-            descricao = dados["descricao"]
-            if descricao is not None and not isinstance(descricao, str):
-                raise DadosInvalidosError("A descricao deve ser um texto ou nula.")
-            dados_atualizacao["descricao"] = (
-                descricao.strip() if isinstance(descricao, str) else None
-            )
+            dados_atualizacao["descricao"] = validar_descricao(dados["descricao"])
 
         if "materia_id" in dados:
-            materia_id = dados["materia_id"]
-            if (
-                not isinstance(materia_id, int)
-                or isinstance(materia_id, bool)
-                or materia_id <= 0
-            ):
-                raise DadosInvalidosError(
-                    "materia_id deve ser um numero inteiro valido."
-                )
-            if Materia.buscar_por_id(materia_id) is None:
+            materia_id = validar_id(dados["materia_id"], "materia_id")
+            materia = Materia.buscar_por_id(materia_id)
+            if materia is None:
                 raise RecursoNaoEncontradoError("Materia nao encontrada.")
-            dados_atualizacao["materia_id"] = materia_id
+            if materia_id != assunto.materia_id:
+                previa = TransferirAssuntoService.previa(assunto_id, materia_id)
+                return TransferirAssuntoService.executar(
+                    assunto_id,
+                    {
+                        "materia_destino_id": materia_id,
+                        "impacto_esperado": previa["impacto"],
+                    },
+                    atualizacoes=dados_atualizacao,
+                )
+
+        materia_final = dados.get("materia_id", assunto.materia_id)
+        normalizado_final = dados_atualizacao.get(
+            "nome_normalizado", assunto.nome_normalizado
+        )
+        if CatalogoRepository.existe_assunto_equivalente(
+            materia_final, normalizado_final, ignorar_id=assunto_id
+        ):
+            raise ConflitoError("Ja existe um assunto equivalente nesta materia.")
 
         try:
             assunto.atualizar(**dados_atualizacao)
         except IntegrityError as erro:
             raise ConflitoError(
-                "Nao foi possivel atualizar o assunto por conflito de integridade."
+                "Ja existe um assunto equivalente nesta materia."
             ) from erro
 
         return assunto.to_dict()

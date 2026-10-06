@@ -1,7 +1,15 @@
 from sqlalchemy.exc import IntegrityError
 
 from app.exceptions import ConflitoError, DadosInvalidosError
+from app.models.area_enem import AreaEnem
 from app.models.materia import Materia
+from app.services.catalogo_validacao import (
+    validar_descricao,
+    validar_id,
+    validar_nome,
+    validar_status_catalogo,
+)
+from app.exceptions import RecursoNaoEncontradoError
 
 
 class CriarMateriaService:
@@ -10,21 +18,18 @@ class CriarMateriaService:
         if not isinstance(dados, dict):
             raise DadosInvalidosError("Envie os dados da materia em formato JSON.")
 
-        nome = dados.get("nome")
-        if not isinstance(nome, str) or not nome.strip():
-            raise DadosInvalidosError("O nome da materia e obrigatorio.")
-
-        nome = nome.strip()
-        if len(nome) > 100:
-            raise DadosInvalidosError("O nome deve possuir no maximo 100 caracteres.")
-
-        descricao = dados.get("descricao")
-        if descricao is not None and not isinstance(descricao, str):
-            raise DadosInvalidosError("A descricao deve ser um texto ou nula.")
+        nome = validar_nome(dados.get("nome"), "da materia", 100)
+        area_enem_id = validar_id(dados.get("area_enem_id"), "area_enem_id")
+        if AreaEnem.buscar_por_id(area_enem_id) is None:
+            raise RecursoNaoEncontradoError("Area do ENEM nao encontrada.")
+        descricao = validar_descricao(dados.get("descricao"))
+        status = validar_status_catalogo(dados.get("status", "ativa"))
 
         materia = Materia(
             nome=nome,
-            descricao=descricao.strip() if isinstance(descricao, str) else None,
+            descricao=descricao,
+            area_enem_id=area_enem_id,
+            status=status,
         )
 
         try:
