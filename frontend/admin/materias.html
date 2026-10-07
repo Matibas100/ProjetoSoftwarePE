@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Matérias | Plataforma ENEM</title>
-    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/admin.css">
   </head>
-  <body class="admin-page--materias">
-    <div class="admin-shell">
+  <body data-auth="administrador" class="admin-page--materias">
+    <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section><div id="auth-content" hidden><div class="admin-shell">
       <aside class="sidebar" aria-label="Navegação administrativa">
         <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
         <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
@@ -28,8 +28,8 @@
         <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Perfil</span>
         <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#arrow"></use></svg>Área do aluno</span>
         <div class="sidebar-user">
-          <div class="user-row"><span class="avatar">A</span><span><strong>Administrador</strong><small>Ambiente local</small></span></div>
-          <a class="switch-link" href="../index.html">Trocar de ambiente</a>
+          <div class="user-row"><span class="avatar">A</span><span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span></div>
+          <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
         </div>
       </aside>
 
@@ -77,7 +77,7 @@
     </div>
 
     <dialog id="admin-modal" aria-labelledby="admin-modal-titulo"><div class="modal-body"><h2 id="admin-modal-titulo"></h2><p id="admin-modal-texto"></p><div class="modal-actions"><button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button><button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button></div></div></dialog>
-    <script src="../js/api.js"></script>
+    </div><script src="../js/api.js"></script><script src="../js/auth-session.js"></script>
     <script src="../js/admin-common.js"></script>
     <script src="../js/admin-materias.js"></script>
   </body>

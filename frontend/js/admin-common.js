@@ -82,6 +82,7 @@
     let persisted = "";
     const snapshot = () => JSON.stringify(Object.fromEntries(new FormData(form)));
     const dirty = () => snapshot() !== persisted;
+    globalThis.AuthUI?.registerGuard(dirty);
     const update = () => { indicator.hidden = !dirty(); };
     const markPersisted = () => { persisted = snapshot(); update(); };
     form.addEventListener("input", update);

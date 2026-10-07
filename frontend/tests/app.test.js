@@ -13,6 +13,7 @@ describe("tela de materias", () => {
   beforeEach(async () => {
     vi.resetModules();
     prepareGlobalDom();
+    globalThis.AuthUI.registerGuard = vi.fn();
     materias = [{ id: 1, nome: "<Fisica>", descricao: "Mecanica", area_enem_id: 3 }];
     api = vi.fn(async (path, options = {}) => {
       if (path === "/health") return { status: "online" };
@@ -72,6 +73,20 @@ describe("tela de materias", () => {
     );
     await settle();
     expect(api).toHaveBeenCalledWith("/materias/1", expect.objectContaining({ method: "PUT" }));
+  });
+
+  it("distingue abrir edicao de alterar campos para a protecao de logout", async () => {
+    const dirty = globalThis.AuthUI.registerGuard.mock.calls[0][0];
+    expect(dirty()).toBe(false);
+    app.document.querySelector('[data-acao="editar"]').click();
+    expect(dirty()).toBe(false);
+    const name = app.document.querySelector("#nome");
+    name.value = "Fisica editada"; expect(dirty()).toBe(true);
+    name.value = materias[0].nome; expect(dirty()).toBe(false);
+    app.document.querySelector("#descricao").value = "Descricao editada";
+    expect(dirty()).toBe(true);
+    app.document.querySelector("#cancelar-button").click(); await settle();
+    expect(dirty()).toBe(false);
   });
 
   it("cancela e confirma exclusao, inclusive durante edicao", async () => {

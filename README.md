@@ -65,6 +65,18 @@ Esse nível adicional apenas delimita o código da aplicação; `controllers`,
 - Filtros, paginação, criação, edição, ciclo de vida e exclusão segura.
 - Transferência explícita de Assunto com prévia de impacto e histórico.
 - Cadastro e busca de Questões do MVP preservados.
+- Cadastro público de Aluno, login, logout e sessão armazenada no MySQL.
+- Acesso por perfil Aluno/Administrador e reautenticação de operações sensíveis.
+
+O acesso inicial é `/login.html`; o cadastro público cria somente Aluno.
+Administrador é criado pelo comando local, sem senha padrão. Antes de iniciar
+esta versão, aplique a migration `005` e configure `AUTH_SECRET_KEY`.
+Veja [Operação da autenticação escolar](docs/technical/operacao-autenticacao-escolar.md)
+para preparação, comandos, contratos, cookies/origens e recuperação.
+
+As APIs de gestão exigem Administrador; leituras simples do catálogo exigem
+login. Os payloads de sucesso existentes são preservados para o perfil
+autorizado. `/index.html` continua disponível ao Administrador como MVP legado.
 
 ## Componentes implementados
 
@@ -76,6 +88,7 @@ Models:
 - `AssuntoTransferencia`: auditoria das transferências entre Matérias.
 - `Questao`: alternativas, resposta, dificuldade, vínculo com Assunto,
   serialização e CRUD simples.
+- `Usuario`, `Sessao` e `AuthLimite`: identidade, sessão revogável e tentativas.
 
 Services de negócio:
 
@@ -91,6 +104,7 @@ Repository:
   questões por assunto. O cadastro de Questão não utiliza Repository.
 - `CatalogoRepository`: consultas administrativas, contagens, impacto e locks;
   não duplica CRUD nem controla commits.
+- `AutenticacaoRepository`: consultas de sessão, revogação, locks e limpeza.
 
 Stored Procedure:
 
@@ -142,7 +156,8 @@ Copy-Item .env.example .env
 
 Edite o `.env` criado e informe os valores locais de `DB_HOST`, `DB_PORT`,
 `DB_NAME`, `DB_USER` e `DB_PASSWORD`. Também é possível configurar uma
-`DATABASE_URL` completa. Não coloque credenciais reais no `.env.example`.
+`DATABASE_URL` completa. Configure também `AUTH_SECRET_KEY` conforme a
+documentação operacional. Não coloque credenciais reais no `.env.example`.
 
 O `.env` está listado no `.gitignore` e não deve ser enviado ao repositório.
 
@@ -160,7 +175,7 @@ python backend/database/migrate.py status
 python backend/database/migrate.py up
 ```
 
-`up` aplica `000` a `004` em ordem. Chamá-lo novamente não reexecuta
+`up` aplica `000` a `005` em ordem. Chamá-lo novamente não reexecuta
 migrations aplicadas. `create_database.sql` permanece como snapshot consolidado
 para compatibilidade; uma instalação feita por ele deve adotar o histórico como
 um banco existente.
@@ -294,13 +309,15 @@ reinstalar o hook neste clone, execute novamente:
 npm run hooks:install
 ```
 
-Resultado validado no Windows em 6 de outubro de 2026:
+Resultado validado no Windows em 7 de outubro de 2026:
 
-- backend: **96 testes unitários + 46 integrações**, 94,58% de linhas e
-  85,81% de branches;
-- frontend: **30 testes**, 98,80% de linhas e 86,61% de branches;
-- migrations `000` a `004`, APIs legadas, Stored Procedure e APIs
-  administrativas aprovadas no MySQL real.
+- backend: **106 testes unitários + 58 integrações**, 95,54% de linhas e
+  87,64% de branches;
+- frontend: **48 testes**, 98,81% de linhas e 85,55% de branches;
+- migrations `000` a `005`, APIs legadas, Stored Procedure, autenticação e APIs
+  administrativas aprovadas no MySQL real;
+- cadastro/login inspecionados em navegador a 1440/390 px; fluxos dos dois
+  perfis e recuperação de sessão verificados em schema descartável.
 
 Limitações: jsdom não substitui um navegador real e a suíte de integração
 exige MySQL 8 preparado. O projeto usa somente migrations SQL puro; Alembic e

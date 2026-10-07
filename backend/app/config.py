@@ -48,6 +48,8 @@ def _cors_origins():
 
 
 class Config:
+    AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "")
+    AUTH_COOKIE_SECURE = _as_bool(os.getenv("AUTH_COOKIE_SECURE", "false"))
     DEBUG = _as_bool(os.getenv("FLASK_DEBUG", "false"))
     SQLALCHEMY_DATABASE_URI = _database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False

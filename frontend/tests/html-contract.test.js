@@ -31,9 +31,10 @@ describe("contrato estrutural do HTML", () => {
     for (const id of ids) expect(dom.window.document.getElementById(id), id).not.toBeNull();
   });
 
-  it("mantem os quatro scripts classicos na ordem original", () => {
+  it("mantem os scripts classicos com verificacao de sessao antes da gestao", () => {
     expect(declaredScripts()).toEqual([
       "js/api.js",
+      "js/auth-session.js",
       "js/app.js",
       "js/assuntos.js",
       "js/questoes.js",

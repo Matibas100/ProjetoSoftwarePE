@@ -5,9 +5,15 @@ from app.controllers.area_enem_controller import AreaEnemController
 from app.controllers.health_controller import HealthController
 from app.controllers.materia_controller import MateriaController
 from app.controllers.questao_controller import QuestaoController
+from app.controllers.autenticacao_controller import AutenticacaoController
 
 
 api_blueprint = Blueprint("api", __name__)
+
+for nome, metodo in (("csrf", "GET"), ("cadastro", "POST"), ("login", "POST"),
+                     ("sessao", "GET"), ("logout", "POST"), ("reautenticar", "POST")):
+    api_blueprint.add_url_rule(f"/auth/{nome}", endpoint=f"auth_{nome}",
+        view_func=getattr(AutenticacaoController, nome), methods=[metodo])
 
 api_blueprint.add_url_rule(
     "/areas-enem", endpoint="listar_areas_enem", view_func=AreaEnemController.listar,

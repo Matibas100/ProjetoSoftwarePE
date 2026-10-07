@@ -1,3 +1,5 @@
+(async () => {
+if (globalThis.AuthUI && !(await globalThis.AuthUI.ready)) return;
 const statusElement = document.querySelector("#api-status");
 const form = document.querySelector("#materia-form");
 const materiaIdInput = document.querySelector("#materia-id");
@@ -12,6 +14,10 @@ const listaStatusElement = document.querySelector("#lista-status");
 const listaElement = document.querySelector("#materias-lista");
 
 let materias = [];
+let persistedForm = "";
+const formSnapshot = () => JSON.stringify(Object.fromEntries(new FormData(form)));
+globalThis.AuthUI?.registerGuard(() => formSnapshot() !== persistedForm);
+form.addEventListener("reset", () => queueMicrotask(() => { persistedForm = formSnapshot(); }));
 
 async function carregarAreas() {
   try {
@@ -120,6 +126,7 @@ function iniciarEdicao(materia) {
   nomeInput.value = materia.nome;
   descricaoInput.value = materia.descricao || "";
   areaSelect.value = materia.area_enem_id;
+  persistedForm = formSnapshot();
   document.querySelector("#titulo-formulario").textContent = "Editar matéria";
   salvarButton.textContent = "Salvar alterações";
   cancelarButton.hidden = false;
@@ -209,5 +216,7 @@ cancelarButton.addEventListener("click", limparFormulario);
 recarregarButton.addEventListener("click", carregarMaterias);
 
 verificarApi();
-carregarAreas();
+carregarAreas().then(() => { persistedForm = formSnapshot(); });
 carregarMaterias();
+
+})();

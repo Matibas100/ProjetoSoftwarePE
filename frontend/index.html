@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma ENEM</title>
     <link rel="stylesheet" href="css/styles.css">
-  </head>
-  <body>
+  <link rel="stylesheet" href="css/auth.css"></head>
+  <body data-auth="administrador"><section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section><div id="auth-content" hidden><div class="auth-user-bar"><span data-auth-name>Administrador</span><button class="auth-exit" data-auth-exit type="button">Sair</button></div>
     <header class="cabecalho">
       <div class="container">
         <p class="marca">Plataforma ENEM</p>
@@ -247,7 +247,7 @@
         <div id="questoes-lista" class="questoes-lista"></div>
       </section>
     </main>
-    <script src="js/api.js"></script>
+    </div><script src="js/api.js"></script><script src="js/auth-session.js"></script>
     <script src="js/app.js"></script>
     <script src="js/assuntos.js"></script>
     <script src="js/questoes.js"></script>

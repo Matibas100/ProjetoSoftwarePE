@@ -693,9 +693,83 @@ def _detect_catalogo_prefix(connection, tables: set[str]) -> str:
     raise MigrationError("Schema combina estados historicos incompatíveis.")
 
 
+def _detect_auth_prefix(connection, tables: set[str]) -> str:
+    auth_tables = {"usuarios", "sessoes", "auth_limites"}
+    if _detect_catalogo_prefix(connection, tables - auth_tables) != "004":
+        raise MigrationError("Autenticacao exige catalogo final 004.")
+    expected_columns = {
+        "usuarios": [("id", "int", "NO", None, "auto_increment", None),
+            ("nome", "varchar(100)", "NO", None, "", "utf8mb4_unicode_ci"),
+            ("email", "varchar(254)", "NO", None, "", "utf8mb4_bin"),
+            ("senha_hash", "varchar(255)", "NO", None, "", "utf8mb4_unicode_ci"),
+            ("perfil", "varchar(20)", "NO", None, "", "utf8mb4_unicode_ci"),
+            ("ativo", "tinyint(1)", "NO", "1", "", None),
+            ("criado_em", "datetime(6)", "NO", None, "", None)],
+        "sessoes": [("id", "bigint", "NO", None, "auto_increment", None),
+            ("usuario_id", "int", "YES", None, "", None),
+            ("identificador_hash", "char(64)", "NO", None, "", "ascii_bin"),
+            *[(name, "datetime(6)", null, None, "", None) for name, null in
+              [("criada_em", "NO"), ("ultimo_acesso_em", "NO"), ("expira_em", "NO"),
+               ("reautenticada_em", "YES"), ("revogada_em", "YES")]]],
+        "auth_limites": [("chave_hash", "char(64)", "NO", None, "", "ascii_bin"),
+            ("falhas", "smallint unsigned", "NO", None, "", None),
+            ("janela_inicio", "datetime(6)", "NO", None, "", None),
+            ("bloqueado_ate", "datetime(6)", "YES", None, "", None)],
+    }
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT TABLE_NAME, ENGINE, TABLE_COLLATION FROM information_schema.TABLES "
+                       "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('usuarios','sessoes','auth_limites')")
+        if {tuple(row.values()) for row in cursor.fetchall()} != {
+            (table, "InnoDB", "utf8mb4_unicode_ci") for table in auth_tables
+        }:
+            raise MigrationError("Tabelas de autenticacao divergentes.")
+        cursor.execute("SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT, "
+                       "EXTRA, COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() "
+                       "AND TABLE_NAME IN ('usuarios','sessoes','auth_limites') ORDER BY TABLE_NAME, ORDINAL_POSITION")
+        actual = {table: [] for table in auth_tables}
+        for row in cursor.fetchall():
+            values = list(row.values())
+            actual[values[0]].append(tuple(values[1:]))
+        if actual != expected_columns:
+            raise MigrationError("Colunas de autenticacao divergentes.")
+        cursor.execute("SELECT TABLE_NAME, INDEX_NAME, NON_UNIQUE, SEQ_IN_INDEX, COLUMN_NAME "
+                       "FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() "
+                       "AND TABLE_NAME IN ('usuarios','sessoes','auth_limites')")
+        if {tuple(row.values()) for row in cursor.fetchall()} != {
+            ("usuarios", "PRIMARY", 0, 1, "id"), ("usuarios", "uq_usuarios_email", 0, 1, "email"),
+            ("sessoes", "PRIMARY", 0, 1, "id"), ("sessoes", "uq_sessoes_identificador", 0, 1, "identificador_hash"),
+            ("sessoes", "ix_sessoes_usuario", 1, 1, "usuario_id"),
+            ("sessoes", "ix_sessoes_expiracao", 1, 1, "expira_em"),
+            ("auth_limites", "PRIMARY", 0, 1, "chave_hash"),
+        }:
+            raise MigrationError("Indices de autenticacao divergentes.")
+        cursor.execute("SELECT tc.TABLE_NAME, tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE "
+                       "FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.CHECK_CONSTRAINTS cc "
+                       "ON cc.CONSTRAINT_SCHEMA=tc.CONSTRAINT_SCHEMA AND cc.CONSTRAINT_NAME=tc.CONSTRAINT_NAME "
+                       "WHERE tc.TABLE_SCHEMA=DATABASE() AND tc.TABLE_NAME IN ('usuarios','sessoes','auth_limites')")
+        checks = {(row["TABLE_NAME"], row["CONSTRAINT_NAME"]): _check_tokens(row["CHECK_CLAUSE"])
+                  for row in cursor.fetchall()}
+        if checks != {("usuarios", "ck_usuarios_perfil"): _check_tokens("perfil IN ('aluno','administrador')"),
+                      ("usuarios", "ck_usuarios_ativo"): _check_tokens("ativo IN (0,1)")}:
+            raise MigrationError("Checks de autenticacao divergentes.")
+        cursor.execute("SELECT rc.TABLE_NAME, rc.CONSTRAINT_NAME, rc.UPDATE_RULE, rc.DELETE_RULE, "
+                       "k.COLUMN_NAME, k.REFERENCED_TABLE_NAME, k.REFERENCED_COLUMN_NAME "
+                       "FROM information_schema.REFERENTIAL_CONSTRAINTS rc JOIN information_schema.KEY_COLUMN_USAGE k "
+                       "ON k.CONSTRAINT_SCHEMA=rc.CONSTRAINT_SCHEMA AND k.CONSTRAINT_NAME=rc.CONSTRAINT_NAME "
+                       "WHERE rc.CONSTRAINT_SCHEMA=DATABASE() AND rc.TABLE_NAME IN ('usuarios','sessoes','auth_limites')")
+        if {tuple(row.values()) for row in cursor.fetchall()} != {
+            ("sessoes", "fk_sessoes_usuario", "RESTRICT", "RESTRICT", "usuario_id", "usuarios", "id")
+        }:
+            raise MigrationError("Foreign keys de autenticacao divergentes.")
+    return "005"
+
+
 def detect_legacy_prefix(connection) -> str:
     expected_tables = set(EXPECTED_COLUMNS)
     user_tables = _user_tables(connection)
+    if user_tables == {"areas_enem", "materias", "assuntos", "questoes", "assunto_transferencias",
+                       "usuarios", "sessoes", "auth_limites"}:
+        return _detect_auth_prefix(connection, user_tables)
     if user_tables != expected_tables:
         if user_tables == {
             "areas_enem",

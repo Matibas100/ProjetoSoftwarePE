@@ -14,6 +14,7 @@ describe("tela de assuntos", () => {
   beforeEach(async () => {
     vi.resetModules();
     prepareGlobalDom();
+    globalThis.AuthUI.registerGuard = vi.fn();
     materias = [{ id: 1, nome: "Matematica" }];
     assuntos = [{ id: 2, nome: "<Algebra>", descricao: null, materia_id: 1 }];
     api = vi.fn(async (path, options = {}) => {
@@ -93,6 +94,20 @@ describe("tela de assuntos", () => {
     edit.dataset.id = "999";
     edit.click();
     expect(app.document.querySelector("#assunto-mensagem").className).toContain("erro");
+  });
+
+  it("distingue abrir edicao de alterar campos para a protecao de logout", async () => {
+    const dirty = globalThis.AuthUI.registerGuard.mock.calls[0][0];
+    expect(dirty()).toBe(false);
+    app.document.querySelector('[data-acao="editar"]').click();
+    expect(dirty()).toBe(false);
+    const name = app.document.querySelector("#assunto-nome");
+    name.value = "Algebra editada"; expect(dirty()).toBe(true);
+    name.value = assuntos[0].nome; expect(dirty()).toBe(false);
+    app.document.querySelector("#assunto-descricao").value = "Descricao editada";
+    expect(dirty()).toBe(true);
+    app.document.querySelector("#assunto-cancelar-button").click(); await settle();
+    expect(dirty()).toBe(false);
   });
 
   it("mostra estados vazios e falhas", async () => {

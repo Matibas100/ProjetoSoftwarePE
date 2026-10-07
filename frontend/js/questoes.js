@@ -1,5 +1,10 @@
-(() => {
+(async () => {
+  if (globalThis.AuthUI && !(await globalThis.AuthUI.ready)) return;
   const form = document.querySelector("#questao-form");
+  let persistedForm = "";
+  const formSnapshot = () => JSON.stringify(Object.fromEntries(new FormData(form)));
+  globalThis.AuthUI?.registerGuard(() => formSnapshot() !== persistedForm);
+  form.addEventListener("reset", () => queueMicrotask(() => { persistedForm = formSnapshot(); }));
   const assuntoSelect = document.querySelector("#questao-assunto-id");
   const enunciadoInput = document.querySelector("#questao-enunciado");
   const respostaSelect = document.querySelector("#resposta-correta");
@@ -182,5 +187,5 @@
     atualizarAssuntos(evento.detail);
   });
 
-  carregarAssuntos();
+  carregarAssuntos().then(() => { persistedForm = formSnapshot(); });
 })();

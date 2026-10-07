@@ -1,4 +1,5 @@
-(() => {
+(async () => {
+  if (globalThis.AuthUI && !(await globalThis.AuthUI.ready)) return;
   const ui = globalThis.AdminUI;
   const form = document.querySelector("#assunto-form");
   const idInput = document.querySelector("#assunto-id");
@@ -277,7 +278,8 @@
   areaFilter.addEventListener("change", () => { matterFilter.value = ""; refreshMatterFilters(); state.page = 1; load(); });
   matterFilter.addEventListener("change", () => { refreshMatterFilters(); state.page = 1; load(); });
   statusFilter.addEventListener("change", () => { state.page = 1; load(); });
-  search.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.page = 1; load(); }, 250); });
+  search.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => {
+  if (globalThis.AuthUI && !(await globalThis.AuthUI.ready)) return; state.page = 1; load(); }, 250); });
   document.querySelector("#assuntos-anterior").addEventListener("click", () => { state.page -= 1; load(); });
   document.querySelector("#assuntos-proxima").addEventListener("click", () => { state.page += 1; load(); });
 

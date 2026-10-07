@@ -8,6 +8,8 @@ import unittest
 from dataclasses import replace
 from urllib.parse import quote_plus
 from uuid import uuid4
+import secrets
+from flask.testing import FlaskClient
 
 import pymysql
 from pymysql.cursors import DictCursor
@@ -19,6 +21,18 @@ from database import migrate
 
 
 API_TEST_PREFIX = "plataforma_enem_api_test_"
+
+
+class ClienteAutenticado(FlaskClient):
+    csrf = None
+
+    def open(self, *args, **kwargs):
+        if self.csrf:
+            headers = dict(kwargs.get("headers", {}))
+            headers.setdefault("Origin", "http://frontend.test")
+            headers.setdefault("X-CSRF-Token", self.csrf)
+            kwargs["headers"] = headers
+        return super().open(*args, **kwargs)
 SAFE_API_TEST_SCHEMA = re.compile(rf"^{API_TEST_PREFIX}[a-f0-9]{{12}}$")
 
 
@@ -29,6 +43,8 @@ def validate_api_test_schema(name):
 
 
 class MySQLIntegrationTestCase(unittest.TestCase):
+    autenticar_administrador = True
+    cors_origins = ["http://frontend.test"]
     required_tables = {
         "areas_enem", "materias", "assuntos", "questoes", "assunto_transferencias"
     }
@@ -71,9 +87,12 @@ class MySQLIntegrationTestCase(unittest.TestCase):
                 f"@{settings.host}:{settings.port}/{settings.name}?charset={settings.charset}"
             )
             SQLALCHEMY_TRACK_MODIFICATIONS = False
-            CORS_ORIGINS = []
+            CORS_ORIGINS = cls.cors_origins
+            AUTH_SECRET_KEY = secrets.token_hex(32)
+            AUTH_COOKIE_SECURE = False
 
         cls.app = create_app(TestConfig)
+        cls.app.test_client_class = ClienteAutenticado
         cls.app.logger.disabled = True
         cls.client = cls.app.test_client()
         try:
@@ -82,6 +101,18 @@ class MySQLIntegrationTestCase(unittest.TestCase):
                 tables = set(inspect(db.engine).get_table_names())
                 if cls.required_tables - tables:
                     raise RuntimeError("Infraestrutura MySQL incompleta.")
+                if cls.autenticar_administrador:
+                    from app.services.autenticacao_service import CriarUsuarioService
+                    senha = secrets.token_urlsafe(18)
+                    email = f"admin-{uuid4().hex[:8]}@teste.local"
+                    CriarUsuarioService.executar({"nome": "Administrador teste", "email": email,
+                        "senha": senha, "senha_confirmacao": senha}, "administrador")
+                    token = cls.client.get("/api/auth/csrf").get_json()["csrf_token"]
+                    response = cls.client.post("/api/auth/login", json={"email": email, "senha": senha},
+                        headers={"Origin": "http://frontend.test", "X-CSRF-Token": token})
+                    if response.status_code != 200:
+                        raise RuntimeError("Autenticacao real da fixture falhou.")
+                    cls.client.csrf = response.get_json()["csrf_token"]
         except Exception as error:
             cls._drop_schema()
             raise RuntimeError("Preflight MySQL falhou no schema descartavel.") from error

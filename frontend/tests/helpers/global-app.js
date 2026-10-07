@@ -4,6 +4,7 @@ import { htmlPath } from "./classic-app.js";
 
 
 export function prepareGlobalDom() {
+  globalThis.AuthUI = { ready: Promise.resolve(true), registerGuard() {} };
   const html = fs.readFileSync(htmlPath, "utf8").replace(
     /<script\s+src="[^"]+"><\/script>/g,
     "",
@@ -18,6 +19,7 @@ export function prepareGlobalDom() {
 }
 
 export function prepareAdminGlobalDom(sourcePath) {
+  globalThis.AuthUI = { ready: Promise.resolve(true), registerGuard() {} };
   const html = fs.readFileSync(sourcePath, "utf8").replace(
     /<script\s+src="[^"]+"><\/script>/g,
     "",

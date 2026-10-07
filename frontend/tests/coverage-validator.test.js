@@ -15,6 +15,7 @@ function report(overrides = {}) {
     [
       "api.js", "app.js", "assuntos.js", "questoes.js",
       "admin-common.js", "admin-materias.js", "admin-assuntos.js",
+      "auth-page.js", "auth-session.js",
     ].map((name) => {
       const file = path.join(root, "frontend", "js", name);
       return [file, { lines: metric(), branches: metric(), ...overrides[name] }];

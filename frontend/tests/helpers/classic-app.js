@@ -42,7 +42,9 @@ export function createClassicApp({ apiRequest, confirm = () => true } = {}) {
   for (const scriptPath of scripts) {
     execute(path.posix.join("frontend", scriptPath));
     if (scriptPath === "js/api.js" && apiRequest) {
-      dom.window.__apiRequestMock = apiRequest;
+      dom.window.__apiRequestMock = (path, ...args) => path === "/auth/sessao"
+        ? Promise.resolve({ usuario: { id: 1, nome: "Admin teste", email: "admin@teste.local", perfil: "administrador" }, csrf_token: "unit" })
+        : apiRequest(path, ...args);
       dom.window.eval("apiRequest = window.__apiRequestMock");
     }
   }
@@ -75,7 +77,9 @@ export function createAdminApp(htmlFile, { apiRequest } = {}) {
     script.textContent = `${fs.readFileSync(absolutePath, "utf8")}\n//# sourceURL=${absolutePath.replaceAll("\\", "/")}`;
     dom.window.document.head.appendChild(script);
     if (scriptPath.endsWith("api.js") && apiRequest) {
-      dom.window.__apiRequestMock = apiRequest;
+      dom.window.__apiRequestMock = (path, ...args) => path === "/auth/sessao"
+        ? Promise.resolve({ usuario: { id: 1, nome: "Admin teste", email: "admin@teste.local", perfil: "administrador" }, csrf_token: "unit" })
+        : apiRequest(path, ...args);
       dom.window.eval("apiRequest = window.__apiRequestMock");
     }
   }

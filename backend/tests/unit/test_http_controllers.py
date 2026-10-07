@@ -15,6 +15,9 @@ class ControllerDelegationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.client = create_app(TestConfig).test_client()
+        cls.guard = patch("app.auth_http.AutorizarService.executar", return_value=None)
+        cls.guard.start()
+        cls.addClassCleanup(cls.guard.stop)
 
     @patch("app.controllers.materia_controller.CriarMateriaService.executar", return_value={"id": 1})
     def test_cadastrar_materia(self, execute):
