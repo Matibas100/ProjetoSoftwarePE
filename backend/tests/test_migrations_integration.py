@@ -12,6 +12,45 @@ UPGRADE_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "catalogo_upgr
 
 
 class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
+    def test_questoes_006_upgrade_backfill_idempotencia_e_restricoes(self):
+        migrate.run_up(self.connection, self.settings, self.migrations[:3])
+        self._execute_file(UPGRADE_FIXTURES / "validos.sql")
+        migrate.run_up(self.connection, self.settings, self.migrations[:6])
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations[:7]), 1)
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations[:7]), 0)
+        with self.connection.cursor() as cursor:
+            cursor.execute("SELECT q.id,q.status,q.revisao,q.versao_publicada_id,q.criado_em, "
+                "v.enunciado,v.origem,v.ator_id,v.estado,v.materia_id "
+                "FROM questoes q JOIN questao_versoes v ON v.questao_id=q.id WHERE q.id=930001")
+            row=cursor.fetchone()
+            self.assertEqual(row['id'],930001)
+            self.assertEqual(row['status'],'rascunho')
+            self.assertEqual(row['estado'],'rascunho')
+            self.assertEqual(row['origem'],'legado')
+            self.assertIsNone(row['ator_id'])
+            self.assertIsNone(row['versao_publicada_id'])
+            self.assertIsNone(row['criado_em'])
+            self.assertEqual(row['materia_id'],910001)
+            cursor.execute("SELECT COUNT(*) AS total FROM questao_eventos WHERE questao_id=930001")
+            self.assertEqual(cursor.fetchone()['total'],1)
+            with self.assertRaises(Exception):
+                cursor.execute("DELETE FROM questoes WHERE id=930001")
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection),'006')
+
+    def test_questoes_006_fingerprint_recusa_schema_parcial(self):
+        for alteracoes in (
+            ["ALTER TABLE questao_eventos DROP FOREIGN KEY fk_questao_eventos_ator"],
+            ["ALTER TABLE questoes DROP CHECK ck_questoes_revisao",
+             "ALTER TABLE questoes ADD CONSTRAINT ck_questoes_revisao CHECK (revisao <= 1)"],
+        ):
+            self.recreate_schema()
+            migrate.run_up(self.connection,self.settings,self.migrations)
+            with self.connection.cursor() as cursor:
+                for comando in alteracoes:
+                    cursor.execute(comando)
+            with self.assertRaises(migrate.MigrationError):
+                migrate.detect_legacy_prefix(self.connection)
+
     def _execute_file(self, path):
         sql = path.read_text(encoding="utf-8")
         migrate.execute_statements(
@@ -69,15 +108,15 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
             self.assertEqual([row["id"] for row in cursor.fetchall()], [920003, 920004])
 
     def test_instalacao_idempotencia_historico_e_procedure(self):
-        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 6)
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 10)
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
 
         history = migrate.fetch_history(self.connection)
         self.assertEqual(
-            [row["version"] for row in history], ["000", "001", "002", "003", "004", "005"]
+            [row["version"] for row in history], ["000", "001", "002", "003", "004", "005", "006", "007", "008", "009"]
         )
         self.assertTrue(all(row["status"] == "APPLIED" for row in history))
-        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "005")
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "009")
 
         with self.connection.cursor() as cursor:
             cursor.execute(
@@ -121,7 +160,7 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
         self.assertEqual(ids, [first_id, second_id])
 
     def test_baseline_reconhece_todos_os_prefixos_sem_alterar_dados(self):
-        for prefix in ("000", "001", "002", "003", "004", "005"):
+        for prefix in ("000", "001", "002", "003", "004", "005", "006", "007", "008", "009"):
             with self.subTest(prefix=prefix):
                 self.recreate_schema()
                 self.apply_without_history(prefix)
@@ -147,12 +186,12 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
                     cursor.execute("SELECT nome FROM materias WHERE id = %s", (persisted_id,))
                     self.assertEqual(cursor.fetchone()["nome"], "Matemática")
 
-                expected_pending = 5 - int(prefix)
+                expected_pending = 9 - int(prefix)
                 self.assertEqual(
                     migrate.run_up(self.connection, self.settings, self.migrations),
                     expected_pending,
                 )
-                self.assertEqual(migrate.detect_legacy_prefix(self.connection), "005")
+                self.assertEqual(migrate.detect_legacy_prefix(self.connection), "009")
 
     def test_baseline_recusa_schema_divergente(self):
         self.apply_without_history("000")
@@ -249,7 +288,7 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
 
     def test_bootstrap_consolidado_equivale_as_migrations(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
-        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "005")
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "009")
 
         other_name = self.schema_name[:-12] + "f" * 12
         if other_name == self.schema_name:
@@ -276,7 +315,15 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
                     continue
                 selected.append(statement)
             migrate.execute_statements(other_connection, selected)
-            self.assertEqual(migrate.detect_legacy_prefix(other_connection), "005")
+            self.assertEqual(migrate.detect_legacy_prefix(other_connection), "009")
+            def estrutura(connection):
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT TABLE_NAME,COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,"
+                        "COLUMN_DEFAULT,EXTRA,COLLATION_NAME FROM information_schema.COLUMNS "
+                        "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME<>'schema_migrations' "
+                        "ORDER BY TABLE_NAME,ORDINAL_POSITION")
+                    return cursor.fetchall()
+            self.assertEqual(estrutura(self.connection),estrutura(other_connection))
         finally:
             other_connection.close()
             with self.admin_connection.cursor() as cursor:

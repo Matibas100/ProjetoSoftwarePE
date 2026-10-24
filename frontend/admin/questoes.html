@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Questões | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body data-auth="administrador" data-questao-view="lista" class="admin-page--questoes">
+    <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section><div id="auth-content" hidden><div class="admin-shell">
+      <aside class="sidebar" aria-label="Navegação administrativa">
+        <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+        <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+        <p class="nav-label">Administração</p>
+        <a class="nav-link" href="dashboard.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Dashboard</a>
+        <p class="nav-label">Conteúdo</p>
+        <a class="nav-link" href="materias.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Matérias</a>
+        <a class="nav-link" href="assuntos.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#list"></use></svg>Assuntos</a>
+        <a class="nav-link" href="questoes.html" aria-current="page"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Questões</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Resumos</span>
+        <p class="nav-label">Avaliações</p>
+        <a class="nav-link" href="simulados.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Simulados</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Temas de Redação</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Redações</span>
+        <p class="nav-label">Gestão</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Usuários</span>
+        <p class="nav-label">Minha conta</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Perfil</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#arrow"></use></svg>Área do aluno</span>
+        <div class="sidebar-user">
+          <div class="user-row"><span class="avatar">A</span><span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span></div>
+          <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="topbar"><strong class="topbar-title">Questões</strong><div class="topbar-actions"><span class="environment-badge">Ambiente administrativo</span><span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span><span class="avatar">A</span></div></header>
+        <main class="main-content">
+<header class="page-heading"><div><h1>Gestão de Questões</h1><p>Gerencie o banco de questões com classificação e revisão.</p></div><a class="button button--primary" id="questao-nova" href="questao.html">Cadastrar questão</a></header>
+<form id="questoes-filtros" class="card questoes-filters" role="search">
+<div class="field"><label for="busca">Busca</label><input id="busca" name="busca" maxlength="100" placeholder="Buscar no enunciado"></div>
+<div class="field"><label for="area_enem_id">Área do ENEM</label><select id="area_enem_id" name="area_enem_id"><option value="">Todas</option></select></div><div class="field"><label for="materia_id">Matéria</label><select id="materia_id" name="materia_id"><option value="">Todas</option></select></div><div class="field"><label for="assunto_id">Assunto</label><select id="assunto_id" name="assunto_id"><option value="">Todas</option></select></div><div class="field"><label for="dificuldade">Dificuldade</label><select id="dificuldade" name="dificuldade"><option value="">Todas</option><option value="facil">Fácil</option><option value="media">Média</option><option value="dificil">Difícil</option></select></div><div class="field"><label for="status">Status</label><select id="status" name="status"><option value="">Todos</option><option value="rascunho">Rascunho</option><option value="publicada">Publicada</option><option value="arquivada">Arquivada</option></select></div>
+<div class="form-actions"><button class="button button--outline" id="questoes-limpar" type="button">Limpar filtros</button><button class="button button--primary" type="submit">Filtrar</button></div></form>
+<section class="card table-card" aria-label="Questões cadastradas"><div class="table-scroll"><table><thead><tr><th>Enunciado</th><th>Área</th><th>Matéria</th><th>Assunto</th><th>Dificuldade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="questoes-corpo"></tbody></table></div>
+<p id="questoes-estado" class="table-state" role="status">Carregando questões...</p><button id="questoes-recarregar" class="button button--outline" type="button">Recarregar</button>
+<nav class="pagination" aria-label="Paginação de questões"><span id="questoes-total"></span><span><button id="questoes-anterior" class="button button--text" type="button">Anterior</button><span id="questoes-pagina">Página 1</span><button id="questoes-proxima" class="button button--text" type="button">Próxima</button></span></nav></section>
+<section class="card editor-card"><h2>Revisão e publicação</h2><p>O cadastro cria um rascunho. Abra uma questão para editar, revisar e publicar uma versão, ou arquivar mantendo o histórico.</p><p class="screen-note">Importação, geração por IA, mídia e operações em lote ainda estão indisponíveis.</p></section>
+</main>
+      </div>
+    </div>
+
+    <dialog id="admin-modal" aria-labelledby="admin-modal-titulo"><div class="modal-body"><h2 id="admin-modal-titulo"></h2><p id="admin-modal-texto"></p><div class="modal-actions"><button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button><button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button></div></div></dialog>
+    </div><script src="../js/api.js"></script><script src="../js/auth-session.js"></script>
+    <script src="../js/admin-common.js"></script>
+    <script src="../js/admin-questoes.js"></script>
+  </body>
+</html>

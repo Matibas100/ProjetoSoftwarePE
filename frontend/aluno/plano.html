@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Plano de Estudos | Plataforma ENEM</title><link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/aluno.css"><link rel="stylesheet" href="../css/plano.css"></head>
+<body data-auth="aluno">
+<section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section>
+<div id="auth-content" class="aluno-shell" hidden>
+  <nav class="aluno-nav" aria-label="Navegação do aluno">
+    <img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+    <a href="/aluno/inicio.html">Meu início</a><small>ESTUDAR</small>
+    <a href="/aluno/questoes.html">Praticar questões</a><a href="/aluno/historico.html">Meu histórico</a><a href="/aluno/simulados.html">Simulados</a>
+    <small>MINHA EVOLUÇÃO</small><a href="/aluno/desempenho.html">Desempenho</a><a href="/aluno/plano.html" aria-current="page">Plano de Estudos</a>
+    <small>EM BREVE</small><span>Resumos · indisponível</span><span>Tutor IA · indisponível</span>
+  </nav>
+  <div class="aluno-main">
+    <header class="aluno-top"><strong>Plano de Estudos</strong><div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
+    <main class="aluno-page">
+      <h1>Plano de Estudos</h1><p class="aluno-subtitle">Transforme seu desempenho em próximos passos, no seu ritmo.</p>
+      <div class="plano-intro"><div><strong>Até três assuntos para praticar</strong><p>Prioridades dos últimos 30 dias UTC, com pelo menos cinco respostas por assunto.</p></div><a href="/aluno/desempenho.html">Ver meu desempenho →</a></div>
+      <div class="pratica-acoes plano-toolbar">
+        <button id="plano-gerar" class="auth-primary" type="button" data-plano-action hidden>Gerar meu plano</button>
+        <button id="plano-recalcular" class="auth-primary" type="button" data-plano-action hidden>Recalcular plano</button>
+        <button id="plano-recarregar" class="auth-secondary" type="button" data-plano-action>Consultar plano</button>
+        <button id="plano-retentar" class="auth-secondary" type="button" data-plano-action hidden>Tentar ação pendente</button>
+      </div>
+      <p id="plano-status" class="pratica-status" role="status" aria-live="polite" tabindex="-1">Carregando plano...</p>
+      <div class="plano-colunas">
+        <section class="pratica-card plano-prioridades" aria-labelledby="plano-lista-titulo" aria-busy="true" id="plano-conteudo">
+          <h2 id="plano-lista-titulo">Suas prioridades</h2>
+          <p id="plano-meta" data-plano-private></p><p id="plano-vazio" data-plano-private></p>
+          <ol id="plano-lista" class="pratica-lista" data-plano-private></ol>
+          <a href="/aluno/questoes.html">Praticar questões livremente →</a>
+        </section>
+        <aside class="pratica-card plano-explicacao"><h2>Você decide o próximo passo</h2>
+          <p>A lista prioriza a menor taxa de acerto entre os assuntos que você praticou. Em empate, considera a maior amostra e depois o menor ID do assunto.</p>
+          <p>Uma prioridade pode ter 100% de acerto. A comparação é relativa e não comprova dificuldade ou domínio.</p>
+          <hr><p><strong>Conclusão manual</strong></p><p>Marque um item quando terminar seu estudo. Isso não altera respostas, resultados ou desempenho.</p>
+          <p>Novas respostas atualizam o desempenho. O plano só muda quando você confirma um recálculo; as gerações anteriores são preservadas.</p>
+          <p class="plano-recorte">Agenda, duração e reagendamento indisponíveis neste plano básico.</p>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+<dialog id="plano-confirmacao" class="auth-dialog" aria-labelledby="plano-confirmacao-titulo" aria-describedby="plano-confirmacao-texto">
+  <h2 id="plano-confirmacao-titulo">Recalcular seu plano?</h2><p id="plano-confirmacao-texto">O plano atual será substituído por uma nova geração. O plano anterior e suas conclusões serão preservados no histórico.</p>
+  <div class="auth-dialog-actions"><button id="plano-cancelar" class="auth-secondary" type="button">Cancelar</button><button id="plano-confirmar" class="auth-primary" type="button">Confirmar recálculo</button></div>
+</dialog>
+<script src="../js/api.js"></script><script src="../js/auth-session.js"></script><script src="../js/aluno-plano.js"></script>
+</body></html>

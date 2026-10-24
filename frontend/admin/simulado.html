@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulados | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/simulados.css"></head>
+  <body data-auth="administrador" data-simulado="admin-editor" class="admin-page--questoes">
+    <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section><div id="auth-content" hidden><div class="admin-shell">
+      <aside class="sidebar" aria-label="Navegação administrativa">
+        <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+        <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+        <p class="nav-label">Administração</p>
+        <a class="nav-link" href="dashboard.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Dashboard</a>
+        <p class="nav-label">Conteúdo</p>
+        <a class="nav-link" href="materias.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Matérias</a>
+        <a class="nav-link" href="assuntos.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#list"></use></svg>Assuntos</a>
+        <a class="nav-link" href="questoes.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Questões</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Resumos</span>
+        <p class="nav-label">Avaliações</p>
+        <a class="nav-link" href="simulados.html" aria-current="page"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Simulados</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Temas de Redação</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Redações</span>
+        <p class="nav-label">Gestão</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Usuários</span>
+        <p class="nav-label">Minha conta</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Perfil</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#arrow"></use></svg>Área do aluno</span>
+        <div class="sidebar-user">
+          <div class="user-row"><span class="avatar">A</span><span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span></div>
+          <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="topbar"><strong class="topbar-title">Simulados</strong><div class="topbar-actions"><span class="environment-badge">Ambiente administrativo</span><span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span><span class="avatar">A</span></div></header>
+        <main class="main-content"><header class="page-heading"><div><h1>Criar simulado manual</h1><p>Selecione, organize e revise uma composição de 1 a 180 Questões.</p></div><a href="simulados.html">Voltar à gestão</a></header>
+<p id="sim-unsaved" hidden>Alterações não salvas.</p><form id="sim-form" class="card editor-card">
+<label for="titulo">Título</label><input id="titulo" name="titulo" minlength="3" maxlength="150" required>
+<p id="sim-revisao"></p><h2>Composição selecionada</h2><ol id="sim-selecao" data-sim-private></ol>
+<button id="sim-salvar" class="button button--primary">Salvar rascunho</button></form>
+<section id="sim-banco" class="card editor-card"><h2>Banco de Questões publicadas</h2><p>A disponibilidade atual é validada pelo servidor ao salvar e publicar.</p>
+<form id="sim-busca-form"><label for="busca">Buscar no enunciado</label><input id="busca" maxlength="100"><button class="button button--outline">Buscar</button></form>
+<ul id="sim-questoes" data-sim-private></ul><button id="sim-banco-anterior" type="button" class="button button--text">Anterior</button><span id="sim-banco-pagina"></span><button id="sim-banco-proxima" type="button" class="button button--text">Próxima</button></section>
+<section id="sim-publicacao" class="card editor-card" hidden><h2>Revisar e publicar</h2><p>Confira título, ordem e conteúdo das Questões. A publicação cria uma versão imutável.</p>
+<label for="sim-motivo">Motivo da decisão</label><textarea id="sim-motivo" minlength="3" maxlength="500"></textarea>
+<div class="form-actions"><button id="sim-publicar" class="button button--primary" type="button">Revisar e publicar</button><button id="sim-arquivar" class="button button--danger" type="button">Arquivar simulado</button></div></section><p id="sim-status" role="status" tabindex="-1" aria-live="polite"></p><button id="sim-recarregar" type="button" class="button button--outline auth-secondary">Recarregar</button><p>Composição manual fixa, sem prazo. Geradores, importação, calendário e TRI indisponíveis.</p></main>
+      </div>
+    </div>
+
+    <dialog id="admin-modal" aria-labelledby="admin-modal-titulo"><div class="modal-body"><h2 id="admin-modal-titulo"></h2><p id="admin-modal-texto"></p><div class="modal-actions"><button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button><button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button></div></div></dialog>
+    </div><script src="../js/api.js"></script><script src="../js/auth-session.js"></script>
+    <script src="../js/admin-common.js"></script>
+    <script src="../js/admin-simulados.js"></script>
+  </body>
+</html>

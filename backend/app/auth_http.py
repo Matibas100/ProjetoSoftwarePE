@@ -34,16 +34,19 @@ def proteger_api():
         leitura_catalogo = request.method in {"GET", "HEAD"} and request.path in {
             "/api/areas-enem", "/api/materias", "/api/assuntos"}
         rota_auth = request.path.startswith("/api/auth/")
-        admin = not rota_auth and (not leitura_catalogo or request.args.get("status") == "todos")
+        rota_aluno = request.path.startswith("/api/aluno/")
+        admin = not rota_auth and not rota_aluno and (not leitura_catalogo or request.args.get("status") == "todos")
         mutacao = request.method not in {"GET", "HEAD"}
         dados = request.get_json(silent=True)
         sensivel = not rota_auth and (request.method == "DELETE" or
-            request.path.rsplit("/", 1)[-1] in {"inativar", "arquivar", "reativar", "transferir"} or
+            request.path.rsplit("/", 1)[-1] in {"inativar", "arquivar", "reativar", "transferir", "publicar"} or
             (request.method == "PUT" and isinstance(dados, dict) and (
                 ("/materias/" in request.path and bool({"status", "area_enem_id"} & dados.keys())) or
                 ("/assuntos/" in request.path and "materia_id" in dados))))
         g.auth_sessao = AutorizarService.executar(identificador, admin, mutacao, origem,
             origens, csrf, chave, sensivel)
+        if rota_aluno and g.auth_sessao.usuario.perfil != "aluno":
+            raise AutenticacaoError("Você não tem acesso a esta operação.", 403, "acesso_negado")
     except AutenticacaoError as erro:
         return resposta_erro(erro)
     except Exception:
@@ -53,6 +56,6 @@ def proteger_api():
 
 
 def sem_cache_auth(resposta):
-    if request.path.startswith("/api/auth/") or getattr(g, "auth_sessao", None) is not None:
+    if request.path.startswith(("/api/auth/", "/api/aluno/", "/api/admin/")) or getattr(g, "auth_sessao", None) is not None:
         resposta.headers["Cache-Control"] = "no-store"
     return resposta

@@ -1,4 +1,5 @@
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from app import create_app
@@ -15,7 +16,7 @@ class ControllerDelegationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.client = create_app(TestConfig).test_client()
-        cls.guard = patch("app.auth_http.AutorizarService.executar", return_value=None)
+        cls.guard = patch("app.auth_http.AutorizarService.executar", return_value=SimpleNamespace(usuario_id=1))
         cls.guard.start()
         cls.addClassCleanup(cls.guard.stop)
 
@@ -63,7 +64,7 @@ class ControllerDelegationTest(unittest.TestCase):
     @patch("app.controllers.questao_controller.CriarQuestaoService.executar", return_value={"id": 1})
     def test_cadastrar_questao(self, execute):
         self.client.post("/api/questoes", json={"enunciado": "x"})
-        execute.assert_called_once_with({"enunciado": "x"})
+        execute.assert_called_once_with({"enunciado": "x"}, 1)
 
     @patch("app.controllers.questao_controller.BuscarQuestoesPorAssuntoService.executar", return_value=[])
     def test_buscar_questoes(self, execute):

@@ -6,9 +6,52 @@ from app.controllers.health_controller import HealthController
 from app.controllers.materia_controller import MateriaController
 from app.controllers.questao_controller import QuestaoController
 from app.controllers.autenticacao_controller import AutenticacaoController
+from app.controllers.pratica_controller import PraticaController
+from app.controllers.simulado_controller import SimuladoController
+from app.controllers.desempenho_controller import DesempenhoController
+from app.controllers.plano_estudo_controller import PlanoEstudoController
 
 
 api_blueprint = Blueprint("api", __name__)
+
+for caminho, nome, metodo in (("/aluno/plano", "consultar", "GET"),
+    ("/aluno/plano/gerar", "gerar", "POST"), ("/aluno/plano/recalcular", "recalcular", "POST"),
+    ("/aluno/plano/itens/<int:item_id>/concluir", "concluir", "POST")):
+    api_blueprint.add_url_rule(caminho, endpoint=f"plano_{nome}", view_func=getattr(PlanoEstudoController, nome), methods=[metodo])
+
+for caminho, nome in (("/aluno/desempenho", "diagnostico"), ("/aluno/dashboard", "aluno"), ("/admin/dashboard", "admin")):
+    api_blueprint.add_url_rule(caminho, endpoint=f"desempenho_{nome}", view_func=getattr(DesempenhoController, nome), methods=["GET"])
+
+for caminho, nome, metodo in (("/admin/simulados", "admin_lista", "GET"),
+    ("/admin/simulados", "criar", "POST"), ("/admin/simulados/<int:simulado_id>", "admin_detalhe", "GET"),
+    ("/admin/simulados/<int:simulado_id>", "editar", "PUT"),
+    ("/admin/simulados/<int:simulado_id>/publicar", "publicar", "POST"),
+    ("/admin/simulados/<int:simulado_id>/arquivar", "arquivar", "POST"),
+    ("/aluno/simulados", "catalogo", "GET"), ("/aluno/tentativas-simulado", "iniciar", "POST"),
+    ("/aluno/tentativas-simulado", "historico", "GET"),
+    ("/aluno/tentativas-simulado/<int:tentativa_id>", "tentativa", "GET"),
+    ("/aluno/tentativas-simulado/<int:tentativa_id>/respostas/<int:item_id>", "responder", "PUT"),
+    ("/aluno/tentativas-simulado/<int:tentativa_id>/finalizar", "finalizar", "POST")):
+    api_blueprint.add_url_rule(caminho, endpoint=f"simulado_{nome}", view_func=getattr(SimuladoController, nome), methods=[metodo])
+for modo in ("resultado", "correcao"):
+    api_blueprint.add_url_rule(f"/aluno/tentativas-simulado/<int:tentativa_id>/{modo}",
+        endpoint=f"simulado_{modo}", view_func=SimuladoController.tentativa, defaults={"modo": modo}, methods=["GET"])
+
+for caminho, nome, metodo in (("/aluno/questoes", "questoes", "GET"),
+    ("/aluno/praticas", "iniciar", "POST"), ("/aluno/praticas", "historico", "GET"),
+    ("/aluno/praticas/<int:tentativa_id>", "detalhe", "GET"),
+    ("/aluno/praticas/<int:tentativa_id>/resposta", "responder", "POST")):
+    api_blueprint.add_url_rule(caminho, endpoint=f"pratica_{nome}",
+        view_func=getattr(PraticaController, nome), methods=[metodo])
+
+api_blueprint.add_url_rule("/admin/questoes", endpoint="listar_questoes_admin",
+    view_func=QuestaoController.listar_admin, methods=["GET"])
+for nome, metodo in (("detalhe", "GET"), ("editar", "PUT")):
+    api_blueprint.add_url_rule("/questoes/<int:questao_id>", endpoint=f"questao_{nome}",
+        view_func=getattr(QuestaoController, nome), methods=[metodo])
+for nome in ("publicar", "arquivar"):
+    api_blueprint.add_url_rule(f"/questoes/<int:questao_id>/{nome}", endpoint=f"questao_{nome}",
+        view_func=getattr(QuestaoController, nome), methods=["POST"])
 
 for nome, metodo in (("csrf", "GET"), ("cadastro", "POST"), ("login", "POST"),
                      ("sessao", "GET"), ("logout", "POST"), ("reautenticar", "POST")):

@@ -12,6 +12,13 @@ class CatalogoRepository:
     """Consultas especializadas, agregacoes e locks do catalogo."""
 
     @staticmethod
+    def contagens_dashboard(contexto):
+        return {"materias_ativas": contexto.executar(select(func.count()).select_from(Materia)
+            .where(Materia.status == "ativa")).scalar_one(),
+            "assuntos_ativos": contexto.executar(select(func.count()).select_from(Assunto)
+            .where(Assunto.status == "ativa")).scalar_one()}
+
+    @staticmethod
     def listar_materias_admin(filtros, pagina, por_pagina):
         condicoes = []
         if filtros.get("busca"):

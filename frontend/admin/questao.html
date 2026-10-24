@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Questões | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body data-auth="administrador" data-questao-view="editor" class="admin-page--questoes">
+    <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section><div id="auth-content" hidden><div class="admin-shell">
+      <aside class="sidebar" aria-label="Navegação administrativa">
+        <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+        <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+        <p class="nav-label">Administração</p>
+        <a class="nav-link" href="dashboard.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Dashboard</a>
+        <p class="nav-label">Conteúdo</p>
+        <a class="nav-link" href="materias.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Matérias</a>
+        <a class="nav-link" href="assuntos.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#list"></use></svg>Assuntos</a>
+        <a class="nav-link" href="questoes.html" aria-current="page"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Questões</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Resumos</span>
+        <p class="nav-label">Avaliações</p>
+        <a class="nav-link" href="simulados.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Simulados</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Temas de Redação</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Redações</span>
+        <p class="nav-label">Gestão</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Usuários</span>
+        <p class="nav-label">Minha conta</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Perfil</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#arrow"></use></svg>Área do aluno</span>
+        <div class="sidebar-user">
+          <div class="user-row"><span class="avatar">A</span><span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span></div>
+          <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="topbar"><strong class="topbar-title">Questões</strong><div class="topbar-actions"><span class="environment-badge">Ambiente administrativo</span><span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span><span class="avatar">A</span></div></header>
+        <main class="main-content">
+<header class="page-heading"><div><h1 id="questao-titulo">Cadastrar questão manualmente</h1><p>Preencha o conteúdo e salve o rascunho antes de publicar.</p></div><a class="button button--outline" id="questao-voltar" href="questoes.html">Voltar à listagem</a></header>
+<p id="questao-carregando" role="status">Carregando catálogo e questão...</p><button id="questao-recarregar" class="button button--outline" type="button">Recarregar dados</button>
+<div id="questao-mensagem" class="notice" role="status" aria-live="polite" hidden></div>
+<form id="questao-form" novalidate><div class="editor-grid"><section class="card editor-card">
+<h2>Classificação <span id="questao-unsaved" class="unsaved" hidden>Alterações não salvas</span></h2><div class="editor-fields">
+<div class="field"><label for="area_enem_id">Área do ENEM</label><select id="area_enem_id" name="area_enem_id"><option value="">Selecione</option></select></div><div class="field"><label for="materia_id">Matéria</label><select id="materia_id" name="materia_id"><option value="">Selecione</option></select></div><div class="field"><label for="assunto_id">Assunto</label><select id="assunto_id" name="assunto_id"><option value="">Selecione</option></select></div><div class="field"><label for="dificuldade">Dificuldade</label><select id="dificuldade" name="dificuldade"><option value="media">Média</option><option value="facil">Fácil</option><option value="dificil">Difícil</option></select></div>
+</div><h2>Conteúdo da questão</h2><div class="field"><label for="enunciado">Enunciado</label><textarea id="enunciado" name="enunciado" rows="5" required></textarea></div><h2>Alternativas e resposta</h2><p>Preencha as cinco alternativas e selecione exatamente uma resposta correta.</p><div class="editor-fields">
+<div class="field"><label for="alternativa_a">Alternativa A</label><textarea id="alternativa_a" name="alternativa_a" rows="2" required></textarea></div><div class="field"><label for="alternativa_b">Alternativa B</label><textarea id="alternativa_b" name="alternativa_b" rows="2" required></textarea></div><div class="field"><label for="alternativa_c">Alternativa C</label><textarea id="alternativa_c" name="alternativa_c" rows="2" required></textarea></div><div class="field"><label for="alternativa_d">Alternativa D</label><textarea id="alternativa_d" name="alternativa_d" rows="2" required></textarea></div><div class="field"><label for="alternativa_e">Alternativa E</label><textarea id="alternativa_e" name="alternativa_e" rows="2" required></textarea></div><div class="field"><label for="resposta_correta">Resposta correta</label><select id="resposta_correta" name="resposta_correta"><option value="">Selecione</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select></div>
+</div></section><aside class="card state-card"><h2>Resposta e explicação</h2><div class="field"><label for="explicacao">Explicação / resolução (opcional)</label><textarea id="explicacao" name="explicacao" rows="7"></textarea></div><h2>Publicação e histórico</h2>
+<p id="questao-status">Novo rascunho</p><p id="questao-revisao"></p><ul id="questao-versoes"></ul><p>A versão publicada conserva conteúdo, gabarito e classificação. Salvar uma edição não substitui essa versão.</p><p class="screen-note">Mídia, importação, IA e revisão em lote ainda estão indisponíveis.</p></aside></div>
+<div class="form-actions questao-save"><button id="questao-cancelar" class="button button--outline" type="button">Cancelar</button><button id="questao-salvar" class="button button--primary" type="submit" disabled>Salvar rascunho</button></div></form>
+<section class="card editor-card" id="questao-acoes" hidden><h2>Revisar e retirar de uso</h2><div class="field"><label for="questao-motivo">Motivo da publicação ou do arquivamento</label><textarea id="questao-motivo" minlength="3" maxlength="500" rows="2"></textarea></div><p>Revise o enunciado, as alternativas, o gabarito e a classificação antes de confirmar. Arquivar impede novos usos e mantém versões anteriores.</p><div class="form-actions"><button id="questao-arquivar" type="button" class="button button--danger">Arquivar questão</button><button id="questao-publicar" type="button" class="button button--primary">Revisar e publicar</button></div></section>
+</main>
+      </div>
+    </div>
+
+    <dialog id="admin-modal" aria-labelledby="admin-modal-titulo"><div class="modal-body"><h2 id="admin-modal-titulo"></h2><p id="admin-modal-texto"></p><div class="modal-actions"><button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button><button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button></div></div></dialog>
+    </div><script src="../js/api.js"></script><script src="../js/auth-session.js"></script>
+    <script src="../js/admin-common.js"></script>
+    <script src="../js/admin-questoes.js"></script>
+  </body>
+</html>

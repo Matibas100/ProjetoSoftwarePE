@@ -29,6 +29,20 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 1100px; background: #f5f7fb; }
+.questoes-filters { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 16px; padding: 24px; margin-bottom: 24px; }
+.questoes-filters .form-actions { grid-column: 3 / -1; align-self: end; justify-content: flex-end; }
+.questao-save { margin: 24px 0; }
+.admin-page--questoes .table-card td:first-child { max-width: 260px; overflow-wrap: anywhere; }
+.admin-page--questoes .editor-grid { align-items: start; }
+.status-pill--publicada { color: var(--success); background: #e7f5ee; }
+.status-pill--rascunho { color: var(--muted); background: #eef0f5; }
+
+/* O recorte de Questões ajusta apenas seus cards, preservando Matérias/Assuntos. */
+.admin-page--questoes .table-card { min-height: 0; }
+.admin-page--questoes .table-state:empty { display: none; }
+.admin-page--questoes #questoes-recarregar { align-self: flex-start; margin: 16px 12px; }
+.admin-page--questoes .editor-card h2:not(:first-child),
+.admin-page--questoes .state-card h2:not(:first-child) { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 20px; }
 button, input, select, textarea { font: inherit; }
 button, a, input, select, textarea { outline-offset: 3px; }
 :focus-visible { outline: 3px solid var(--violet); }

@@ -13,9 +13,15 @@ async function setup(file = "login.html", api = vi.fn().mockRejectedValue(expire
   document.open(); document.write(html); document.close();
   HTMLDialogElement.prototype.showModal = function () { this.open = true; };
   HTMLDialogElement.prototype.close = function () { this.open = false; };
-  globalThis.apiRequest = api; globalThis.resetCsrf = vi.fn();
+  // Observar a navegação antes de resolver a primeira consulta de sessão.
+  let release;
+  const bootstrap = new Promise((resolve) => { release = resolve; });
+  globalThis.apiRequest = (...args) => bootstrap.then(() => api(...args));
+  globalThis.resetCsrf = vi.fn();
   await import("../js/auth-session.js");
   globalThis.AuthUI.navigate = vi.fn();
+  globalThis.apiRequest = api;
+  release();
   if (["login.html", "cadastro.html"].includes(file)) await import("../js/auth-page.js");
   await settle();
   return api;
@@ -56,7 +62,7 @@ describe("cadastro e login", () => {
     expect(Object.keys(body).sort()).toEqual(["email", "nome", "senha", "senha_confirmacao"]);
     expect(sessionStorage.getItem("cadastro-email")).toBe(aluno.email);
     expect(sessionStorage.getItem("senha")).toBeNull();
-    expect(AuthUI.navigate).toHaveBeenCalledWith("/login.html");
+    expect(AuthUI.navigate).toHaveBeenCalledWith("/login");
     await setup();
     expect(document.querySelector("#auth-email").value).toBe(aluno.email);
     expect(sessionStorage.getItem("cadastro-email")).toBeNull();
@@ -79,7 +85,7 @@ describe("cadastro e login", () => {
     submit(); await settle();
     expect(name.hasAttribute("aria-invalid")).toBe(false);
     expect(document.querySelector("#auth-name-error").textContent).toBe("");
-    expect(AuthUI.navigate).toHaveBeenCalledWith("/login.html");
+    expect(AuthUI.navigate).toHaveBeenCalledWith("/login");
     expect(api).toHaveBeenCalledTimes(2);
   });
 
@@ -111,6 +117,18 @@ describe("cadastro e login", () => {
 describe("sessao e preservacao administrativa", () => {
   afterEach(() => { globalThis.AuthUI?.destroy?.(); delete globalThis.AuthUI; delete globalThis.apiRequest; vi.restoreAllMocks(); });
 
+  it("confere identidade administrativa sem bloquear o mesmo perfil e rejeita troca", async () => {
+    const api = vi.fn().mockResolvedValue({ usuario: admin });
+    await setup("admin/simulado.html", api);
+    expect(await AuthUI.checkIdentity()).toBe(true);
+    expect(AuthUI.blocked).toBe(false);
+    api.mockResolvedValue({ usuario: aluno });
+    window.dispatchEvent(new Event("focus"));
+    await settle();
+    expect(AuthUI.changedAccount).toBe(true);
+    expect(document.querySelector("#auth-content").hidden).toBe(true);
+  });
+
   it("carrega identidade segura e confirma descarte antes do logout", async () => {
     const api = vi.fn().mockResolvedValue({ usuario: aluno });
     await setup("aluno/inicio.html", api);
@@ -118,10 +136,29 @@ describe("sessao e preservacao administrativa", () => {
     expect(document.querySelector("#auth-content").hidden).toBe(false);
     AuthUI.registerGuard(() => true); vi.spyOn(window, "confirm").mockReturnValue(false);
     await AuthUI.logout(); expect(api).toHaveBeenCalledTimes(1);
+    expect(AuthUI.navigate).not.toHaveBeenCalled();
     window.confirm.mockReturnValue(true); api.mockRejectedValueOnce(new Error("Sem rede"));
     await AuthUI.logout(); expect(document.querySelector("#auth-loading").textContent).toContain("Sem rede");
+    expect(AuthUI.navigate).not.toHaveBeenCalled();
     api.mockResolvedValueOnce(null); await AuthUI.logout();
-    expect(AuthUI.navigate).toHaveBeenCalledWith("/login.html");
+    expect(AuthUI.navigate).toHaveBeenCalledWith("/login");
+  });
+
+  it.each(["aluno/inicio.html", "admin/materias.html", "admin/assuntos.html", "index.html"])(
+    "retorna de %s ao login canonico no bootstrap anonimo", async (file) => {
+      const api = await setup(file);
+      expect(AuthUI.navigate).toHaveBeenCalledExactlyOnceWith("/login");
+      expect(AuthUI.blocked).toBe(true);
+      expect(document.querySelector("#auth-content").hidden).toBe(true);
+      expect(api).toHaveBeenCalledExactlyOnceWith("/auth/sessao");
+    },
+  );
+
+  it.each(["login.html", "cadastro.html"])("mantem destinos dos perfis ao abrir %s com sessao", async (file) => {
+    await setup(file, vi.fn().mockResolvedValue({ usuario: aluno }));
+    expect(AuthUI.navigate).toHaveBeenCalledExactlyOnceWith("/aluno/inicio.html");
+    await setup(file, vi.fn().mockResolvedValue({ usuario: admin }));
+    expect(AuthUI.navigate).toHaveBeenCalledExactlyOnceWith("/admin/materias.html");
   });
 
   it("nega aluno na gestao e nao executa consultas de conteudo", async () => {

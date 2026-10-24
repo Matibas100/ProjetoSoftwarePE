@@ -30,6 +30,10 @@
         const link = document.createElement("a"); link.href = "/aluno/inicio.html";
         link.textContent = "Voltar ao meu início"; panel?.append(link); return false;
       }
+      if (mode === "aluno" && ui.user.perfil !== "aluno") {
+        status("Esta área exige uma conta de aluno.");
+        return false;
+      }
       ui.blocked = false;
       if (panel) panel.hidden = true;
       if (content) content.hidden = false;
@@ -37,7 +41,7 @@
       return true;
     } catch (error) {
       if (error.code === "sessao_invalida") {
-        if (mode !== "publico") ui.navigate("/login.html");
+        if (mode !== "publico") ui.navigate("/login");
         else ui.blocked = false;
       } else {
         return new Promise((resolve) => {
@@ -51,14 +55,15 @@
   ui.registerGuard = (guard) => ui.guards.push(guard);
   ui.logout = async () => {
     if (ui.guards.some((guard) => guard()) && !window.confirm("Descartar alterações não salvas e sair?")) return;
-    try { await apiRequest("/auth/logout", { method: "POST" }); ui.navigate("/login.html"); }
+    try { await apiRequest("/auth/logout", { method: "POST" }); ui.navigate("/login"); }
     catch (error) { status(error.message); }
   };
   document.querySelectorAll("[data-auth-exit]").forEach((button) => button.addEventListener("click", ui.logout));
 
   function recover(code) {
-    if (mode !== "administrador" || !ui.user || recovery || ui.changedAccount) return;
+    if (!["administrador", "aluno"].includes(mode) || !ui.user || recovery || ui.changedAccount) return;
     ui.blocked = true;
+    if (mode === "aluno" && content) content.hidden = true;
     ui.reason = code;
     const oldId = ui.user.id;
     const sensitive = code === "reautenticacao_necessaria";
@@ -97,12 +102,15 @@
         password.value = "";
         if (data.usuario.id !== oldId) {
           ui.changedAccount = true;
-          message.textContent = "A conta mudou. Copie os dados que precisar e recarregue a página para continuar.";
+          if (mode === "aluno") document.dispatchEvent(new Event("auth-identity-changed"));
+          message.textContent = mode === "aluno" ? "A conta mudou. O contexto anterior foi removido. Recarregue para continuar." : "A conta mudou. Copie os dados que precisar e recarregue a página para continuar.";
           const reload = document.createElement("button"); reload.type = "button"; reload.className = "auth-secondary";
           reload.textContent = "Descartar e recarregar"; reload.addEventListener("click", () => location.reload());
           button.replaceWith(reload); return;
         }
-        ui.user = data.usuario; ui.blocked = false; close();
+        ui.user = data.usuario; ui.blocked = false;
+        if (mode === "aluno" && content) content.hidden = false;
+        close();
       } catch (error) { message.textContent = error.message; }
       finally { button.disabled = false; }
     });
@@ -111,8 +119,38 @@
 
   const onRequired = (event) => recover(event.detail);
   document.addEventListener("auth-required", onRequired);
-  ui.destroy = () => document.removeEventListener("auth-required", onRequired);
+  ui.destroy = () => {
+    document.removeEventListener("auth-required", onRequired);
+    window.removeEventListener("focus", onReturn);
+    document.removeEventListener("visibilitychange", onReturn);
+  };
   ui.recover = recover;
+  ui.checkIdentity = async () => {
+    const data = await apiRequest("/auth/sessao");
+    if (data.usuario.id !== ui.user?.id || data.usuario.perfil !== ui.user?.perfil) {
+      ui.blocked = true; ui.changedAccount = true;
+      document.dispatchEvent(new Event("auth-identity-changed"));
+      if (content) content.hidden = true;
+      status("A conta mudou. Recarregue a página para continuar.");
+      return false;
+    }
+    return !ui.blocked;
+  };
+  async function onReturn() {
+    if (!["aluno", "administrador"].includes(mode) || !ui.user || ui.blocked || document.visibilityState === "hidden") return;
+    // Ao voltar de outra aba, conferir identidade antes de reexibir conteúdo privado.
+    if (content) content.hidden = true;
+    try {
+      if (await ui.checkIdentity()) {
+        if (content) content.hidden = false;
+        if (panel) panel.hidden = true;
+      }
+    } catch (error) {
+      if (!recovery) status(error.message, onReturn);
+    }
+  }
+  window.addEventListener("focus", onReturn);
+  document.addEventListener("visibilitychange", onReturn);
   ui.ready = start();
   globalThis.AuthUI = ui;
 })();

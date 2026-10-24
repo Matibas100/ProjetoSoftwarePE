@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/desempenho.css"></head>
+  <body data-auth="administrador" data-desempenho="admin" class="admin-page--questoes">
+    <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section><div id="auth-content" hidden><div class="admin-shell">
+      <aside class="sidebar" aria-label="Navegação administrativa">
+        <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+        <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+        <p class="nav-label">Administração</p>
+        <a class="nav-link" href="dashboard.html" aria-current="page"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Dashboard</a>
+        <p class="nav-label">Conteúdo</p>
+        <a class="nav-link" href="materias.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Matérias</a>
+        <a class="nav-link" href="assuntos.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#list"></use></svg>Assuntos</a>
+        <a class="nav-link" href="questoes.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Questões</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#book"></use></svg>Resumos</span>
+        <p class="nav-label">Avaliações</p>
+        <a class="nav-link" href="simulados.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#file"></use></svg>Simulados</a>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Temas de Redação</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#pencil"></use></svg>Redações</span>
+        <p class="nav-label">Gestão</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Usuários</span>
+        <p class="nav-label">Minha conta</p>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#user"></use></svg>Perfil</span>
+        <span class="nav-link" aria-disabled="true"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#arrow"></use></svg>Área do aluno</span>
+        <div class="sidebar-user">
+          <div class="user-row"><span class="avatar">A</span><span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span></div>
+          <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="topbar"><strong class="topbar-title">Dashboard</strong><div class="topbar-actions"><span class="environment-badge">Ambiente administrativo</span><span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span><span class="avatar">A</span></div></header>
+        <main class="main-content"><header class="page-heading"><div><h1>Dashboard Administrativo</h1><p>Contagens globais atuais da operação, sem históricos individuais.</p></div></header><nav class="dash-acoes" aria-label="Gestão de conteúdo"><a href="materias.html">Matérias</a><a href="assuntos.html">Assuntos</a><a href="questoes.html">Questões</a><a href="simulados.html">Simulados</a></nav><p id="dash-meta" data-dash-private></p><button id="dash-recarregar" type="button" class="button button--outline">Recarregar dados</button><div class="dash-colunas"><section class="dash-block pratica-card card" id="dash-catalogo" data-dash-block aria-busy="true"><h2>Catálogo ativo</h2><p data-dash-message role="status" aria-live="polite">Carregando...</p><div data-dash-body data-dash-private></div><button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button></section><section class="dash-block pratica-card card" id="dash-questoes" data-dash-block aria-busy="true"><h2>Questões por estado</h2><p data-dash-message role="status" aria-live="polite">Carregando...</p><div data-dash-body data-dash-private></div><button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button></section><section class="dash-block pratica-card card" id="dash-simulados" data-dash-block aria-busy="true"><h2>Simulados por estado</h2><p data-dash-message role="status" aria-live="polite">Carregando...</p><div data-dash-body data-dash-private></div><button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button></section><section class="dash-block pratica-card card" id="dash-tentativas" data-dash-block aria-busy="true"><h2>Tentativas de simulado finalizadas</h2><p data-dash-message role="status" aria-live="polite">Carregando...</p><div data-dash-body data-dash-private></div><button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button></section></div><p class="screen-note">Estado publicado não garante disponibilidade atual de todos os itens. Revisão editorial avançada, usuários, redação e auditoria estão indisponíveis neste recorte.</p></main>
+      </div>
+    </div>
+
+    <dialog id="admin-modal" aria-labelledby="admin-modal-titulo"><div class="modal-body"><h2 id="admin-modal-titulo"></h2><p id="admin-modal-texto"></p><div class="modal-actions"><button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button><button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button></div></div></dialog>
+    </div><script src="../js/api.js"></script><script src="../js/auth-session.js"></script>
+    <script src="../js/admin-common.js"></script>
+    <script src="../js/desempenho.js"></script>
+  </body>
+</html>

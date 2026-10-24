@@ -601,7 +601,7 @@ END
 
 
 def _sql_tokens(value: str) -> list[str]:
-    return re.findall(r"[a-z_][a-z0-9_]*|\d+|'[^']*'|[,();=]", value.lower().replace("`", ""))
+    return re.findall(r"[a-z_][a-z0-9_]*|\d+|'[^']*'|[<>!]=?|[,();=]", value.lower().replace("`", ""))
 
 
 def _check_tokens(value: str) -> list[str]:
@@ -764,9 +764,192 @@ def _detect_auth_prefix(connection, tables: set[str]) -> str:
     return "005"
 
 
+def _detect_questoes_prefix(connection, tables: set[str]) -> str:
+    editorial = {"questao_versoes", "questao_eventos"}
+    _detect_auth_prefix(connection, tables - editorial)
+    expected = {
+        "questoes": [(name, kind, null) for name, kind, null, *_ in EXPECTED_COLUMNS["questoes"]]
+            + [("status", "varchar(20)", "NO"), ("revisao", "int", "NO"),
+               ("criado_em", "datetime(6)", "YES"), ("atualizado_em", "datetime(6)", "NO"),
+               ("versao_publicada_id", "int", "YES")],
+        "questao_versoes": [("id", "int", "NO"), ("questao_id", "int", "NO"),
+            ("numero", "int", "NO"), ("revisao_origem", "int", "NO"), ("estado", "varchar(20)", "NO"),
+            *[(name, kind, null) for name, kind, null, *_ in EXPECTED_COLUMNS["questoes"][1:]],
+            ("assunto_nome", "varchar(150)", "NO"), ("materia_id", "int", "NO"),
+            ("materia_nome", "varchar(100)", "NO"), ("area_enem_id", "int", "NO"),
+            ("area_enem_nome", "varchar(100)", "NO"), ("ator_id", "int", "YES"),
+            ("origem", "varchar(20)", "NO"), ("criado_em", "datetime(6)", "NO")],
+        "questao_eventos": [("id", "bigint", "NO"), ("questao_id", "int", "NO"),
+            ("versao_id", "int", "YES"), ("ator_id", "int", "YES"),
+            ("acao", "varchar(20)", "NO"), ("motivo", "varchar(500)", "NO"),
+            ("criado_em", "datetime(6)", "NO")],
+    }
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE "
+            "FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() "
+            "AND TABLE_NAME IN ('questoes','questao_versoes','questao_eventos') "
+            "ORDER BY TABLE_NAME, ORDINAL_POSITION")
+        actual = {name: [] for name in expected}
+        for row in cursor.fetchall():
+            actual[row['TABLE_NAME']].append((row['COLUMN_NAME'], row['COLUMN_TYPE'], row['IS_NULLABLE']))
+        if actual != expected:
+            raise MigrationError("Colunas de questoes versionadas divergentes.")
+        cursor.execute("SELECT TABLE_NAME, ENGINE, TABLE_COLLATION FROM information_schema.TABLES "
+            "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('questao_versoes','questao_eventos')")
+        if any(row['ENGINE'] != 'InnoDB' or row['TABLE_COLLATION'] != 'utf8mb4_unicode_ci'
+               for row in cursor.fetchall()):
+            raise MigrationError("Engine/collation editorial divergentes.")
+        cursor.execute("SELECT rc.TABLE_NAME, k.COLUMN_NAME, k.REFERENCED_TABLE_NAME, "
+            "rc.DELETE_RULE, rc.UPDATE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS rc "
+            "JOIN information_schema.KEY_COLUMN_USAGE k ON k.CONSTRAINT_SCHEMA=rc.CONSTRAINT_SCHEMA "
+            "AND k.CONSTRAINT_NAME=rc.CONSTRAINT_NAME AND k.TABLE_NAME=rc.TABLE_NAME "
+            "WHERE rc.CONSTRAINT_SCHEMA=DATABASE() "
+            "AND rc.TABLE_NAME IN ('questoes','questao_versoes','questao_eventos')")
+        links = {tuple(row.values()) for row in cursor.fetchall()}
+        expected_links = {('questoes','assunto_id','assuntos','RESTRICT','RESTRICT'),
+                          ('questoes','versao_publicada_id','questao_versoes','RESTRICT','RESTRICT')}
+        for name, fields in {
+            'questao_versoes': {'questao_id':'questoes','assunto_id':'assuntos','materia_id':'materias',
+                               'area_enem_id':'areas_enem','ator_id':'usuarios'},
+            'questao_eventos': {'questao_id':'questoes','versao_id':'questao_versoes','ator_id':'usuarios'},
+        }.items():
+            expected_links.update((name, field, target, 'RESTRICT', 'RESTRICT') for field,target in fields.items())
+        if links != expected_links:
+            raise MigrationError("Foreign keys editoriais divergentes.")
+        cursor.execute("SELECT INDEX_NAME, NON_UNIQUE, SEQ_IN_INDEX, COLUMN_NAME "
+            "FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='questao_versoes'")
+        unique = {(r['INDEX_NAME'], r['SEQ_IN_INDEX'], r['COLUMN_NAME'])
+                  for r in cursor.fetchall() if r['NON_UNIQUE'] == 0}
+        if unique != {('PRIMARY',1,'id'),('uq_questao_versoes_numero',1,'questao_id'),
+                      ('uq_questao_versoes_numero',2,'numero')}:
+            raise MigrationError("Unicidade de versoes divergente.")
+        cursor.execute("SELECT tc.TABLE_NAME, tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE "
+            "FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.CHECK_CONSTRAINTS cc "
+            "ON cc.CONSTRAINT_SCHEMA=tc.CONSTRAINT_SCHEMA AND cc.CONSTRAINT_NAME=tc.CONSTRAINT_NAME "
+            "WHERE tc.TABLE_SCHEMA=DATABASE() AND tc.TABLE_NAME IN ('questoes','questao_versoes','questao_eventos')")
+        checks = {(r['TABLE_NAME'],r['CONSTRAINT_NAME']): _check_tokens(r['CHECK_CLAUSE']) for r in cursor.fetchall()}
+        required_checks = {
+            ('questoes','ck_questoes_status'): "status IN ('rascunho','publicada','arquivada')",
+            ('questoes','ck_questoes_revisao'): 'revisao >= 1',
+            ('questoes','ck_questoes_resposta_correta'): "resposta_correta IN ('A','B','C','D','E')",
+            ('questoes','ck_questoes_dificuldade'): "dificuldade IN ('facil','media','dificil')",
+            ('questao_versoes','ck_questao_versoes_numero'): 'numero >= 1 AND revisao_origem >= 1',
+            ('questao_versoes','ck_questao_versoes_estado'): "estado IN ('rascunho','publicada')",
+            ('questao_versoes','ck_questao_versoes_origem'): "origem IN ('legado','manual')",
+            ('questao_versoes','ck_questao_versoes_resposta'): "resposta_correta IN ('A','B','C','D','E')",
+            ('questao_versoes','ck_questao_versoes_dificuldade'): "dificuldade IN ('facil','media','dificil')",
+            ('questao_eventos','ck_questao_eventos_acao'): "acao IN ('cadastro','edicao','revisao','aprovacao','publicacao','arquivamento')",
+        }
+        if checks != {key:_check_tokens(value) for key,value in required_checks.items()}:
+            raise MigrationError("Checks editoriais divergentes.")
+    return "006"
+
+
+def _detect_praticas_prefix(connection, tables: set[str]) -> str:
+    _detect_questoes_prefix(connection, tables - {"pratica_tentativas"})
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,COLLATION_NAME,EXTRA "
+            "FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() "
+            "AND TABLE_NAME='pratica_tentativas' ORDER BY ORDINAL_POSITION")
+        columns = cursor.fetchall()
+        expected = [('id','bigint','NO'),('usuario_id','int','NO'),('questao_versao_id','int','NO'),
+            ('chave_envio','char(36)','NO'),('estado','varchar(20)','NO'),('resposta_escolhida','char(1)','YES'),
+            ('correta','tinyint(1)','YES'),('iniciada_em','datetime(6)','NO'),('respondida_em','datetime(6)','YES'),
+            ('assunto_id','int','NO'),('assunto_nome','varchar(150)','NO'),('materia_id','int','NO'),
+            ('materia_nome','varchar(100)','NO')]
+        if [(r['COLUMN_NAME'],r['COLUMN_TYPE'],r['IS_NULLABLE']) for r in columns] != expected:
+            raise MigrationError("Colunas de praticas divergentes.")
+        if columns[0]['EXTRA'] != 'auto_increment' or any(
+            r['COLLATION_NAME'] != 'ascii_bin' for r in columns if r['COLUMN_NAME'] in {'chave_envio','resposta_escolhida'}):
+            raise MigrationError("Identidade/collation de praticas divergente.")
+        cursor.execute("SELECT ENGINE,TABLE_COLLATION FROM information_schema.TABLES "
+            "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='pratica_tentativas'")
+        if tuple(cursor.fetchone().values()) != ('InnoDB','utf8mb4_unicode_ci'):
+            raise MigrationError("Engine/collation de praticas divergente.")
+        cursor.execute("SELECT k.COLUMN_NAME,k.REFERENCED_TABLE_NAME,k.REFERENCED_COLUMN_NAME,rc.DELETE_RULE,rc.UPDATE_RULE "
+            "FROM information_schema.REFERENTIAL_CONSTRAINTS rc JOIN information_schema.KEY_COLUMN_USAGE k "
+            "ON k.CONSTRAINT_SCHEMA=rc.CONSTRAINT_SCHEMA AND k.CONSTRAINT_NAME=rc.CONSTRAINT_NAME "
+            "AND k.TABLE_NAME=rc.TABLE_NAME WHERE rc.CONSTRAINT_SCHEMA=DATABASE() AND rc.TABLE_NAME='pratica_tentativas'")
+        if {tuple(r.values()) for r in cursor.fetchall()} != {
+            (c,t,'id','RESTRICT','RESTRICT') for c,t in [('usuario_id','usuarios'),
+            ('questao_versao_id','questao_versoes'),('assunto_id','assuntos'),('materia_id','materias')]}:
+            raise MigrationError("Foreign keys de praticas divergentes.")
+        cursor.execute("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME FROM information_schema.STATISTICS "
+            "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='pratica_tentativas'")
+        indexes = {tuple(r.values()) for r in cursor.fetchall()}
+        required = {('PRIMARY',0,1,'id'),('uq_pratica_tentativas_chave',0,1,'usuario_id'),
+            ('uq_pratica_tentativas_chave',0,2,'chave_envio'),('ix_pratica_tentativas_historico',1,1,'usuario_id'),
+            ('ix_pratica_tentativas_historico',1,2,'respondida_em'),('ix_pratica_tentativas_historico',1,3,'id')}
+        if not required <= indexes or {r for r in indexes if r[1] == 0} != {r for r in required if r[1] == 0}:
+            raise MigrationError("Indices de praticas divergentes.")
+        cursor.execute("SELECT cc.CHECK_CLAUSE,tc.ENFORCED FROM information_schema.TABLE_CONSTRAINTS tc "
+            "JOIN information_schema.CHECK_CONSTRAINTS cc ON cc.CONSTRAINT_SCHEMA=tc.CONSTRAINT_SCHEMA "
+            "AND cc.CONSTRAINT_NAME=tc.CONSTRAINT_NAME WHERE tc.TABLE_SCHEMA=DATABASE() AND tc.TABLE_NAME='pratica_tentativas'")
+        checks = cursor.fetchall()
+        expected_check = "(estado = 'em_andamento' AND resposta_escolhida IS NULL AND correta IS NULL AND respondida_em IS NULL) OR (estado = 'respondida' AND resposta_escolhida IS NOT NULL AND resposta_escolhida IN ('A','B','C','D','E') AND correta IS NOT NULL AND correta IN (0,1) AND respondida_em IS NOT NULL AND respondida_em >= iniciada_em)"
+        if len(checks) != 1 or checks[0]['ENFORCED'] != 'YES' or _check_tokens(checks[0]['CHECK_CLAUSE']) != _check_tokens(expected_check):
+            raise MigrationError("Check de praticas divergente.")
+    return "007"
+
+
+SIMULADOS_FINGERPRINTS = {
+    "simulados": "35b91f9a0f2b8d8cf7db2d27b5195d3b6c3dcc5b139fbed5f04fca7d69ba85ba",
+    "simulado_rascunho_itens": "fbeaff16680ca7c6ad2293fc76faaf85af4f0e9472f51b64f2185398769b4f93",
+    "simulado_versoes": "d46f8f7657f25b26e39c93ecb133e81981751547f962173f5f7ee8dbd01f746a",
+    "simulado_versao_itens": "36f689fa5279e4d08a5b79731a8710bd127a6dbd015d8026da410048ebab8070",
+    "simulado_eventos": "162c8b96a919ab7e60931323df54f59ca58df11e60181600d9c2fcec794143a7",
+    "simulado_tentativas": "bac3364ef64882d18f332a29e57f258cfdfb68c35afe0e332a80aed159c6881a",
+    "simulado_respostas": "f0ca66ebf310c61f8610ef13bb3f5ee0d40603621f482c948a7033c68c21343e",
+}
+
+
+def _detect_simulados_prefix(connection, tables: set[str]) -> str:
+    novas = set(SIMULADOS_FINGERPRINTS)
+    if not novas <= tables:
+        raise MigrationError("Schema parcial de simulados.")
+    _detect_praticas_prefix(connection, tables - novas)
+    with connection.cursor() as cursor:
+        for tabela, esperado in SIMULADOS_FINGERPRINTS.items():
+            cursor.execute(f"SHOW CREATE TABLE `{tabela}`")
+            # Somente o contador de identidades varia com os dados. O DDL inteiro
+            # (inclusive generated/checks/FKs/índices) precisa corresponder ao 008.
+            ddl = re.sub(r"AUTO_INCREMENT=\d+\s*", "", cursor.fetchone()["Create Table"])
+            if hashlib.sha256(ddl.encode("utf-8")).hexdigest() != esperado:
+                raise MigrationError("Fingerprint de simulados divergente.")
+    return "008"
+
+
+PLANOS_FINGERPRINTS = {
+    "planos_estudo": "00e76e77302334fc04d25c1514adc7ac98a8041a825c5885d601a3aeadd07ba7",
+    "plano_estudo_itens": "bb69309f58165b276bb5c2c7914b60c5295b8e7dfee418765be422abafcd1b1b",
+}
+
+
+def _detect_planos_prefix(connection, tables: set[str]) -> str:
+    novas = set(PLANOS_FINGERPRINTS)
+    if not novas <= tables:
+        raise MigrationError("Schema parcial de planos de estudo.")
+    _detect_simulados_prefix(connection, tables - novas)
+    with connection.cursor() as cursor:
+        for tabela, esperado in PLANOS_FINGERPRINTS.items():
+            cursor.execute(f"SHOW CREATE TABLE `{tabela}`")
+            ddl = re.sub(r"AUTO_INCREMENT=\d+\s*", "", cursor.fetchone()["Create Table"])
+            if hashlib.sha256(ddl.encode("utf-8")).hexdigest() != esperado:
+                raise MigrationError("Fingerprint de planos de estudo divergente.")
+    return "009"
+
+
 def detect_legacy_prefix(connection) -> str:
     expected_tables = set(EXPECTED_COLUMNS)
     user_tables = _user_tables(connection)
+    if set(PLANOS_FINGERPRINTS) & user_tables:
+        return _detect_planos_prefix(connection, user_tables)
+    if set(SIMULADOS_FINGERPRINTS) & user_tables:
+        return _detect_simulados_prefix(connection, user_tables)
+    if "pratica_tentativas" in user_tables:
+        return _detect_praticas_prefix(connection, user_tables)
+    if {"questao_versoes", "questao_eventos"} <= user_tables:
+        return _detect_questoes_prefix(connection, user_tables)
     if user_tables == {"areas_enem", "materias", "assuntos", "questoes", "assunto_transferencias",
                        "usuarios", "sessoes", "auth_limites"}:
         return _detect_auth_prefix(connection, user_tables)

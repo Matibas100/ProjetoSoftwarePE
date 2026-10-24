@@ -3,6 +3,9 @@ from sqlalchemy.exc import IntegrityError
 from app.exceptions import ConflitoError, DadosInvalidosError, RecursoNaoEncontradoError
 from app.models.assunto import Assunto
 from app.models.questao import Questao
+from app.models.questao_evento import QuestaoEvento
+from app.domain.autenticacao import agora_utc
+from app.transaction_manager import TransactionManager
 
 
 class CriarQuestaoService:
@@ -18,7 +21,7 @@ class CriarQuestaoService:
     )
 
     @classmethod
-    def executar(cls, dados):
+    def validar(cls, dados):
         if not isinstance(dados, dict):
             raise DadosInvalidosError("Envie os dados da questao em formato JSON.")
 
@@ -67,7 +70,7 @@ class CriarQuestaoService:
         if explicacao is not None and not isinstance(explicacao, str):
             raise DadosInvalidosError("A explicacao deve ser um texto ou nula.")
 
-        questao = Questao(
+        return dict(
             **valores,
             resposta_correta=resposta_correta,
             explicacao=explicacao.strip() if isinstance(explicacao, str) else None,
@@ -75,11 +78,24 @@ class CriarQuestaoService:
             assunto_id=assunto_id,
         )
 
+    @classmethod
+    def executar(cls, dados, ator_id=None):
+        valores = cls.validar(dados)
+        if not isinstance(ator_id, int) or isinstance(ator_id, bool) or ator_id <= 0:
+            raise DadosInvalidosError("Operador autenticado obrigatório.")
+
+        def operacao():
+            instante = agora_utc()
+            questao = Questao(**valores, status="rascunho", revisao=1,
+                criado_em=instante, atualizado_em=instante)
+            questao.salvar(confirmar=False)
+            QuestaoEvento(questao_id=questao.id, ator_id=ator_id, acao="cadastro",
+                motivo="Cadastro manual de rascunho.", criado_em=instante).salvar(confirmar=False)
+            return questao.to_dict()
+
         try:
-            questao.salvar()
+            return TransactionManager.executar(operacao)
         except IntegrityError as erro:
             raise ConflitoError(
                 "Nao foi possivel cadastrar a questao por conflito de integridade."
             ) from erro
-
-        return questao.to_dict()

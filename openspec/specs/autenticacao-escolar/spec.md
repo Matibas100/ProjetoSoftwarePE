@@ -7,12 +7,12 @@ Permitir que Alunos criem contas e acessem seu ambiente e que Administradores us
 ## Requirements
 
 ### Requirement: Cadastro público exclusivo de Aluno
-O sistema SHALL disponibilizar `/cadastro.html` e `POST /api/auth/cadastro` para criar Aluno ativo com nome, e-mail, senha e confirmação. Nome SHALL ter 2–100 caracteres após trim; e-mail SHALL ser normalizado por trim/lowercase, ASCII, até 254 caracteres, com exatamente um `@`, partes não vazias, domínio com ponto e sem espaços, controles ou pontos consecutivos. Senha SHALL ter 8–128 caracteres, sem transformação, e confirmação idêntica. Campos extras SHALL ser recusados com 400. O e-mail normalizado SHALL ser único, inclusive sob concorrência. Sucesso SHALL retornar 201 com `{usuario: {id, nome, email, perfil}}`, sem autenticar automaticamente; validação SHALL retornar 400 e duplicidade SHALL retornar 409.
+O sistema SHALL disponibilizar `/cadastro` como URL canônica, mantendo `/cadastro.html` por redirecionamento, e `POST /api/auth/cadastro` para criar Aluno ativo com nome, e-mail, senha e confirmação. Nome SHALL ter 2–100 caracteres após trim; e-mail SHALL ser normalizado por trim/lowercase, ASCII, até 254 caracteres, com exatamente um `@`, partes não vazias, domínio com ponto e sem espaços, controles ou pontos consecutivos. Senha SHALL ter 8–128 caracteres, sem transformação, e confirmação idêntica. Campos extras SHALL ser recusados com 400. O e-mail normalizado SHALL ser único, inclusive sob concorrência. Sucesso SHALL retornar 201 com `{usuario: {id, nome, email, perfil}}`, sem autenticar automaticamente; validação SHALL retornar 400 e duplicidade SHALL retornar 409.
 
 #### Scenario: Cadastro válido
 - **GIVEN** pessoa não autenticada com origem e CSRF válidos
 - **WHEN** envia os quatro campos válidos para e-mail ainda não registrado
-- **THEN** uma única conta Aluno é persistida, recebe 201, a tela confirma o cadastro e encaminha ao login sem transmitir a senha
+- **THEN** uma única conta Aluno é persistida, recebe 201, a tela confirma o cadastro e encaminha a `/login` sem transmitir a senha
 
 #### Scenario: Tentativa de escolher Administrador
 - **GIVEN** pessoa no cadastro público
@@ -48,7 +48,7 @@ O sistema SHALL oferecer o comando local `python -m flask --app backend/run.py c
 - **THEN** o comando termina com erro de conflito e preserva a conta original
 
 ### Requirement: Login por credenciais com rotação de sessão
-O sistema SHALL oferecer `/login.html` e `POST /api/auth/login` com `{email, senha}`. Credenciais válidas SHALL retornar 200 com usuário público, `csrf_token` e `destino`, revogando a sessão anterior e estabelecendo nova sessão. E-mail desconhecido, senha incorreta ou conta inativa SHALL produzir 401 `credenciais_invalidas` com a mesma mensagem `E-mail ou senha inválidos.`; entrada malformada SHALL produzir 400. Login de usuário já autenticado SHALL retornar 409 `ja_autenticado`. Senhas SHALL ser persistidas somente por hash adequado e SHALL NOT aparecer em URL, storage ou logs.
+O sistema SHALL oferecer `/login` como URL canônica, mantendo `/login.html` por redirecionamento, e `POST /api/auth/login` com `{email, senha}`. Credenciais válidas SHALL retornar 200 com usuário público, `csrf_token` e `destino`, revogando a sessão anterior e estabelecendo nova sessão. E-mail desconhecido, senha incorreta ou conta inativa SHALL produzir 401 `credenciais_invalidas` com a mesma mensagem `E-mail ou senha inválidos.`; entrada malformada SHALL produzir 400. Login de usuário já autenticado SHALL retornar 409 `ja_autenticado`. Senhas SHALL ser persistidas somente por hash adequado e SHALL NOT aparecer em URL, storage ou logs.
 
 #### Scenario: Login de Aluno ou Administrador
 - **GIVEN** conta ativa e controles de origem/CSRF válidos
@@ -117,7 +117,7 @@ O sistema SHALL oferecer `GET /api/auth/csrf` que devolve token vinculado à ses
 - **THEN** recebe política CORS adequada a cookies/CSRF, sem exigir login e sem alterar dados funcionais
 
 ### Requirement: Autorização por perfil e recurso
-O sistema SHALL autorizar operações no servidor, independentemente da tela. GET health SHALL continuar público. Leituras simples de Áreas, Matérias e Assuntos SHALL aceitar Aluno e Administrador; `status=todos`, consultas administrativas, prévias de impacto, todas as mutações do catálogo e consulta legada de Questões SHALL exigir Administrador. Anônimo SHALL receber 401; perfil insuficiente SHALL receber 403 `acesso_negado`. HEAD SHALL herdar a política de GET; rotas/métodos inexistentes SHALL preservar 404/405. Gabarito da consulta legada SHALL NOT ser fornecido ao Aluno.
+O sistema SHALL autorizar operações no servidor, independentemente da tela. GET health SHALL continuar público. Leituras simples de Áreas, Matérias e Assuntos SHALL aceitar Aluno e Administrador; `status=todos`, consultas administrativas, prévias de impacto, todas as mutações do catálogo e consulta legada de Questões SHALL exigir Administrador. Rotas existentes sob `/api/aluno/` SHALL exigir perfil Aluno e SHALL limitar coleções e recursos pessoais ao usuário da sessão; Administrador SHALL receber 403 nessas rotas. Recurso pessoal inexistente ou de outro Aluno SHALL retornar o mesmo 404 sem exposição de conteúdo. Anônimo SHALL receber 401; perfil insuficiente SHALL receber 403 `acesso_negado`. HEAD SHALL herdar a política de GET; rotas/métodos inexistentes SHALL preservar 404/405. Gabarito da consulta legada SHALL NOT ser fornecido ao Aluno. Mutações permitidas ao Aluno SHALL manter os controles existentes de sessão, origem e CSRF.
 
 #### Scenario: Aluno lê catálogo ativo
 - **GIVEN** sessão de Aluno válida
@@ -126,7 +126,7 @@ O sistema SHALL autorizar operações no servidor, independentemente da tela. GE
 
 #### Scenario: Aluno tenta gestão ou gabarito
 - **GIVEN** sessão de Aluno válida
-- **WHEN** consulta listagem administrativa, impacto, `status=todos`, Questões legadas ou tenta uma mutação
+- **WHEN** consulta listagem administrativa, impacto, `status=todos`, Questões legadas ou tenta mutação administrativa do catálogo
 - **THEN** recebe 403, sem gabarito nem alteração de dados
 
 #### Scenario: Requisição anônima
@@ -138,6 +138,16 @@ O sistema SHALL autorizar operações no servidor, independentemente da tela. GE
 - **GIVEN** cliente anônimo
 - **WHEN** usa HEAD em leitura protegida ou solicita rota/método não existente
 - **THEN** HEAD aplica autenticação e rota/método inexistente mantém 404/405
+
+#### Scenario: Ação própria de Aluno
+- **GIVEN** sessão válida de Aluno e origem/CSRF válidos
+- **WHEN** usa rota existente de `/api/aluno/` sobre seu próprio recurso
+- **THEN** a regra da ação é avaliada para a identidade da sessão sem exigir perfil Administrador
+
+#### Scenario: Recurso de outra conta ou perfil administrativo
+- **GIVEN** Aluno consultando recurso alheio ou Administrador usando rota de Aluno
+- **WHEN** solicita a operação
+- **THEN** recebe respectivamente 404 ou 403 sem leitura/escrita de dados do estudante
 
 ### Requirement: Reautenticação de ações sensíveis
 O sistema SHALL exigir autenticação de senha nos últimos 15 minutos para excluir, inativar, arquivar, reativar ou transferir catálogo e para PUT Matéria contendo `status`/`area_enem_id` ou PUT Assunto contendo `materia_id`. Janela vencida SHALL retornar 403 `reautenticacao_necessaria`, sem mudança parcial. `POST /api/auth/reautenticar` SHALL confirmar a senha do usuário atual e renovar a janela; senha incorreta SHALL retornar 401 `credenciais_invalidas` preservando a sessão, e sessão inválida SHALL retornar 401 `sessao_invalida`. A tela SHALL preservar contexto e exigir nova confirmação da ação, sem repetir mutação automaticamente.
@@ -176,17 +186,17 @@ O sistema SHALL limitar login a 5 falhas por e-mail normalizado em janela de 15 
 - **THEN** bloqueio expirado reinicia a janela e falhas simultâneas são contabilizadas corretamente sem 500
 
 ### Requirement: Navegação autenticada e telas utilizáveis
-Login e cadastro SHALL usar identidade visual e estados de PUB-AUT-001/002 com acessibilidade por teclado, labels, foco visível, loading, erro e sucesso. Aluno SHALL entrar em `/aluno/inicio.html` com nome real e saída; Administrador SHALL entrar em `/admin/materias.html`. Destinos SHALL ser fixos e SHALL NOT aceitar redirect externo. Início de Aluno SHALL NOT exibir métricas fictícias ou gestão. `/index.html` e telas administrativas SHALL verificar sessão antes de carregar gestão. Sessão válida nas telas de login/cadastro SHALL encaminhar ao destino do perfil. Saída SHALL navegar somente depois de logout confirmado; falha de rede SHALL mostrar erro sem fingir sucesso. Recuperação/onboarding não implementados SHALL NOT aparecer como links ativos.
+Login e cadastro SHALL usar identidade visual e estados de PUB-AUT-001/002 com acessibilidade por teclado, labels, foco visível, loading, erro e sucesso. Os links entre essas telas SHALL usar `/login` e `/cadastro`; após cadastro concluído, logout confirmado ou identificação de sessão inválida no bootstrap de página protegida, o frontend SHALL encaminhar a `/login`. Aluno SHALL entrar em `/aluno/inicio.html` com nome real e saída; Administrador SHALL entrar em `/admin/materias.html`. Destinos SHALL ser fixos e SHALL NOT aceitar redirect externo. Início de Aluno SHALL NOT exibir métricas fictícias ou gestão. `/index.html` e telas administrativas SHALL verificar sessão antes de carregar gestão. Sessão válida nas telas de login/cadastro SHALL encaminhar ao destino do perfil. Saída SHALL navegar somente depois de logout confirmado; falha de rede SHALL mostrar erro sem fingir sucesso. Recuperação/onboarding não implementados SHALL NOT aparecer como links ativos.
 
 #### Scenario: Fluxo escolar de Aluno
 - **GIVEN** pessoa com cadastro recém-concluído
 - **WHEN** faz login e depois aciona Sair
-- **THEN** vê seu nome no início, encerra a sessão e retorna ao login; recarregar a área protegida exige nova autenticação
+- **THEN** vê seu nome no início, encerra a sessão e retorna a `/login`; recarregar a área protegida exige nova autenticação
 
 #### Scenario: Entrada direta em gestão
 - **GIVEN** anônimo ou Aluno abrindo `/index.html`, Matérias ou Assuntos
 - **WHEN** a página resolve sua identidade
-- **THEN** anônimo vai ao login e Aluno vê acesso negado com retorno ao seu início, sem chamadas administrativas
+- **THEN** anônimo vai a `/login` e Aluno vê acesso negado com retorno ao seu início, sem chamadas administrativas
 
 #### Scenario: Formulário com erro ou duplo clique
 - **GIVEN** login/cadastro em andamento ou falha de validação/rede
@@ -197,6 +207,16 @@ Login e cadastro SHALL usar identidade visual e estados de PUB-AUT-001/002 com a
 - **GIVEN** login/cadastro em navegador real
 - **WHEN** operados por teclado a 1440 px e visualizados a 390 px
 - **THEN** apresentam foco e erros compreensíveis, composição oficial no desktop e nenhuma rolagem horizontal causada pelo formulário
+
+#### Scenario: Alternância entre formulários
+- **GIVEN** pessoa não autenticada em `/login` ou `/cadastro`
+- **WHEN** aciona Criar uma conta ou Entrar
+- **THEN** navega a `/cadastro` ou `/login`, respectivamente, sem `.html`
+
+#### Scenario: Sessão válida nas páginas públicas
+- **GIVEN** Aluno ou Administrador com sessão válida
+- **WHEN** abre `/login` ou `/cadastro`
+- **THEN** segue para `/aluno/inicio.html` ou `/admin/materias.html`, respectivamente, preservando os destinos dos perfis
 
 ### Requirement: Evolução compatível do banco e do MVP
 O sistema SHALL adicionar autenticação por migration versionada e snapshot equivalente, preservando dados, identificadores, procedure e regras existentes. Não SHALL modificar migrations aplicadas. Operações de cadastro/login SHALL ser atômicas e falhas SHALL NOT deixar conta parcial ou sessão autenticada parcial. Instalação nova, upgrade de 004, baseline do snapshot completo e idempotência SHALL ser verificáveis no MySQL real. Os 29 cenários originais e a suíte ampliada SHALL continuar validando comportamento com autenticação real, sem bypass de produção.
@@ -223,3 +243,46 @@ O sistema SHALL oferecer comando local `python -m flask --app backend/run.py lim
 - **GIVEN** registros antigos, sessões válidas e conteúdo funcional no mesmo banco
 - **WHEN** operador executa a limpeza
 - **THEN** apenas registros de autenticação elegíveis são removidos e a saída contém contagens sem segredos
+
+### Requirement: URLs canônicas das páginas públicas de autenticação
+O servidor local do frontend SHALL responder a GET `/login` e GET `/cadastro` com 200 e conteúdo HTML das respectivas telas, mantendo essas URLs no navegador e permitindo entrada direta e recarga. HEAD SHALL apresentar o mesmo status e cabeçalhos de GET, sem corpo. GET e HEAD de `/login.html` e `/login/` SHALL retornar 302 com `Location: /login`; `/cadastro.html` e `/cadastro/` SHALL retornar 302 com `Location: /cadastro`. Havendo query string, ela SHALL ser preservada no Location, sem ser interpretada como destino de navegação. Os redirecionamentos SHALL usar somente caminhos locais fixos e SHALL NOT criar ciclos ou aceitar destino externo. CSS, JavaScript, imagens, fontes, `/`, `/index.html`, `/aluno/inicio.html`, `/admin/materias.html` e `/admin/assuntos.html` SHALL continuar acessíveis com seus comportamentos existentes. Caminhos inexistentes SHALL retornar 404, sem fallback para login ou cadastro. O servidor do frontend SHALL NOT executar ou encaminhar operações `/api` nem disponibilizar arquivos fora do diretório público do frontend.
+
+#### Scenario: Entrada direta e recarga
+- **GIVEN** servidor local do frontend em execução
+- **WHEN** pessoa abre `/login` ou `/cadastro` e recarrega a página
+- **THEN** cada GET retorna 200 com a tela correspondente e a URL permanece sem `.html`
+
+#### Scenario: Endereços antigos continuam utilizáveis
+- **GIVEN** link para `/login.html` ou `/cadastro.html`
+- **WHEN** cliente solicita o endereço com GET ou HEAD
+- **THEN** recebe 302 para `/login` ou `/cadastro`, respectivamente, e o destino responde 200 sem ciclo de redirecionamento
+
+#### Scenario: Barra final e parâmetros
+- **GIVEN** endereço `/cadastro/?origem=local` ou `/login.html?origem=local`
+- **WHEN** cliente faz GET
+- **THEN** recebe 302 para `/cadastro?origem=local` ou `/login?origem=local`, respectivamente, e os recursos da página continuam carregando após o redirecionamento
+
+#### Scenario: Destino externo não controla o redirecionamento
+- **GIVEN** endereço antigo contendo `?next=https://example.com`
+- **WHEN** cliente solicita esse endereço
+- **THEN** Location aponta à URL canônica local com a mesma query string e não encaminha o navegador a `example.com`
+
+#### Scenario: Consulta sem corpo
+- **GIVEN** servidor local do frontend em execução
+- **WHEN** cliente usa HEAD nas URLs canônicas e nos aliases
+- **THEN** recebe o status e os cabeçalhos correspondentes a GET, inclusive Location nos aliases, sem corpo de resposta
+
+#### Scenario: Recursos e páginas existentes
+- **GIVEN** login ou cadastro aberto pela URL canônica
+- **WHEN** navegador carrega estilos, scripts, logo e fontes, ou solicita as páginas existentes de Aluno, administração e MVP
+- **THEN** os arquivos continuam acessíveis e as verificações de sessão/perfil existentes permanecem responsáveis pela navegação protegida
+
+#### Scenario: Caminho inexistente e API no servidor de páginas
+- **GIVEN** servidor do frontend separado da API
+- **WHEN** cliente solicita `/pagina-inexistente`, `/login/inexistente` ou `/api/auth/login` no servidor do frontend
+- **THEN** recebe 404 sem página de autenticação como fallback nem execução de negócio na API
+
+#### Scenario: Diretório público delimitado
+- **GIVEN** servidor do frontend em execução
+- **WHEN** cliente solicita um arquivo da raiz do projeto fora de `frontend`, inclusive por caminho com tentativa de subir diretórios
+- **THEN** o arquivo externo não é entregue e, não existindo recurso público correspondente, a resposta é 404

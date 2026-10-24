@@ -33,7 +33,12 @@ openspec/                  specs e changes futuras
 ```powershell
 python -m pip install -r backend\requirements.txt
 python backend\run.py
-python -m http.server 5500 --directory frontend
+python scripts/serve_frontend.py
 ```
+
+Abra `http://127.0.0.1:5500/login`. Para usar outra porta, execute
+`python scripts/serve_frontend.py --port 5501` e autorize
+`http://127.0.0.1:5501` em `CORS_ORIGINS` na configuração local da API.
+O servidor fixa a raiz pública em `frontend`, mesmo iniciado de outro diretório.
 
 Não instale dependências nem execute comandos que escrevam no banco sem que o escopo aprovado exija isso.

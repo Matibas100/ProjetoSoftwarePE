@@ -44,13 +44,22 @@ externa de autenticação.
 
 ## Contas e uso
 
-Abra `http://127.0.0.1:5500/login.html`, com frontend servido pelo comando atual:
+Abra `http://127.0.0.1:5500/login`, com frontend servido pelo comando atual:
 
 ```powershell
-python -m http.server 5500 --directory frontend
+python scripts/serve_frontend.py
 ```
 
-`Criar uma conta` abre `/cadastro.html`. Cadastro pede nome, e-mail, senha de
+As URLs canônicas são `/login` e `/cadastro`, com entrada direta e recarga.
+`/login.html` e `/login/` retornam 302 para `/login`; `/cadastro.html` e
+`/cadastro/` retornam 302 para `/cadastro`, preservando a query string.
+A raiz `/` mantém o MVP legado; caminhos inexistentes retornam 404.
+O servidor escuta apenas em `127.0.0.1`, fixa a raiz em `frontend` e não
+carrega configuração, banco ou API. Para outra porta, use
+`python scripts/serve_frontend.py --port 5501` e autorize a origem exata
+`http://127.0.0.1:5501` em `CORS_ORIGINS` na configuração local da API.
+
+`Criar uma conta` abre `/cadastro`. Cadastro pede nome, e-mail, senha de
 8–128 caracteres e confirmação; cria sempre Aluno e encaminha ao login, sem
 login automático. Nome/e-mail permanecem após erro, senha não vai a logs/URL/storage.
 E-mail é normalizado por trim/lowercase, único inclusive sob concorrência.

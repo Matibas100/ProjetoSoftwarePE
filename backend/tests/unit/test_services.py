@@ -257,11 +257,14 @@ class QuestaoServicesTest(unittest.TestCase):
         )
         questao = questao_class.return_value
         questao.to_dict.return_value = {"id": 3}
-        self.assertEqual(CriarQuestaoService.executar(self.valid_data()), {"id": 3})
+        with patch("app.services.criar_questao_service.TransactionManager.executar", side_effect=lambda op: op()), \
+             patch("app.services.criar_questao_service.QuestaoEvento"):
+            self.assertEqual(CriarQuestaoService.executar(self.valid_data(), 1), {"id": 3})
         self.assertEqual(questao_class.call_args.kwargs["explicacao"], "Explicacao")
         questao.salvar.side_effect = integrity_error()
-        with self.assertRaises(ConflitoError):
-            CriarQuestaoService.executar(self.valid_data())
+        with patch("app.services.criar_questao_service.TransactionManager.executar", side_effect=lambda op: op()), \
+             self.assertRaises(ConflitoError):
+            CriarQuestaoService.executar(self.valid_data(), 1)
 
     @patch("app.services.buscar_questoes_por_assunto_service.QuestaoRepository")
     @patch("app.services.buscar_questoes_por_assunto_service.Assunto")

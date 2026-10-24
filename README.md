@@ -68,7 +68,7 @@ Esse nível adicional apenas delimita o código da aplicação; `controllers`,
 - Cadastro público de Aluno, login, logout e sessão armazenada no MySQL.
 - Acesso por perfil Aluno/Administrador e reautenticação de operações sensíveis.
 
-O acesso inicial é `/login.html`; o cadastro público cria somente Aluno.
+O acesso inicial é `/login`; o cadastro público cria somente Aluno.
 Administrador é criado pelo comando local, sem senha padrão. Antes de iniciar
 esta versão, aplique a migration `005` e configure `AUTH_SECRET_KEY`.
 Veja [Operação da autenticação escolar](docs/technical/operacao-autenticacao-escolar.md)
@@ -233,11 +233,13 @@ A API utiliza `http://127.0.0.1:5000` por padrão.
 Em outro terminal:
 
 ```powershell
-python -m http.server 5500 --directory frontend
+python scripts/serve_frontend.py
 ```
 
-Abra `http://127.0.0.1:5500`. As origens autorizadas podem ser alteradas por
-`CORS_ORIGINS` no `.env`.
+Abra `http://127.0.0.1:5500/login`. O servidor usa somente a biblioteca padrão
+do Python, escuta em `127.0.0.1` e serve a raiz pública `frontend`.
+Para outra porta, use `python scripts/serve_frontend.py --port 5501` e autorize
+a origem `http://127.0.0.1:5501` em `CORS_ORIGINS` na configuração local da API.
 
 ## Testes automatizados
 

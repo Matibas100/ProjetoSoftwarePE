@@ -2,6 +2,8 @@ import unittest
 from uuid import uuid4
 
 from app.models.questao import Questao
+from app.extensions import db
+from sqlalchemy import text
 from tests.integration_support import MySQLIntegrationTestCase
 
 
@@ -64,6 +66,8 @@ class QuestoesApiIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             questao = Questao.buscar_por_id(questao_id)
             if questao is not None:
+                # Limpeza somente da fixture descartável; não é fluxo de produção.
+                db.session.execute(text("DELETE FROM questao_eventos WHERE questao_id=:id"), {"id": questao_id})
                 questao.deletar()
 
     def test_post_questao_valida(self):

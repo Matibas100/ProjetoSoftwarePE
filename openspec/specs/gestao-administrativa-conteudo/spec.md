@@ -157,3 +157,34 @@ ADM-CON-001 e ADM-CON-002 SHALL verificar identidade antes de carregar conteúdo
 - **GIVEN** Administrador sem alterações locais
 - **WHEN** aciona Sair e a API confirma logout
 - **THEN** retorna ao login e o cookie anterior deixa de autorizar gestão
+
+### Requirement: Gestão mínima utilizável de Questões
+As telas `/admin/questoes.html` e `/admin/questao.html` SHALL oferecer listagem, filtros, paginação, cadastro, edição de rascunho, revisão/publicação explícita e arquivamento com confirmação, usando referências ADM-QUE-001/002, moldura e ativos oficiais. SHALL verificar perfil antes de consultar dados e preservar formulário/filtros em falha de negócio, rede ou sessão. Recuperação/reautenticação SHALL ocorrer no contexto, sem repetição automática da mutação; troca de conta SHALL bloquear contexto antigo até descarte/recarga. SHALL proteger alterações não salvas, manter labels, foco e teclado e diferenciar carregamento, vazio, filtros sem resultado, erro e sucesso. Funções fora do recorte SHALL permanecer indisponíveis sem ação fictícia.
+
+#### Scenario: Gerir Questão real
+- **GIVEN** Administrador e catálogo ativo
+- **WHEN** cadastra, edita, revisa/publica ou arquiva uma Questão
+- **THEN** a tela chama APIs reais, reflete o estado confirmado e preserva contexto da listagem
+
+#### Scenario: Falha ou saída durante edição
+- **GIVEN** formulário alterado e ainda não salvo
+- **WHEN** ocorre erro, sessão expirada ou tentativa de navegar/sair
+- **THEN** dados são preservados, recuperação não repete escrita e descarte exige confirmação explícita
+
+#### Scenario: Operação acessível e escopo limitado
+- **GIVEN** usuário operando por teclado
+- **WHEN** percorre filtros, formulário e confirmação de publicação/arquivamento
+- **THEN** foco e consequências são compreensíveis e não há importação, IA ou upload funcional fora deste recorte
+
+### Requirement: Gestão mínima utilizável de Simulados fixos
+As telas administrativas de Simulados SHALL usar referências ADM-SIM-001/002 para listar, cadastrar composição manual ordenada, editar rascunho, revisar/publicar e arquivar, com dados reais e APIs protegidas. SHALL preservar campos, seleção, revisão e filtros diante de erro/sessão expirada, proteger alterações não salvas e exigir confirmação/reautenticação contextual em publicação/arquivamento. SHALL permitir teclado/foco e mostrar vazio, carregamento, falha e sucesso. Geradores, importação, calendário, TRI e recursos fora do recorte SHALL permanecer indisponíveis.
+
+#### Scenario: Publicação de composição real
+- **GIVEN** Administrador com rascunho válido
+- **WHEN** revisa e confirma publicação pela tela
+- **THEN** versão e composição retornadas pelo servidor são refletidas e a edição de publicado fica indisponível
+
+#### Scenario: Falha e proteção da seleção
+- **GIVEN** rascunho com Questões selecionadas e ainda não salvo
+- **WHEN** falha gravação, expira sessão ou tenta sair
+- **THEN** seleção é preservada, descarte exige confirmação e recuperação não repete mutação automaticamente

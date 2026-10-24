@@ -49,7 +49,7 @@
       password.value = "";
       if (signup) {
         form.elements.senha_confirmacao.value = "";
-        sessionStorage.setItem("cadastro-email", data.usuario.email); AuthUI.navigate("/login.html");
+        sessionStorage.setItem("cadastro-email", data.usuario.email); AuthUI.navigate("/login");
       } else AuthUI.navigate(data.usuario.perfil === "administrador" ? "/admin/materias.html" : "/aluno/inicio.html");
     } catch (error) {
       message.dataset.error = "true"; message.textContent = error.message;

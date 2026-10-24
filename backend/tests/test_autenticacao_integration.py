@@ -91,14 +91,21 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         for rule in self.app.url_map.iter_rules():
             if not rule.rule.startswith("/api/") or rule.rule.startswith("/api/auth/"):
                 continue
-            path = rule.rule.replace("<int:materia_id>", "2147483647").replace("<int:assunto_id>", "2147483647")
+            path = rule.rule
+            for argumento in rule.arguments - set(rule.defaults or {}):
+                path = path.replace(f"<int:{argumento}>", "2147483647")
             for method in rule.methods - {"OPTIONS"}:
                 public = path == "/api/health"
                 leitura = method in {"GET", "HEAD"} and path in {"/api/areas-enem", "/api/materias", "/api/assuntos"}
                 anonymous = self.app.test_client().open(path, method=method)
                 self.assertEqual(anonymous.status_code, 200 if public else 401, (path, method))
-                aluno = self.client.open(path, method=method, json={}, headers={"Origin": ORIGIN})
-                self.assertEqual(aluno.status_code, 200 if public or leitura else 403, (path, method))
+                headers = {"Origin": ORIGIN}
+                esperado = 200 if public or leitura else 403
+                if path.startswith('/api/aluno/'):
+                    headers['X-CSRF-Token'] = self.client.get('/api/auth/sessao').json['csrf_token']
+                    esperado = (404 if '/2147483647' in path else 200) if method in {'GET','HEAD'} else 400
+                aluno = self.client.open(path, method=method, json={}, headers=headers)
+                self.assertEqual(aluno.status_code, esperado, (path, method))
         for path in ("/api/materias?status=todos", "/api/assuntos?status=todos"):
             self.assertEqual(self.client.get(path).status_code, 403)
         self.assertEqual(self.client.get("/api/inexistente").status_code, 404)

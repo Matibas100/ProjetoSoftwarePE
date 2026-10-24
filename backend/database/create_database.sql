@@ -169,3 +169,277 @@ CREATE TABLE auth_limites (
     bloqueado_ate DATETIME(6) NULL,
     PRIMARY KEY (chave_hash)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Gest?o versionada: estrutura equivalente ? migration 006.
+ALTER TABLE questoes
+    ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'rascunho',
+    ADD COLUMN revisao INT NOT NULL DEFAULT 1,
+    ADD COLUMN criado_em DATETIME(6) NULL,
+    ADD COLUMN atualizado_em DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    ADD COLUMN versao_publicada_id INT NULL,
+    ADD CONSTRAINT ck_questoes_status CHECK (status IN ('rascunho', 'publicada', 'arquivada')),
+    ADD CONSTRAINT ck_questoes_revisao CHECK (revisao >= 1),
+    ADD INDEX ix_questoes_status (status);
+
+CREATE TABLE questao_versoes (
+    id INT NOT NULL AUTO_INCREMENT,
+    questao_id INT NOT NULL,
+    numero INT NOT NULL,
+    revisao_origem INT NOT NULL,
+    estado VARCHAR(20) NOT NULL,
+    enunciado TEXT NOT NULL,
+    alternativa_a TEXT NOT NULL,
+    alternativa_b TEXT NOT NULL,
+    alternativa_c TEXT NOT NULL,
+    alternativa_d TEXT NOT NULL,
+    alternativa_e TEXT NOT NULL,
+    resposta_correta CHAR(1) NOT NULL,
+    explicacao TEXT NULL,
+    dificuldade VARCHAR(10) NOT NULL,
+    assunto_id INT NOT NULL,
+    assunto_nome VARCHAR(150) NOT NULL,
+    materia_id INT NOT NULL,
+    materia_nome VARCHAR(100) NOT NULL,
+    area_enem_id INT NOT NULL,
+    area_enem_nome VARCHAR(100) NOT NULL,
+    ator_id INT NULL,
+    origem VARCHAR(20) NOT NULL,
+    criado_em DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uq_questao_versoes_numero UNIQUE (questao_id, numero),
+    CONSTRAINT ck_questao_versoes_numero CHECK (numero >= 1 AND revisao_origem >= 1),
+    CONSTRAINT ck_questao_versoes_estado CHECK (estado IN ('rascunho', 'publicada')),
+    CONSTRAINT ck_questao_versoes_origem CHECK (origem IN ('legado', 'manual')),
+    CONSTRAINT ck_questao_versoes_resposta CHECK (resposta_correta IN ('A','B','C','D','E')),
+    CONSTRAINT ck_questao_versoes_dificuldade CHECK (dificuldade IN ('facil','media','dificil')),
+    CONSTRAINT fk_questao_versoes_questao FOREIGN KEY (questao_id) REFERENCES questoes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_questao_versoes_assunto FOREIGN KEY (assunto_id) REFERENCES assuntos(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_questao_versoes_materia FOREIGN KEY (materia_id) REFERENCES materias(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_questao_versoes_area FOREIGN KEY (area_enem_id) REFERENCES areas_enem(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_questao_versoes_ator FOREIGN KEY (ator_id) REFERENCES usuarios(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB;
+
+ALTER TABLE questoes ADD CONSTRAINT fk_questoes_versao_publicada
+    FOREIGN KEY (versao_publicada_id) REFERENCES questao_versoes(id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+CREATE TABLE questao_eventos (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    questao_id INT NOT NULL,
+    versao_id INT NULL,
+    ator_id INT NULL,
+    acao VARCHAR(20) NOT NULL,
+    motivo VARCHAR(500) NOT NULL,
+    criado_em DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX ix_questao_eventos_questao (questao_id),
+    CONSTRAINT ck_questao_eventos_acao CHECK (acao IN ('cadastro','edicao','revisao','aprovacao','publicacao','arquivamento')),
+    CONSTRAINT fk_questao_eventos_questao FOREIGN KEY (questao_id) REFERENCES questoes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_questao_eventos_versao FOREIGN KEY (versao_id) REFERENCES questao_versoes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_questao_eventos_ator FOREIGN KEY (ator_id) REFERENCES usuarios(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB;
+
+INSERT INTO questao_versoes (questao_id, numero, revisao_origem, estado,
+    enunciado, alternativa_a, alternativa_b, alternativa_c, alternativa_d, alternativa_e,
+    resposta_correta, explicacao, dificuldade, assunto_id, assunto_nome,
+    materia_id, materia_nome, area_enem_id, area_enem_nome, ator_id, origem, criado_em)
+SELECT q.id, 1, 1, 'rascunho', q.enunciado, q.alternativa_a, q.alternativa_b,
+    q.alternativa_c, q.alternativa_d, q.alternativa_e, q.resposta_correta, q.explicacao,
+    q.dificuldade, a.id, a.nome, m.id, m.nome, ar.id, ar.nome, NULL, 'legado', UTC_TIMESTAMP(6)
+FROM questoes q JOIN assuntos a ON a.id=q.assunto_id
+JOIN materias m ON m.id=a.materia_id JOIN areas_enem ar ON ar.id=m.area_enem_id;
+
+INSERT INTO questao_eventos (questao_id, versao_id, ator_id, acao, motivo, criado_em)
+SELECT questao_id, id, NULL, 'cadastro', 'Backfill da migration 006; autoria historica desconhecida.', criado_em
+FROM questao_versoes WHERE origem='legado';
+
+-- Prática individual: sem backfill. Reversão por backup/compensação.
+CREATE TABLE pratica_tentativas (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    usuario_id INT NOT NULL,
+    questao_versao_id INT NOT NULL,
+    chave_envio CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    estado VARCHAR(20) NOT NULL,
+    resposta_escolhida CHAR(1) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    correta BOOLEAN NULL,
+    iniciada_em DATETIME(6) NOT NULL,
+    respondida_em DATETIME(6) NULL,
+    assunto_id INT NOT NULL,
+    assunto_nome VARCHAR(150) NOT NULL,
+    materia_id INT NOT NULL,
+    materia_nome VARCHAR(100) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uq_pratica_tentativas_chave UNIQUE (usuario_id, chave_envio),
+    INDEX ix_pratica_tentativas_historico (usuario_id, respondida_em, id),
+    CONSTRAINT ck_pratica_tentativas_estado CHECK (
+        (estado = 'em_andamento' AND resposta_escolhida IS NULL AND correta IS NULL AND respondida_em IS NULL)
+        OR (estado = 'respondida' AND resposta_escolhida IS NOT NULL
+            AND resposta_escolhida IN ('A','B','C','D','E') AND correta IS NOT NULL
+            AND correta IN (0,1) AND respondida_em IS NOT NULL AND respondida_em >= iniciada_em)
+    ),
+    CONSTRAINT fk_pratica_tentativas_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_pratica_tentativas_versao FOREIGN KEY (questao_versao_id) REFERENCES questao_versoes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_pratica_tentativas_assunto FOREIGN KEY (assunto_id) REFERENCES assuntos(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_pratica_tentativas_materia FOREIGN KEY (materia_id) REFERENCES materias(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Pré-condição: prefixo 007 completo. Tabelas vazias, sem backfill.
+-- Reversão: backup ou migration compensatória; preservar tentativas concluídas.
+CREATE TABLE simulados (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	titulo VARCHAR(150) NOT NULL,
+	estado VARCHAR(20) NOT NULL,
+	revisao INTEGER NOT NULL,
+	autor_id INTEGER NOT NULL,
+	criado_em DATETIME(6) NOT NULL,
+	atualizado_em DATETIME(6) NOT NULL,
+	simulado_versao_id INTEGER,
+	PRIMARY KEY (id),
+	CONSTRAINT ck_simulados_estado CHECK (estado IN ('rascunho','publicado','arquivado')),
+	CONSTRAINT ck_simulados_revisao CHECK (revisao >= 1),
+	CONSTRAINT fk_simulados_autor_id FOREIGN KEY(autor_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+)CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE simulado_rascunho_itens (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	simulado_id INTEGER NOT NULL,
+	posicao INTEGER NOT NULL,
+	questao_id INTEGER NOT NULL,
+	questao_versao_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT uq_sim_rascunho_posicao UNIQUE (simulado_id, posicao),
+	CONSTRAINT uq_sim_rascunho_questao UNIQUE (simulado_id, questao_id),
+	CONSTRAINT ck_sim_rascunho_posicao CHECK (posicao BETWEEN 1 AND 180),
+	CONSTRAINT fk_simulado_rascunho_itens_simulado_id FOREIGN KEY(simulado_id) REFERENCES simulados (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_rascunho_itens_questao_id FOREIGN KEY(questao_id) REFERENCES questoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_rascunho_itens_questao_versao_id FOREIGN KEY(questao_versao_id) REFERENCES questao_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+)CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE simulado_versoes (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	simulado_id INTEGER NOT NULL,
+	numero INTEGER NOT NULL,
+	revisao_origem INTEGER NOT NULL,
+	titulo VARCHAR(150) NOT NULL,
+	autor_id INTEGER NOT NULL,
+	criado_em DATETIME(6) NOT NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT uq_sim_versao_numero UNIQUE (simulado_id, numero),
+	CONSTRAINT uq_sim_versao_revisao UNIQUE (simulado_id, revisao_origem),
+	CONSTRAINT ck_sim_versao_numero CHECK (numero >= 1 AND revisao_origem >= 1),
+	CONSTRAINT fk_simulado_versoes_simulado_id FOREIGN KEY(simulado_id) REFERENCES simulados (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_versoes_autor_id FOREIGN KEY(autor_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+)CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE simulado_versao_itens (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	simulado_versao_id INTEGER NOT NULL,
+	posicao INTEGER NOT NULL,
+	questao_id INTEGER NOT NULL,
+	questao_versao_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT uq_sim_item_posicao UNIQUE (simulado_versao_id, posicao),
+	CONSTRAINT uq_sim_item_questao UNIQUE (simulado_versao_id, questao_id),
+	CONSTRAINT ck_sim_item_posicao CHECK (posicao BETWEEN 1 AND 180),
+	CONSTRAINT fk_simulado_versao_itens_simulado_versao_id FOREIGN KEY(simulado_versao_id) REFERENCES simulado_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_versao_itens_questao_id FOREIGN KEY(questao_id) REFERENCES questoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_versao_itens_questao_versao_id FOREIGN KEY(questao_versao_id) REFERENCES questao_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+)CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE simulado_eventos (
+	id BIGINT NOT NULL AUTO_INCREMENT,
+	simulado_id INTEGER NOT NULL,
+	versao_id INTEGER,
+	ator_id INTEGER NOT NULL,
+	acao VARCHAR(30) NOT NULL,
+	motivo VARCHAR(500) NOT NULL,
+	criado_em DATETIME(6) NOT NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT fk_simulado_eventos_simulado_id FOREIGN KEY(simulado_id) REFERENCES simulados (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_eventos_versao_id FOREIGN KEY(versao_id) REFERENCES simulado_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_eventos_ator_id FOREIGN KEY(ator_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+)CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE simulado_tentativas (
+	id BIGINT NOT NULL AUTO_INCREMENT,
+	usuario_id INTEGER NOT NULL,
+	simulado_versao_id INTEGER NOT NULL,
+	estado VARCHAR(20) NOT NULL,
+	revisao INTEGER NOT NULL,
+	chave_envio CHAR(36) COLLATE ascii_bin NOT NULL,
+	iniciada_em DATETIME(6) NOT NULL,
+	finalizada_em DATETIME(6),
+	total INTEGER,
+	respondidas INTEGER,
+	acertos INTEGER,
+	erros INTEGER,
+	em_branco INTEGER,
+	percentual_acerto NUMERIC(5, 2),
+	em_andamento_marcador INTEGER GENERATED ALWAYS AS (CASE WHEN estado = 'em_andamento' THEN 1 ELSE NULL END) STORED,
+	PRIMARY KEY (id),
+	CONSTRAINT uq_sim_tentativa_chave UNIQUE (usuario_id, chave_envio),
+	CONSTRAINT uq_sim_tentativa_andamento UNIQUE (usuario_id, simulado_versao_id, em_andamento_marcador),
+	CONSTRAINT ck_sim_tentativa_revisao CHECK (revisao >= 1),
+	CONSTRAINT ck_sim_tentativa_estado CHECK ((estado = 'em_andamento' AND finalizada_em IS NULL AND total IS NULL AND respondidas IS NULL AND acertos IS NULL AND erros IS NULL AND em_branco IS NULL AND percentual_acerto IS NULL) OR (estado = 'finalizada' AND finalizada_em IS NOT NULL AND finalizada_em >= iniciada_em AND total IS NOT NULL AND total BETWEEN 1 AND 180 AND respondidas IS NOT NULL AND acertos IS NOT NULL AND erros IS NOT NULL AND em_branco IS NOT NULL AND percentual_acerto IS NOT NULL AND acertos >= 0 AND erros >= 0 AND em_branco >= 0 AND total = acertos + erros + em_branco AND respondidas = acertos + erros AND percentual_acerto = ROUND(100 * acertos / total, 2))),
+	CONSTRAINT fk_simulado_tentativas_usuario_id FOREIGN KEY(usuario_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_tentativas_simulado_versao_id FOREIGN KEY(simulado_versao_id) REFERENCES simulado_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+)CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX ix_sim_tentativa_historico ON simulado_tentativas (usuario_id, finalizada_em, id);
+
+CREATE TABLE simulado_respostas (
+	id BIGINT NOT NULL AUTO_INCREMENT,
+	tentativa_id BIGINT NOT NULL,
+	item_id INTEGER NOT NULL,
+	alternativa CHAR(1) COLLATE ascii_bin,
+	correta BOOL,
+	PRIMARY KEY (id),
+	CONSTRAINT uq_sim_resposta_item UNIQUE (tentativa_id, item_id),
+	CONSTRAINT ck_sim_resposta_alternativa CHECK (alternativa IS NULL OR alternativa IN ('A','B','C','D','E')),
+	CONSTRAINT ck_sim_resposta_correta CHECK (correta IS NULL OR correta IN (0,1)),
+	CONSTRAINT fk_simulado_respostas_tentativa_id FOREIGN KEY(tentativa_id) REFERENCES simulado_tentativas (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT fk_simulado_respostas_item_id FOREIGN KEY(item_id) REFERENCES simulado_versao_itens (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+)CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
+
+ALTER TABLE simulados ADD CONSTRAINT fk_simulados_simulado_versao_id FOREIGN KEY (simulado_versao_id) REFERENCES simulado_versoes(id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+-- Pré-condição: prefixo 008 completo. Sem backfill e sem planos artificiais.
+-- Reversão: restaurar backup ou migration compensatória que preserve o histórico.
+CREATE TABLE planos_estudo (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    usuario_id INTEGER NOT NULL,
+    geracao INTEGER NOT NULL,
+    atual BOOL NOT NULL,
+    usuario_atual INTEGER GENERATED ALWAYS AS (CASE WHEN atual = 1 THEN usuario_id ELSE NULL END) STORED,
+    periodo JSON NOT NULL,
+    gerado_em DATETIME(6) NOT NULL,
+    chave_envio CHAR(36) COLLATE ascii_bin NOT NULL,
+    operacao VARCHAR(12) NOT NULL,
+    plano_anterior_id BIGINT,
+    PRIMARY KEY (id),
+    CONSTRAINT uq_plano_geracao UNIQUE (usuario_id, geracao),
+    CONSTRAINT uq_plano_chave UNIQUE (usuario_id, chave_envio),
+    CONSTRAINT uq_plano_atual UNIQUE (usuario_atual),
+    CONSTRAINT ck_plano_geracao CHECK (geracao >= 1 AND atual IN (0,1)),
+    CONSTRAINT ck_plano_operacao CHECK ((operacao = 'gerar' AND plano_anterior_id IS NULL) OR (operacao = 'recalcular' AND plano_anterior_id IS NOT NULL)),
+    CONSTRAINT fk_plano_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_plano_anterior FOREIGN KEY (plano_anterior_id) REFERENCES planos_estudo(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+) CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE plano_estudo_itens (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    plano_id BIGINT NOT NULL,
+    assunto_id INTEGER NOT NULL,
+    materia_id INTEGER NOT NULL,
+    posicao INTEGER NOT NULL,
+    snapshot JSON NOT NULL,
+    estado VARCHAR(12) NOT NULL,
+    concluido_em DATETIME(6),
+    PRIMARY KEY (id),
+    CONSTRAINT uq_plano_item_posicao UNIQUE (plano_id, posicao),
+    CONSTRAINT uq_plano_item_assunto UNIQUE (plano_id, assunto_id),
+    CONSTRAINT ck_plano_item_posicao CHECK (posicao BETWEEN 1 AND 3),
+    CONSTRAINT ck_plano_item_estado CHECK ((estado = 'pendente' AND concluido_em IS NULL) OR (estado = 'concluido' AND concluido_em IS NOT NULL)),
+    CONSTRAINT fk_plano_item_plano FOREIGN KEY (plano_id) REFERENCES planos_estudo(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_plano_item_assunto FOREIGN KEY (assunto_id) REFERENCES assuntos(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_plano_item_materia FOREIGN KEY (materia_id) REFERENCES materias(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+) CHARSET=utf8mb4 ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
