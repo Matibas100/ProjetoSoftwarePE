@@ -53,6 +53,12 @@ Todas as rotas têm prefixo `/api`.
 As rotas legadas de Matérias, Assuntos e Questões permanecem compatíveis. Suas
 listagens oferecem somente itens ativos por padrão.
 
+O JOIN da listagem ativa de Assuntos fica em
+`CatalogoRepository.listar_assuntos_ativos`, coordenado por
+`ListarAssuntosService`: exige Assunto e Matéria ativos, filtra opcionalmente
+por Matéria e ordena por nome normalizado/ID. `Assunto.listar_ativos` delega
+ao Repository para compatibilidade; CRUD simples permanece nas Models.
+
 ## Testes
 
 ```powershell

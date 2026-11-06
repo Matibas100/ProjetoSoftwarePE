@@ -3,6 +3,7 @@ from flask import current_app, g, request
 
 from app.controllers.autenticacao_controller import COOKIE, resposta_erro
 from app.domain.autenticacao import AutenticacaoError
+from app.http_response import registrar_falha
 from app.services.autenticacao_service import AutorizarService, ConsultarSessaoService, ValidarCsrfService
 
 
@@ -49,8 +50,8 @@ def proteger_api():
             raise AutenticacaoError("Você não tem acesso a esta operação.", 403, "acesso_negado")
     except AutenticacaoError as erro:
         return resposta_erro(erro)
-    except Exception:
-        current_app.logger.error("Falha interna ao verificar identidade.")
+    except Exception as erro:
+        registrar_falha("Falha interna ao verificar identidade.", erro)
         return resposta_erro(AutenticacaoError("Não foi possível verificar sua sessão.", 500, "erro_interno"))
     return None
 

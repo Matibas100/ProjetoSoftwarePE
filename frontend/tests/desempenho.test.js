@@ -28,7 +28,7 @@ async function setup(mode = "dashboard", override = () => undefined, auth = {}) 
     return mode === "admin" ? admin() : mode === "dashboard" ? dashboard() : diagnostic();
   });
   globalThis.apiRequest = api;
-  await import("../js/desempenho.js"); await settle(); return api;
+  await import("../js/navigation.js"); await import("../js/desempenho.js"); await settle(); return api;
 }
 afterEach(() => { globalThis.DesempenhoUI?.destroy(); delete globalThis.DesempenhoUI; delete globalThis.AuthUI; delete globalThis.apiRequest; vi.restoreAllMocks(); });
 

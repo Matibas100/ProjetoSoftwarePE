@@ -12,6 +12,17 @@ class CatalogoRepository:
     """Consultas especializadas, agregacoes e locks do catalogo."""
 
     @staticmethod
+    def listar_assuntos_ativos(materia_id=None):
+        consulta = select(Assunto).join(Assunto.materia).where(
+            Assunto.status == "ativa", Materia.status == "ativa"
+        )
+        if materia_id is not None:
+            consulta = consulta.where(Assunto.materia_id == materia_id)
+        return db.session.execute(
+            consulta.order_by(Assunto.nome_normalizado, Assunto.id)
+        ).scalars().all()
+
+    @staticmethod
     def contagens_dashboard(contexto):
         return {"materias_ativas": contexto.executar(select(func.count()).select_from(Materia)
             .where(Materia.status == "ativa")).scalar_one(),

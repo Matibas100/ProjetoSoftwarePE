@@ -6,8 +6,7 @@ from sqlalchemy import event, select, text
 from app.extensions import db
 from app.exceptions import ConflitoError
 from app.models.plano_estudo import PlanoEstudo as Plano, PlanoEstudoItem as Item
-from app.services.gerar_plano_service import GerarPlanoService
-from app.services.recalcular_plano_service import RecalcularPlanoService
+from app.http_composition import servicos
 from app.services.concluir_plano_item_service import ConcluirPlanoItemService
 from tests.integration_support import MySQLIntegrationTestCase
 from tests import test_praticas_integration as fixture
@@ -161,16 +160,16 @@ class PlanosIntegrationTest(MySQLIntegrationTestCase):
 
     def test_concorrencia_geracao_mesma_chave_e_distinta_e_recalculo(self):
         self.base();chave=str(uuid4())
-        resultados=self.disputa(lambda:GerarPlanoService.executar(self.usuario,{'chave_envio':chave}))
+        resultados=self.disputa(lambda:servicos().gerar_plano.executar(self.usuario,{'chave_envio':chave}))
         self.assertEqual(sorted(r[1] for r in resultados),[200,201])
         p=resultados[0][0]['plano']
-        resultados=self.disputa(lambda:RecalcularPlanoService.executar(self.usuario,{'chave_envio':str(uuid4()),'plano_atual_id':p['id'],'confirmar':True}))
+        resultados=self.disputa(lambda:servicos().recalcular_plano.executar(self.usuario,{'chave_envio':str(uuid4()),'plano_atual_id':p['id'],'confirmar':True}))
         self.assertEqual(sorted(r[1] for r in resultados),[201,409])
         self.base(total=5)
         # Outra identidade possui base própria e duas chaves de geração disputam.
         with self.app.app_context():
             db.session.execute(text('UPDATE pratica_tentativas SET usuario_id=:outro WHERE usuario_id=:u'),{'outro':self.outro_id,'u':self.usuario});db.session.commit()
-        resultados=self.disputa(lambda:GerarPlanoService.executar(self.outro_id,{'chave_envio':str(uuid4())}))
+        resultados=self.disputa(lambda:servicos().gerar_plano.executar(self.outro_id,{'chave_envio':str(uuid4())}))
         self.assertEqual(sorted(r[1] for r in resultados),[201,409])
 
     def test_snapshot_transacional_exclui_resposta_concorrente_e_preserva_imutabilidade(self):
@@ -195,6 +194,7 @@ class PlanosIntegrationTest(MySQLIntegrationTestCase):
                 with self.assertRaises(ConflitoError):db.session.flush()
                 db.session.rollback()
             for entidade in [p,i]:
+                self.assertFalse(hasattr(entidade, 'deletar'))
                 db.session.delete(entidade)
                 with self.assertRaises(ConflitoError):db.session.flush()
                 db.session.rollback()

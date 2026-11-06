@@ -1,8 +1,8 @@
 from app.extensions import db
 
 
-class CrudMixin(db.Model):
-    """Operacoes simples compartilhadas pelas Models do dominio."""
+class ModeloBase(db.Model):
+    """Persistência e leitura; salvar respeita os invariantes da entidade."""
 
     __abstract__ = True
 
@@ -19,6 +19,20 @@ class CrudMixin(db.Model):
             raise
         return self
 
+    @classmethod
+    def listar_todos(cls):
+        return db.session.execute(db.select(cls)).scalars().all()
+
+    @classmethod
+    def buscar_por_id(cls, registro_id):
+        return db.session.get(cls, registro_id)
+
+
+class ModeloAtualizavel(ModeloBase):
+    """Acrescenta atualização dos campos permitidos pela Model."""
+
+    __abstract__ = True
+
     def atualizar(self, confirmar=True, **dados):
         for campo, valor in dados.items():
             if campo in self.campos_atualizaveis:
@@ -34,6 +48,12 @@ class CrudMixin(db.Model):
             raise
         return self
 
+
+class CrudMixin(ModeloAtualizavel):
+    """CRUD completo; mantém o caminho de importação legado."""
+
+    __abstract__ = True
+
     def deletar(self, confirmar=True):
         try:
             db.session.delete(self)
@@ -45,11 +65,3 @@ class CrudMixin(db.Model):
             if confirmar:
                 db.session.rollback()
             raise
-
-    @classmethod
-    def listar_todos(cls):
-        return db.session.execute(db.select(cls)).scalars().all()
-
-    @classmethod
-    def buscar_por_id(cls, registro_id):
-        return db.session.get(cls, registro_id)

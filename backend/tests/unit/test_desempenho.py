@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import unittest
+from unittest.mock import Mock
 from werkzeug.datastructures import MultiDict
 from app.contexto_leitura import ContextoLeitura, utc
 from app.exceptions import DadosInvalidosError
@@ -28,7 +29,7 @@ class DesempenhoUnitTest(unittest.TestCase):
         self.assertEqual(metrica({'total_respostas':3,'acertos':1,'pratica':2,'simulado':1})['percentual_acerto'],33.33)
 
     def test_contexto_e_usuario_obrigatorios_sem_fallback(self):
-        with self.assertRaises(ValueError):ConsultarDesempenhoService.executar(None)
+        with self.assertRaises(ValueError):ConsultarDesempenhoService(Mock(), Mock()).executar(None)
         with self.assertRaises(ValueError):
             with ContextoLeitura.usar(object()):pass
         for repo in [PraticaRepository,SimuladoRepository]:

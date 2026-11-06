@@ -56,16 +56,9 @@ class Assunto(CrudMixin):
 
     @classmethod
     def listar_ativos(cls, materia_id=None):
-        from app.models.materia import Materia
+        from app.repositories.catalogo_repository import CatalogoRepository
 
-        consulta = db.select(cls).join(cls.materia).where(
-            cls.status == "ativa", Materia.status == "ativa"
-        )
-        if materia_id is not None:
-            consulta = consulta.where(cls.materia_id == materia_id)
-        return db.session.execute(
-            consulta.order_by(cls.nome_normalizado, cls.id)
-        ).scalars().all()
+        return CatalogoRepository.listar_assuntos_ativos(materia_id)
 
     def to_dict(self):
         return {

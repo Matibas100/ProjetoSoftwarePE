@@ -1,10 +1,10 @@
 from sqlalchemy import event
 from app.extensions import db
-from app.models.crud_mixin import CrudMixin
+from app.models.crud_mixin import ModeloBase
 from app.exceptions import ConflitoError
 
 
-class QuestaoEvento(CrudMixin):
+class QuestaoEvento(ModeloBase):
     __tablename__ = "questao_eventos"
     __table_args__ = (db.CheckConstraint("acao IN ('cadastro','edicao','revisao','aprovacao','publicacao','arquivamento')", name="ck_questao_eventos_acao"),)
     id = db.Column(db.BigInteger, primary_key=True)
@@ -15,11 +15,6 @@ class QuestaoEvento(CrudMixin):
     motivo = db.Column(db.String(500), nullable=False)
     criado_em = db.Column(db.DateTime, nullable=False)
 
-    def atualizar(self, **dados):
-        raise ConflitoError("Eventos editoriais são imutáveis.")
-
-    def deletar(self, confirmar=True):
-        raise ConflitoError("Eventos editoriais não podem ser excluídos.")
 
 
 @event.listens_for(QuestaoEvento, "before_update")

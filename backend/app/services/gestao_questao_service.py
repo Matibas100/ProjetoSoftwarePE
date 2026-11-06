@@ -196,3 +196,22 @@ class ConsultarVersaoHistoricaService:
         if versao is None or versao.estado != "publicada":
             raise RecursoNaoEncontradoError("Versão publicada não encontrada.")
         return versao.conteudo(correcao=correcao)
+
+
+class ConsultarVersoesElegiveisService:
+    @staticmethod
+    def executar(ids):
+        """Mapa interno somente das versões disponíveis para novo uso, sem locks."""
+        return {v.id: v.conteudo() for v in QuestaoRepository.versoes_elegiveis(set(ids))}
+
+
+class ConsultarVersoesHistoricasService:
+    @staticmethod
+    def executar(ids, correcao=False):
+        """Consumidor deve autorizar propriedade/conclusão antes desta leitura."""
+        ids = set(ids)
+        versoes = {v.id: v.conteudo(correcao=correcao)
+            for v in QuestaoRepository.versoes_historicas(ids)}
+        if ids - versoes.keys():
+            raise RecursoNaoEncontradoError("Versão publicada não encontrada.")
+        return versoes

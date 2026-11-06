@@ -39,6 +39,7 @@ permitidos somente nos testes unitários; nunca substituem as integrações.
 | `make test-frontend` | `npm run test:coverage` |
 | `make test-coverage` | runner backend e `npm run test:coverage` |
 | `make test` | igual a `make test-coverage` |
+| `make test-e2e` | `python scripts/run_e2e.py` |
 
 As integrações e qualquer alvo que as inclua exigem opt-in somente no processo:
 
@@ -64,3 +65,26 @@ cobertas.
 - Não declare sucesso quando o MySQL estiver indisponível.
 - Mudança somente documental ou de configuração não exige executar a suíte da aplicação.
 - Registre no fechamento comandos, resultados e limitações reais.
+
+## Navegador real
+
+Instale as dependências com `npm ci` e o browser com
+`npx playwright install chromium` (em Linux CI: `--with-deps chromium`).
+`npm run test:e2e:list` apenas descobre a suíte, separada dos testes Vitest.
+
+O E2E exige `RUN_MYSQL_E2E=1` somente no processo e configuração MySQL por
+ambiente (`DATABASE_URL` ou variáveis `DB_*`). O runner não lê `.env`; cria
+schema com prefixo `plataforma_enem_e2e_test_` e sufixo aleatório validado,
+aplica migrations oficiais, cria operador sintético e inicia API/frontend
+em portas locais livres. Os vinte casos usam a interface com persistência real.
+
+```powershell
+$env:RUN_MYSQL_E2E = "1"
+npm run test:e2e
+Remove-Item Env:RUN_MYSQL_E2E
+```
+
+É necessário privilégio de criar/remover schemas descartáveis. Processos e
+schema são limpos em `finally`, também após falha. Não há fallback para mocks,
+SQLite ou banco operacional. Relatórios/capturas ficam em `test-results/`,
+ignorado pelo Git. Não gerar traces, HAR, vídeo ou storage state autenticado.

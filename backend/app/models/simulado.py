@@ -3,7 +3,7 @@ from sqlalchemy import event
 from sqlalchemy.dialects.mysql import DATETIME
 from app.extensions import db
 from app.exceptions import ConflitoError
-from app.models.crud_mixin import CrudMixin
+from app.models.crud_mixin import CrudMixin, ModeloBase
 
 
 def referencia(tabela, tipo=db.Integer, **opcoes):
@@ -40,7 +40,7 @@ class SimuladoRascunhoItem(CrudMixin):
     questao_versao_id = referencia("questao_versoes", nullable=False)
 
 
-class SimuladoVersao(CrudMixin):
+class SimuladoVersao(ModeloBase):
     __tablename__ = "simulado_versoes"
     __table_args__ = (
         db.UniqueConstraint("simulado_id", "numero", name="uq_sim_versao_numero"),
@@ -56,7 +56,7 @@ class SimuladoVersao(CrudMixin):
     criado_em = db.Column(DATETIME(fsp=6), nullable=False)
 
 
-class SimuladoVersaoItem(CrudMixin):
+class SimuladoVersaoItem(ModeloBase):
     __tablename__ = "simulado_versao_itens"
     __table_args__ = (
         db.UniqueConstraint("simulado_versao_id", "posicao", name="uq_sim_item_posicao"),
@@ -70,7 +70,7 @@ class SimuladoVersaoItem(CrudMixin):
     questao_versao_id = referencia("questao_versoes", nullable=False)
 
 
-class SimuladoEvento(CrudMixin):
+class SimuladoEvento(ModeloBase):
     __tablename__ = "simulado_eventos"
     id = db.Column(db.BigInteger, primary_key=True)
     simulado_id = referencia("simulados", nullable=False)

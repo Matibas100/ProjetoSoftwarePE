@@ -1,6 +1,6 @@
-from flask import current_app, g, jsonify, request
-from app.exceptions import ErroAplicacao
-from app.services.listar_questoes_aluno_service import ListarQuestoesAlunoService
+from flask import g, jsonify, request
+from app.http_response import responder_http, resposta_json, resposta_json_dinamica
+from app.http_composition import servicos
 from app.services.iniciar_pratica_service import IniciarPraticaService
 from app.services.consultar_pratica_service import ConsultarPraticaService
 from app.services.responder_pratica_service import ResponderPraticaService
@@ -10,19 +10,12 @@ from app.services.listar_praticas_service import ListarPraticasService
 class PraticaController:
     @staticmethod
     def _responder(operacao):
-        try:
-            dados = operacao()
-            payload, status = dados if isinstance(dados, tuple) else (dados, 200)
-            return jsonify(payload), status
-        except ErroAplicacao as erro:
-            return jsonify(erro.to_dict()), erro.status_code
-        except Exception:
-            current_app.logger.error("Falha interna ao processar prática.")
-            return jsonify({"erro": "Ocorreu um erro interno no servidor."}), 500
+        return responder_http(operacao, contexto="Falha interna: pratica.",
+            adaptar_sucesso=resposta_json_dinamica)
 
     @staticmethod
     def questoes():
-        return PraticaController._responder(lambda: ListarQuestoesAlunoService.executar(request.args))
+        return PraticaController._responder(lambda: servicos().questoes_aluno.executar(request.args))
 
     @staticmethod
     def iniciar():

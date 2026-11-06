@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from app.exceptions import DadosInvalidosError
 from app.services.plano_validacao import operacao, confirmacao
 from app.services.selecionar_plano_service import SelecionarPlanoService
@@ -23,10 +23,11 @@ class PlanosUnitTest(unittest.TestCase):
 
     def selecionar(self, linhas, pares=None):
         d={'limiar_amostra':5,'periodo':{'inicio':'2026-09-25','fim':'2026-10-24','timezone':'UTC'},'assuntos':linhas}
-        with patch('app.services.selecionar_plano_service.ConsultarDesempenhoService.executar',return_value=d) as diagnostico, \
-             patch('app.services.selecionar_plano_service.QuestaoRepository.pares_elegiveis_plano',return_value=pares if pares is not None else {(a['assunto_id'],1) for a in linhas}):
-            resultado=SelecionarPlanoService.executar(7,'contexto',datetime(2026,10,24))
-            diagnostico.assert_called_once_with(7,contexto='contexto',instante=datetime(2026,10,24))
+        diagnostico = Mock()
+        diagnostico.executar.return_value = d
+        with patch('app.services.selecionar_plano_service.QuestaoRepository.pares_elegiveis_plano',return_value=pares if pares is not None else {(a['assunto_id'],1) for a in linhas}):
+            resultado=SelecionarPlanoService(diagnostico).executar(7,'contexto',datetime(2026,10,24))
+            diagnostico.executar.assert_called_once_with(7,contexto='contexto',instante=datetime(2026,10,24))
             return resultado[1]
 
     @staticmethod
@@ -45,8 +46,9 @@ class PlanosUnitTest(unittest.TestCase):
         self.assertEqual(self.selecionar([self.linha(1,0,5)],set()),[])
 
     def test_diagnostico_indisponivel_propaga_e_http_nao_expoe_interno(self):
-        with patch('app.services.selecionar_plano_service.ConsultarDesempenhoService.executar',side_effect=RuntimeError('interno')):
-            with self.assertRaises(RuntimeError):SelecionarPlanoService.executar(1,None,datetime(2026,10,24))
+        diagnostico = Mock()
+        diagnostico.executar.side_effect = RuntimeError('interno')
+        with self.assertRaises(RuntimeError):SelecionarPlanoService(diagnostico).executar(1,None,datetime(2026,10,24))
         app=create_app(type('PlanoTestConfig',(TestConfig,),{'AUTH_SECRET_KEY':'ab'*32}));app.logger.disabled=True
         with app.test_request_context():
             def falhar():raise RuntimeError('interno secreto')

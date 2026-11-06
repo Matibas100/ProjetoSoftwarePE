@@ -41,6 +41,71 @@ class SimuladosIntegrationTest(MySQLIntegrationTestCase):
     def confirmar(self, revisao=1):
         return {'revisao':revisao,'confirmar':True,'motivo':'Revisão explícita de teste'}
 
+    def test_selects_constantes_por_composicao_pagina_e_propriedade(self):
+        from app.services.gestao_simulado_service import ListarSimuladosAdminService
+        from app.services.consultar_simulado_service import (
+            ListarSimuladosAlunoService, ConsultarTentativaSimuladoService,
+            ListarHistoricoSimuladosService,
+        )
+        from app.http_composition import servicos
+
+        pequeno = self.criar(questao_versao_ids=self.versoes[:1]).json
+        publicado = self.client.post(f"/api/admin/simulados/{pequeno['id']}/publicar", json=self.confirmar()).json
+        pequeno_v = publicado['simulado_versao_id']
+        maior = self.iniciar().json
+        menor = self.iniciar(versao=pequeno_v).json
+        alheia = self.iniciar(cliente=self.outro).json
+        aluno_id = self.aluno.get('/api/auth/sessao').json['usuario']['id']
+
+        def medir(operacao):
+            consultas = []
+            def contar(connection, cursor, statement, parameters, context, executemany):
+                if statement.lstrip().upper().startswith('SELECT'):
+                    consultas.append(statement)
+            db.session.remove()
+            event.listen(db.engine, 'before_cursor_execute', contar)
+            try:
+                resultado = operacao()
+            finally:
+                event.remove(db.engine, 'before_cursor_execute', contar)
+            self.assertFalse(any('FOR UPDATE' in sql.upper() for sql in consultas))
+            return resultado, len(consultas)
+
+        with self.app.app_context():
+            for listar in (lambda filtros: ListarSimuladosAdminService.executar({**filtros, 'status':'publicado'}),
+                           lambda filtros: servicos().simulados_aluno.executar(aluno_id, filtros),
+                           servicos().questoes_aluno.executar):
+                _, poucas = medir(lambda: listar({'por_pagina':'1'}))
+                pagina, muitas = medir(lambda: listar({'por_pagina':'100'}))
+                self.assertGreater(len(pagina['itens']), 1)
+                self.assertEqual(muitas, poucas)
+            _, poucas = medir(lambda: ConsultarTentativaSimuladoService.executar(aluno_id, menor['id']))
+            detalhe, muitas = medir(lambda: ConsultarTentativaSimuladoService.executar(aluno_id, maior['id']))
+            self.assertEqual(muitas, poucas)
+            self.assertEqual([i['questao']['questao_versao_id'] for i in detalhe['itens']], self.versoes)
+            self.assertNotIn('resposta_correta', str(detalhe))
+
+        self.assertEqual(self.finalizar(maior).status_code, 200)
+        self.assertEqual(self.finalizar(menor).status_code, 200)
+        with self.app.app_context():
+            _, poucas = medir(lambda: ConsultarTentativaSimuladoService.executar(aluno_id, menor['id'], 'correcao'))
+            _, muitas = medir(lambda: ConsultarTentativaSimuladoService.executar(aluno_id, maior['id'], 'correcao'))
+            self.assertEqual(muitas, poucas)
+            _, poucas = medir(lambda: servicos().historico_simulados.executar(aluno_id, {'por_pagina':'1'}))
+            _, muitas = medir(lambda: servicos().historico_simulados.executar(aluno_id, {'por_pagina':'100'}))
+            self.assertEqual(muitas, poucas)
+
+        disponivel = self.criar(questao_versao_ids=self.versoes[1:]).json
+        self.assertEqual(self.client.post(f"/api/admin/simulados/{disponivel['id']}/publicar", json=self.confirmar()).status_code, 200)
+        self.assertEqual(self.client.post(self.qpath+'/arquivar', json=self.confirmar()).status_code, 200)
+        catalogo = self.aluno.get('/api/aluno/simulados').json['itens']
+        retirado = next(s for s in catalogo if s['id'] == self.s['id'])
+        self.assertFalse(retirado['disponivel'])
+        self.assertTrue(next(s for s in catalogo if s['id'] == disponivel['id'])['disponivel'])
+        self.assertIsNone(retirado['tentativa_em_andamento_id'])
+        self.assertNotEqual(alheia['id'], maior['id'])
+        self.assertEqual(self.outro.get(f"/api/aluno/tentativas-simulado/{maior['id']}").status_code, 404)
+
     def iniciar(self, chave=None, versao=None, cliente=None):
         return (cliente or self.aluno).post('/api/aluno/tentativas-simulado', json={
             'simulado_versao_id':versao or self.v, 'chave_envio':chave or str(uuid4())})
@@ -204,6 +269,25 @@ class SimuladosIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             self.assertTrue(all(r.correta is None for r,i in __import__('app.repositories.simulado_repository',fromlist=['SimuladoRepository']).SimuladoRepository.respostas(t['id'])))
         self.assertEqual(self.finalizar(t,revisao=2).status_code,200)
+
+    def test_snapshots_e_eventos_sem_mutacoes_ou_exclusao(self):
+        with self.app.app_context():
+            versao = db.session.get(SimuladoVersao, self.v)
+            item = db.session.execute(db.select(SimuladoVersaoItem).where(
+                SimuladoVersaoItem.simulado_versao_id == self.v)).scalars().first()
+            evento = db.session.execute(db.select(SimuladoEvento).where(
+                SimuladoEvento.simulado_id == self.s['id'])).scalars().first()
+            for registro, campo in [(versao, 'titulo'), (item, 'posicao'), (evento, 'motivo')]:
+                self.assertFalse(hasattr(registro, 'atualizar'))
+                self.assertFalse(hasattr(registro, 'deletar'))
+                antes = getattr(registro, campo)
+                setattr(registro, campo, 99 if campo == 'posicao' else 'Mutação proibida')
+                with self.assertRaises(ConflitoError): registro.salvar()
+                self.assertEqual(getattr(registro, campo), antes)
+                db.session.delete(registro)
+                with self.assertRaises(ConflitoError): db.session.flush()
+                db.session.rollback()
+                self.assertEqual(getattr(registro, campo), antes)
 
     def test_fatos_preservados_apos_arquivamento_transferencia_e_novo_login(self):
         t=self.iniciar().json;self.resposta(t);self.resposta(t,n=1,alternativa='B',revisao=2)

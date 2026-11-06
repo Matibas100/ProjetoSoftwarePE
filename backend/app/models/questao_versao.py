@@ -1,10 +1,10 @@
 from sqlalchemy import event
 from app.extensions import db
-from app.models.crud_mixin import CrudMixin
+from app.models.crud_mixin import ModeloBase
 from app.exceptions import ConflitoError
 
 
-class QuestaoVersao(CrudMixin):
+class QuestaoVersao(ModeloBase):
     """Snapshot editorial append-only; alterações criam outra versão."""
 
     __tablename__ = "questao_versoes"
@@ -39,12 +39,6 @@ class QuestaoVersao(CrudMixin):
     ator_id = db.Column(db.Integer, db.ForeignKey("usuarios.id", ondelete="RESTRICT", onupdate="RESTRICT"))
     origem = db.Column(db.String(20), nullable=False)
     criado_em = db.Column(db.DateTime, nullable=False)
-
-    def atualizar(self, **dados):
-        raise ConflitoError("Versões são imutáveis; publique uma nova revisão.")
-
-    def deletar(self, confirmar=True):
-        raise ConflitoError("Versões históricas não podem ser excluídas.")
 
     def conteudo(self, correcao=False):
         from app.models.questao import Questao

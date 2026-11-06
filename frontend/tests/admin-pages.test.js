@@ -27,6 +27,7 @@ async function setupAdmin(htmlPath, script, apiRequest) {
   vi.resetModules();
   prepareAdminGlobalDom(htmlPath);
   globalThis.apiRequest = apiRequest;
+  await import("../js/navigation.js");
   await import("../js/admin-common.js");
   await import(script);
   await settle();

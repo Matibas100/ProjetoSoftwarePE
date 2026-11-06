@@ -1,0 +1,22 @@
+[
+  ".env.example",
+  "backend/app/composition.py",
+  "backend/app/contracts/__init__.py",
+  "backend/app/contracts/catalogo.py",
+  "backend/app/contracts/desempenho.py",
+  "backend/app/contracts/questoes.py",
+  "backend/app/contracts/simulados.py",
+  "backend/app/http_composition.py",
+  "backend/app/repositories/consultas_catalogo.py",
+  "backend/app/repositories/consultas_desempenho.py",
+  "backend/app/repositories/consultas_questoes.py",
+  "backend/app/repositories/consultas_simulados.py",
+  "backend/app/services/listar_historico_simulados_service.py",
+  "backend/app/services/listar_simulados_aluno_service.py",
+  "backend/tests/unit/test_composition.py",
+  "backend/tests/unit/test_consultas_compostas.py",
+  "backend/tests/unit/test_persistencia_capacidades.py",
+  "backend/tests/unit/test_substituicao_catalogo.py",
+  "docs/technical/adr/ADR-008-contratos-e-capacidades-de-persistencia.md",
+  "docs/technical/aplicacao-solid.md"
+]

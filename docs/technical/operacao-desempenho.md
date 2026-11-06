@@ -50,8 +50,9 @@ TransactionManager de escrita nem fallback para leituras independentes.
 
 Contrato interno: `ConsultarDesempenhoService.executar(usuario_id, filtros,
 contexto, instante)`. O usuário deve vir de consumidor autorizado. A
-infraestrutura do futuro plano pode construir `ContextoLeitura(conexao,
-instante)` sobre conexão com transação/snapshot REPEATABLE READ já aberta e
+infraestrutura do [Plano básico já implementado](operacao-plano-estudos.md)
+constrói `ContextoLeitura(conexao, instante)` sobre conexão com
+transação/snapshot REPEATABLE READ já aberta e
 passar esse contexto ativo ao Service. Relógio divergente, contexto encerrado,
 isolamento incorreto ou ausência de transação produzem erro. Diagnóstico não
 abre outra conexão nem confirma/reverte a transação recebida; falhas propagam
@@ -98,9 +99,19 @@ vazio, amostra pequena ou erro. Blocos do mesmo endpoint recarregam juntos.
 Recarga/troca de período remove dados anteriores; respostas atrasadas de outra
 geração/identidade não preenchem a tela. Troca de conta limpa dados privados;
 recuperar sessão não repete mutações. Navegação continua acessível durante erro.
-Plano, redação, tutor, TRI, tendência e recomendações permanecem indisponíveis,
-sem números fictícios. Sem storage de respostas ou diagnóstico.
+O [Plano básico de prioridades para prática](operacao-plano-estudos.md) está
+disponível. Agenda, duração/reagendamento, redação, tutor, TRI, tendência e
+recomendações avançadas permanecem indisponíveis, sem números fictícios.
+Sem storage de respostas ou diagnóstico.
 
 Consultas são limitadas por usuário/período e agregadas no MySQL com os índices
 existentes. Materialização, índices novos ou cache persistente exigem outra
 change. Reversão remove consumidores novos sem alterar fatos ou correções.
+
+
+Composição SOLID: diagnóstico recebe ConsultaMetricasDesempenho e EscoposLeitura.
+Dashboard do Aluno recebe DiagnosticoAluno, ConsultaAtividadesAluno e os mesmos escopos;
+reutiliza contexto/relógio com até cinco atividades. Dashboard administrativo recebe apenas
+ConsultaContagensAdmin e escopos, sem dados individuais. Factory fornece instâncias por
+aplicação, sem usuário/conexão capturados. O contexto externo do plano não é encerrado
+pelo diagnóstico; falhas preservam a fronteira de rollback do caso composto.

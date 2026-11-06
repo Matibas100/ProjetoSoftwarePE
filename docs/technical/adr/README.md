@@ -1,6 +1,6 @@
 # Índice de decisões arquiteturais — Pacote 1
 
-Este índice consolida as sete decisões analisadas antes da Modelagem Mestre do MySQL. A aceitação dos ADRs autoriza o direcionamento arquitetural, mas não autoriza implementação, migration ou alteração do banco.
+Este índice consolida as decisões arquiteturais do projeto. A aceitação dos ADRs autoriza o direcionamento arquitetural, mas não autoriza implementação, migration ou alteração do banco.
 
 | ADR | Título | Status | Data | Resumo da decisão |
 |---|---|---|---|---|
@@ -11,6 +11,7 @@ Este índice consolida as sete decisões analisadas antes da Modelagem Mestre do
 | [ADR-005](ADR-005-versionamento-editorial.md) | Versionamento editorial | **Aceito** | 2026-08-29 | Conteúdo usa entidade lógica e versões; versões aprovadas ou publicadas são imutáveis e referenciadas pelo histórico. |
 | [ADR-006](ADR-006-fronteira-de-transacoes.md) | Fronteira de transações | **Aceito** | 2026-08-29 | O Service delimita o caso de uso por TransactionManager/UnitOfWork, preservando Active Record e isolando a sessão na infraestrutura. |
 | [ADR-007](ADR-007-armazenamento-de-midias.md) | Mídias e arquivos | **Aceito** | 2026-08-29 | StorageService abstrai armazenamento local e de objetos; o MySQL guarda metadados e `storage_key`, não os bytes por padrão. |
+| [ADR-008](ADR-008-contratos-e-capacidades-de-persistencia.md) | Contratos e capacidades de persistência | **Aceito** | 2026-11-06 | Nove consultas por contratos/composição e três bases abstratas por capacidade, preservando API, Active Record e transações. |
 
 ## Pendência condicionante
 

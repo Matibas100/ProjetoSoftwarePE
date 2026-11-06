@@ -2,6 +2,7 @@ import math
 from flask import current_app, g, jsonify, request
 
 from app.domain.autenticacao import AutenticacaoError, agora_utc, token_assinado
+from app.http_response import responder_http
 from app.services.autenticacao_service import (
     CadastrarAlunoService, ConsultarSessaoService, LoginService, LogoutService,
     PrepararCsrfService, ReautenticarService, destino,
@@ -79,11 +80,7 @@ class AutenticacaoController:
 
     @staticmethod
     def _responder(operacao):
-        try:
-            return operacao()
-        except AutenticacaoError as erro:
-            return resposta_erro(erro)
-        except Exception:
-            # Nao incluir excecao SQL, parametros, request body ou credenciais no log.
-            current_app.logger.error("Falha interna de autenticacao.")
-            return resposta_erro(AutenticacaoError("Não foi possível concluir a operação.", 500, "erro_interno"))
+        return responder_http(operacao, contexto="Falha interna de autenticacao.",
+            adaptar_sucesso=lambda resposta: resposta, tipo_erro=AutenticacaoError,
+            adaptar_erro=resposta_erro, adaptar_falha=lambda: resposta_erro(
+                AutenticacaoError("Não foi possível concluir a operação.", 500, "erro_interno")))

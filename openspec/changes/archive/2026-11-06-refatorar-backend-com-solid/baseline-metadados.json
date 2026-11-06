@@ -1,0 +1,101 @@
+{
+  "areas_enem": {
+    "ddl": "\nCREATE TABLE areas_enem (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tcodigo VARCHAR(50) NOT NULL, \n\tnome VARCHAR(100) NOT NULL, \n\tordem SMALLINT NOT NULL, \n\tPRIMARY KEY (id), \n\tUNIQUE (codigo), \n\tUNIQUE (nome), \n\tUNIQUE (ordem)\n)\n\n",
+    "indices": []
+  },
+  "auth_limites": {
+    "ddl": "\nCREATE TABLE auth_limites (\n\tchave_hash CHAR(64) COLLATE ascii_bin NOT NULL, \n\tfalhas SMALLINT NOT NULL, \n\tjanela_inicio DATETIME NOT NULL, \n\tbloqueado_ate DATETIME, \n\tPRIMARY KEY (chave_hash)\n)\n\n",
+    "indices": []
+  },
+  "questao_versoes": {
+    "ddl": "\nCREATE TABLE questao_versoes (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tquestao_id INTEGER NOT NULL, \n\tnumero INTEGER NOT NULL, \n\trevisao_origem INTEGER NOT NULL, \n\testado VARCHAR(20) NOT NULL, \n\tenunciado TEXT NOT NULL, \n\talternativa_a TEXT NOT NULL, \n\talternativa_b TEXT NOT NULL, \n\talternativa_c TEXT NOT NULL, \n\talternativa_d TEXT NOT NULL, \n\talternativa_e TEXT NOT NULL, \n\tresposta_correta CHAR(1) NOT NULL, \n\texplicacao TEXT, \n\tdificuldade VARCHAR(10) NOT NULL, \n\tassunto_id INTEGER NOT NULL, \n\tassunto_nome VARCHAR(150) NOT NULL, \n\tmateria_id INTEGER NOT NULL, \n\tmateria_nome VARCHAR(100) NOT NULL, \n\tarea_enem_id INTEGER NOT NULL, \n\tarea_enem_nome VARCHAR(100) NOT NULL, \n\tator_id INTEGER, \n\torigem VARCHAR(20) NOT NULL, \n\tcriado_em DATETIME NOT NULL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_questao_versoes_numero UNIQUE (questao_id, numero), \n\tCONSTRAINT ck_questao_versoes_numero CHECK (numero >= 1 AND revisao_origem >= 1), \n\tCONSTRAINT ck_questao_versoes_estado CHECK (estado IN ('rascunho','publicada')), \n\tCONSTRAINT ck_questao_versoes_origem CHECK (origem IN ('legado','manual')), \n\tCONSTRAINT ck_questao_versoes_resposta CHECK (resposta_correta IN ('A','B','C','D','E')), \n\tCONSTRAINT ck_questao_versoes_dificuldade CHECK (dificuldade IN ('facil','media','dificil')), \n\tFOREIGN KEY(questao_id) REFERENCES questoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(assunto_id) REFERENCES assuntos (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(materia_id) REFERENCES materias (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(area_enem_id) REFERENCES areas_enem (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(ator_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "questoes": {
+    "ddl": "\nCREATE TABLE questoes (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tstatus VARCHAR(20) NOT NULL, \n\trevisao INTEGER NOT NULL, \n\tcriado_em DATETIME, \n\tatualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \n\tversao_publicada_id INTEGER, \n\tenunciado TEXT NOT NULL, \n\talternativa_a TEXT NOT NULL, \n\talternativa_b TEXT NOT NULL, \n\talternativa_c TEXT NOT NULL, \n\talternativa_d TEXT NOT NULL, \n\talternativa_e TEXT NOT NULL, \n\tresposta_correta CHAR(1) NOT NULL, \n\texplicacao TEXT, \n\tdificuldade VARCHAR(10) NOT NULL, \n\tassunto_id INTEGER NOT NULL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT ck_questoes_status CHECK (status IN ('rascunho','publicada','arquivada')), \n\tCONSTRAINT ck_questoes_revisao CHECK (revisao >= 1), \n\tCONSTRAINT ck_questoes_resposta_correta CHECK (resposta_correta IN ('A', 'B', 'C', 'D', 'E')), \n\tCONSTRAINT ck_questoes_dificuldade CHECK (dificuldade IN ('facil', 'media', 'dificil')), \n\tFOREIGN KEY(versao_publicada_id) REFERENCES questao_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(assunto_id) REFERENCES assuntos (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": [
+      "CREATE INDEX ix_questoes_assunto_id ON questoes (assunto_id)",
+      "CREATE INDEX ix_questoes_status ON questoes (status)"
+    ]
+  },
+  "simulado_versoes": {
+    "ddl": "\nCREATE TABLE simulado_versoes (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tsimulado_id INTEGER NOT NULL, \n\tnumero INTEGER NOT NULL, \n\trevisao_origem INTEGER NOT NULL, \n\ttitulo VARCHAR(150) NOT NULL, \n\tautor_id INTEGER NOT NULL, \n\tcriado_em DATETIME(6) NOT NULL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_sim_versao_numero UNIQUE (simulado_id, numero), \n\tCONSTRAINT uq_sim_versao_revisao UNIQUE (simulado_id, revisao_origem), \n\tCONSTRAINT ck_sim_versao_numero CHECK (numero >= 1 AND revisao_origem >= 1), \n\tFOREIGN KEY(simulado_id) REFERENCES simulados (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(autor_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "simulados": {
+    "ddl": "\nCREATE TABLE simulados (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\ttitulo VARCHAR(150) NOT NULL, \n\testado VARCHAR(20) NOT NULL, \n\trevisao INTEGER NOT NULL, \n\tautor_id INTEGER NOT NULL, \n\tcriado_em DATETIME(6) NOT NULL, \n\tatualizado_em DATETIME(6) NOT NULL, \n\tsimulado_versao_id INTEGER, \n\tPRIMARY KEY (id), \n\tCONSTRAINT ck_simulados_estado CHECK (estado IN ('rascunho','publicado','arquivado')), \n\tCONSTRAINT ck_simulados_revisao CHECK (revisao >= 1), \n\tFOREIGN KEY(autor_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(simulado_versao_id) REFERENCES simulado_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "usuarios": {
+    "ddl": "\nCREATE TABLE usuarios (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tnome VARCHAR(100) NOT NULL, \n\temail VARCHAR(254) COLLATE utf8mb4_bin NOT NULL, \n\tsenha_hash VARCHAR(255) NOT NULL, \n\tperfil VARCHAR(20) NOT NULL, \n\tativo BOOL NOT NULL, \n\tcriado_em DATETIME NOT NULL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_usuarios_email UNIQUE (email), \n\tCONSTRAINT ck_usuarios_perfil CHECK (perfil IN ('aluno', 'administrador')), \n\tCONSTRAINT ck_usuarios_ativo CHECK (ativo IN (0, 1))\n)\n\n",
+    "indices": []
+  },
+  "materias": {
+    "ddl": "\nCREATE TABLE materias (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tnome VARCHAR(100) NOT NULL, \n\tdescricao TEXT, \n\tarea_enem_id INTEGER NOT NULL, \n\tstatus VARCHAR(20) NOT NULL, \n\tcriado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \n\tatualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \n\tPRIMARY KEY (id), \n\tCONSTRAINT ck_materias_status CHECK (status IN ('ativa', 'inativa', 'arquivada')), \n\tUNIQUE (nome), \n\tFOREIGN KEY(area_enem_id) REFERENCES areas_enem (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": [
+      "CREATE INDEX ix_materias_area_enem_id ON materias (area_enem_id)",
+      "CREATE INDEX ix_materias_status ON materias (status)"
+    ]
+  },
+  "planos_estudo": {
+    "ddl": "\nCREATE TABLE planos_estudo (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\tusuario_id INTEGER NOT NULL, \n\tgeracao INTEGER NOT NULL, \n\tatual BOOL NOT NULL, \n\tusuario_atual INTEGER GENERATED ALWAYS AS (CASE WHEN atual = 1 THEN usuario_id ELSE NULL END) STORED, \n\tperiodo JSON NOT NULL, \n\tgerado_em DATETIME(6) NOT NULL, \n\tchave_envio CHAR(36) COLLATE ascii_bin NOT NULL, \n\toperacao VARCHAR(12) NOT NULL, \n\tplano_anterior_id BIGINT, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_plano_geracao UNIQUE (usuario_id, geracao), \n\tCONSTRAINT uq_plano_chave UNIQUE (usuario_id, chave_envio), \n\tCONSTRAINT uq_plano_atual UNIQUE (usuario_atual), \n\tCONSTRAINT ck_plano_geracao CHECK (geracao >= 1 AND atual IN (0,1)), \n\tCONSTRAINT ck_plano_operacao CHECK ((operacao = 'gerar' AND plano_anterior_id IS NULL) OR (operacao = 'recalcular' AND plano_anterior_id IS NOT NULL)), \n\tFOREIGN KEY(usuario_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(plano_anterior_id) REFERENCES planos_estudo (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "questao_eventos": {
+    "ddl": "\nCREATE TABLE questao_eventos (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\tquestao_id INTEGER NOT NULL, \n\tversao_id INTEGER, \n\tator_id INTEGER, \n\tacao VARCHAR(20) NOT NULL, \n\tmotivo VARCHAR(500) NOT NULL, \n\tcriado_em DATETIME NOT NULL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT ck_questao_eventos_acao CHECK (acao IN ('cadastro','edicao','revisao','aprovacao','publicacao','arquivamento')), \n\tFOREIGN KEY(questao_id) REFERENCES questoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(versao_id) REFERENCES questao_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(ator_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": [
+      "CREATE INDEX ix_questao_eventos_questao_id ON questao_eventos (questao_id)"
+    ]
+  },
+  "sessoes": {
+    "ddl": "\nCREATE TABLE sessoes (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\tusuario_id INTEGER, \n\tidentificador_hash CHAR(64) COLLATE ascii_bin NOT NULL, \n\tcriada_em DATETIME NOT NULL, \n\tultimo_acesso_em DATETIME NOT NULL, \n\texpira_em DATETIME NOT NULL, \n\treautenticada_em DATETIME, \n\trevogada_em DATETIME, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(usuario_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tUNIQUE (identificador_hash)\n)\n\n",
+    "indices": []
+  },
+  "simulado_eventos": {
+    "ddl": "\nCREATE TABLE simulado_eventos (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\tsimulado_id INTEGER NOT NULL, \n\tversao_id INTEGER, \n\tator_id INTEGER NOT NULL, \n\tacao VARCHAR(30) NOT NULL, \n\tmotivo VARCHAR(500) NOT NULL, \n\tcriado_em DATETIME(6) NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(simulado_id) REFERENCES simulados (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(versao_id) REFERENCES simulado_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(ator_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "simulado_rascunho_itens": {
+    "ddl": "\nCREATE TABLE simulado_rascunho_itens (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tsimulado_id INTEGER NOT NULL, \n\tposicao INTEGER NOT NULL, \n\tquestao_id INTEGER NOT NULL, \n\tquestao_versao_id INTEGER NOT NULL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_sim_rascunho_posicao UNIQUE (simulado_id, posicao), \n\tCONSTRAINT uq_sim_rascunho_questao UNIQUE (simulado_id, questao_id), \n\tCONSTRAINT ck_sim_rascunho_posicao CHECK (posicao BETWEEN 1 AND 180), \n\tFOREIGN KEY(simulado_id) REFERENCES simulados (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(questao_id) REFERENCES questoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(questao_versao_id) REFERENCES questao_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "simulado_tentativas": {
+    "ddl": "\nCREATE TABLE simulado_tentativas (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\tusuario_id INTEGER NOT NULL, \n\tsimulado_versao_id INTEGER NOT NULL, \n\testado VARCHAR(20) NOT NULL, \n\trevisao INTEGER NOT NULL, \n\tchave_envio CHAR(36) COLLATE ascii_bin NOT NULL, \n\tiniciada_em DATETIME(6) NOT NULL, \n\tfinalizada_em DATETIME(6), \n\ttotal INTEGER, \n\trespondidas INTEGER, \n\tacertos INTEGER, \n\terros INTEGER, \n\tem_branco INTEGER, \n\tpercentual_acerto NUMERIC(5, 2), \n\tem_andamento_marcador INTEGER GENERATED ALWAYS AS (CASE WHEN estado = 'em_andamento' THEN 1 ELSE NULL END) STORED, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_sim_tentativa_chave UNIQUE (usuario_id, chave_envio), \n\tCONSTRAINT uq_sim_tentativa_andamento UNIQUE (usuario_id, simulado_versao_id, em_andamento_marcador), \n\tCONSTRAINT ck_sim_tentativa_revisao CHECK (revisao >= 1), \n\tCONSTRAINT ck_sim_tentativa_estado CHECK ((estado = 'em_andamento' AND finalizada_em IS NULL AND total IS NULL AND respondidas IS NULL AND acertos IS NULL AND erros IS NULL AND em_branco IS NULL AND percentual_acerto IS NULL) OR (estado = 'finalizada' AND finalizada_em IS NOT NULL AND finalizada_em >= iniciada_em AND total IS NOT NULL AND total BETWEEN 1 AND 180 AND respondidas IS NOT NULL AND acertos IS NOT NULL AND erros IS NOT NULL AND em_branco IS NOT NULL AND percentual_acerto IS NOT NULL AND acertos >= 0 AND erros >= 0 AND em_branco >= 0 AND total = acertos + erros + em_branco AND respondidas = acertos + erros AND percentual_acerto = ROUND(100 * acertos / total, 2))), \n\tFOREIGN KEY(usuario_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(simulado_versao_id) REFERENCES simulado_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": [
+      "CREATE INDEX ix_sim_tentativa_historico ON simulado_tentativas (usuario_id, finalizada_em, id)"
+    ]
+  },
+  "simulado_versao_itens": {
+    "ddl": "\nCREATE TABLE simulado_versao_itens (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tsimulado_versao_id INTEGER NOT NULL, \n\tposicao INTEGER NOT NULL, \n\tquestao_id INTEGER NOT NULL, \n\tquestao_versao_id INTEGER NOT NULL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_sim_item_posicao UNIQUE (simulado_versao_id, posicao), \n\tCONSTRAINT uq_sim_item_questao UNIQUE (simulado_versao_id, questao_id), \n\tCONSTRAINT ck_sim_item_posicao CHECK (posicao BETWEEN 1 AND 180), \n\tFOREIGN KEY(simulado_versao_id) REFERENCES simulado_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(questao_id) REFERENCES questoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(questao_versao_id) REFERENCES questao_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "assuntos": {
+    "ddl": "\nCREATE TABLE assuntos (\n\tid INTEGER NOT NULL AUTO_INCREMENT, \n\tnome VARCHAR(150) NOT NULL, \n\tnome_normalizado VARCHAR(150) COLLATE utf8mb4_0900_ai_ci NOT NULL, \n\tdescricao TEXT, \n\tmateria_id INTEGER NOT NULL, \n\tstatus VARCHAR(20) NOT NULL, \n\tcriado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \n\tatualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_assuntos_materia_nome_normalizado UNIQUE (materia_id, nome_normalizado), \n\tCONSTRAINT ck_assuntos_status CHECK (status IN ('ativa', 'inativa', 'arquivada')), \n\tFOREIGN KEY(materia_id) REFERENCES materias (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": [
+      "CREATE INDEX ix_assuntos_materia_id ON assuntos (materia_id)",
+      "CREATE INDEX ix_assuntos_status ON assuntos (status)"
+    ]
+  },
+  "simulado_respostas": {
+    "ddl": "\nCREATE TABLE simulado_respostas (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\ttentativa_id BIGINT NOT NULL, \n\titem_id INTEGER NOT NULL, \n\talternativa CHAR(1) COLLATE ascii_bin, \n\tcorreta BOOL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_sim_resposta_item UNIQUE (tentativa_id, item_id), \n\tCONSTRAINT ck_sim_resposta_alternativa CHECK (alternativa IS NULL OR alternativa IN ('A','B','C','D','E')), \n\tCONSTRAINT ck_sim_resposta_correta CHECK (correta IS NULL OR correta IN (0,1)), \n\tFOREIGN KEY(tentativa_id) REFERENCES simulado_tentativas (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(item_id) REFERENCES simulado_versao_itens (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "assunto_transferencias": {
+    "ddl": "\nCREATE TABLE assunto_transferencias (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\tassunto_id INTEGER NOT NULL, \n\tmateria_origem_id INTEGER NOT NULL, \n\tmateria_destino_id INTEGER NOT NULL, \n\tquestoes_impactadas INTEGER NOT NULL, \n\tcriado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \n\tPRIMARY KEY (id), \n\tCONSTRAINT ck_transferencias_questoes CHECK (questoes_impactadas >= 0), \n\tCONSTRAINT ck_transferencias_materias CHECK (materia_origem_id <> materia_destino_id), \n\tFOREIGN KEY(assunto_id) REFERENCES assuntos (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(materia_origem_id) REFERENCES materias (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(materia_destino_id) REFERENCES materias (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": [
+      "CREATE INDEX ix_assunto_transferencias_assunto_id ON assunto_transferencias (assunto_id)",
+      "CREATE INDEX ix_assunto_transferencias_materia_destino_id ON assunto_transferencias (materia_destino_id)",
+      "CREATE INDEX ix_assunto_transferencias_materia_origem_id ON assunto_transferencias (materia_origem_id)"
+    ]
+  },
+  "plano_estudo_itens": {
+    "ddl": "\nCREATE TABLE plano_estudo_itens (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\tplano_id BIGINT NOT NULL, \n\tassunto_id INTEGER NOT NULL, \n\tmateria_id INTEGER NOT NULL, \n\tposicao INTEGER NOT NULL, \n\tsnapshot JSON NOT NULL, \n\testado VARCHAR(12) NOT NULL, \n\tconcluido_em DATETIME(6), \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_plano_item_posicao UNIQUE (plano_id, posicao), \n\tCONSTRAINT uq_plano_item_assunto UNIQUE (plano_id, assunto_id), \n\tCONSTRAINT ck_plano_item_posicao CHECK (posicao BETWEEN 1 AND 3), \n\tCONSTRAINT ck_plano_item_estado CHECK ((estado = 'pendente' AND concluido_em IS NULL) OR (estado = 'concluido' AND concluido_em IS NOT NULL)), \n\tFOREIGN KEY(plano_id) REFERENCES planos_estudo (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(assunto_id) REFERENCES assuntos (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(materia_id) REFERENCES materias (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": []
+  },
+  "pratica_tentativas": {
+    "ddl": "\nCREATE TABLE pratica_tentativas (\n\tid BIGINT NOT NULL AUTO_INCREMENT, \n\tusuario_id INTEGER NOT NULL, \n\tquestao_versao_id INTEGER NOT NULL, \n\tchave_envio CHAR(36) COLLATE ascii_bin NOT NULL, \n\testado VARCHAR(20) NOT NULL, \n\tresposta_escolhida CHAR(1) COLLATE ascii_bin, \n\tcorreta BOOL, \n\tiniciada_em DATETIME(6) NOT NULL, \n\trespondida_em DATETIME(6), \n\tassunto_id INTEGER NOT NULL, \n\tassunto_nome VARCHAR(150) NOT NULL, \n\tmateria_id INTEGER NOT NULL, \n\tmateria_nome VARCHAR(100) NOT NULL, \n\tPRIMARY KEY (id), \n\tCONSTRAINT uq_pratica_tentativas_chave UNIQUE (usuario_id, chave_envio), \n\tCONSTRAINT ck_pratica_tentativas_estado CHECK ((estado = 'em_andamento' AND resposta_escolhida IS NULL AND correta IS NULL AND respondida_em IS NULL) OR (estado = 'respondida' AND resposta_escolhida IS NOT NULL AND resposta_escolhida IN ('A','B','C','D','E') AND correta IS NOT NULL AND correta IN (0,1) AND respondida_em IS NOT NULL AND respondida_em >= iniciada_em)), \n\tFOREIGN KEY(usuario_id) REFERENCES usuarios (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(questao_versao_id) REFERENCES questao_versoes (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(assunto_id) REFERENCES assuntos (id) ON DELETE RESTRICT ON UPDATE RESTRICT, \n\tFOREIGN KEY(materia_id) REFERENCES materias (id) ON DELETE RESTRICT ON UPDATE RESTRICT\n)\n\n",
+    "indices": [
+      "CREATE INDEX ix_pratica_tentativas_historico ON pratica_tentativas (usuario_id, respondida_em, id)"
+    ]
+  }
+}

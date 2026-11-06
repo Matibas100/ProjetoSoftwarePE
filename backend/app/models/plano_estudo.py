@@ -4,10 +4,10 @@ from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import column_property
 from app.extensions import db
 from app.exceptions import ConflitoError
-from app.models.crud_mixin import CrudMixin
+from app.models.crud_mixin import ModeloAtualizavel
 
 
-class PlanoEstudo(CrudMixin):
+class PlanoEstudo(ModeloAtualizavel):
     __tablename__ = "planos_estudo"
     __table_args__ = (
         db.UniqueConstraint("usuario_id", "geracao", name="uq_plano_geracao"),
@@ -29,7 +29,7 @@ class PlanoEstudo(CrudMixin):
     campos_atualizaveis = {"atual"}
 
 
-class PlanoEstudoItem(CrudMixin):
+class PlanoEstudoItem(ModeloAtualizavel):
     __tablename__ = "plano_estudo_itens"
     __table_args__ = (
         db.UniqueConstraint("plano_id", "posicao", name="uq_plano_item_posicao"),

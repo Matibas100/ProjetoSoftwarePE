@@ -1,13 +1,13 @@
-from flask import current_app, jsonify, request
+from flask import jsonify, request
 
-from app.exceptions import ErroAplicacao
+from app.http_response import responder_http, resposta_json, resposta_json_dinamica
 from app.services.atualizar_materia_service import AtualizarMateriaService
 from app.services.criar_materia_service import CriarMateriaService
 from app.services.deletar_materia_service import DeletarMateriaService
 from app.services.listar_materias_service import ListarMateriasService
 from app.services.alterar_status_catalogo_service import AlterarStatusMateriaService
 from app.services.impacto_catalogo_service import ImpactoMateriaService
-from app.services.listar_catalogo_admin_service import ListarMateriasAdminService
+from app.http_composition import servicos
 
 
 class MateriaController:
@@ -32,7 +32,7 @@ class MateriaController:
     def listar_admin():
         parametros = request.args.to_dict()
         return MateriaController._responder(
-            lambda: ListarMateriasAdminService.executar(parametros)
+            lambda: servicos().materias_admin.executar(parametros)
         )
 
     @staticmethod
@@ -63,13 +63,5 @@ class MateriaController:
 
     @staticmethod
     def _responder(operacao, status_sucesso=200):
-        try:
-            resultado = operacao()
-            if status_sucesso == 204:
-                return "", 204
-            return jsonify(resultado), status_sucesso
-        except ErroAplicacao as erro:
-            return jsonify(erro.to_dict()), erro.status_code
-        except Exception:
-            current_app.logger.exception("Erro inesperado ao processar materia")
-            return jsonify({"erro": "Ocorreu um erro interno no servidor."}), 500
+        return responder_http(operacao, contexto="Falha interna: materia.",
+            adaptar_sucesso=lambda dados: resposta_json(dados, status_sucesso))

@@ -1,8 +1,9 @@
 # Plataforma ENEM
 
 Projeto escolar de conclusão de curso para organizar matérias, assuntos e
-questões do ENEM. A aplicação possui uma interface administrativa em HTML, CSS
-e JavaScript que consome uma API Flask persistida em MySQL.
+questões do ENEM. As áreas administrativa e do Aluno usam HTML, CSS e
+JavaScript, consumindo uma API Flask persistida em MySQL. Inclui conteúdo
+versionado, práticas, simulados, desempenho e plano básico de estudos.
 
 ## Tecnologias utilizadas
 
@@ -14,6 +15,7 @@ e JavaScript que consome uma API Flask persistida em MySQL.
 - HTML5, CSS3 e JavaScript sem framework
 - `unittest` e `coverage.py` para testes Python
 - Vitest, jsdom e cobertura V8 para testes do frontend
+- Playwright/Chromium para testes de navegador com API e MySQL reais
 
 ## Arquitetura
 
@@ -28,6 +30,13 @@ caso de uso e concentra suas validações. As Models contêm o CRUD simples. O
 Repository é reservado para consultas especializadas, contagens, impacto,
 locks e a Stored Procedure existente.
 
+Nove consultas recebem contratos por construtor, ligadas pela factory em uma
+composição própria por aplicação. Models usam `ModeloBase`, `ModeloAtualizavel`
+ou `CrudMixin` conforme a capacidade; versões/eventos não oferecem mutações
+incompatíveis. Veja [SOLID e testes](docs/technical/aplicacao-solid.md),
+[ADR-008](docs/technical/adr/ADR-008-contratos-e-capacidades-de-persistencia.md)
+e [diagrama](docs/technical/diagrama-de-classes.md).
+
 ```text
 Plataforma ENEM/
 ├── frontend/
@@ -37,6 +46,8 @@ Plataforma ENEM/
 └── backend/
     ├── app/                         pacote Python da aplicação Flask
     │   ├── controllers/             camada Controller
+    │   ├── contracts/               Protocols e registros de leitura
+    │   ├── composition.py           ligações por aplicação
     │   ├── models/                  camada Model e CRUD simples
     │   ├── repositories/            consultas especializadas
     │   ├── services/                casos de uso
@@ -57,20 +68,45 @@ Esse nível adicional apenas delimita o código da aplicação; `controllers`,
 `models`, `repositories` e `services` continuam separados e dentro de
 `backend`, enquanto `database/create_database.sql` permanece no local exigido.
 
-## Funcionalidades implementadas
+## Funcionalidades Implementadas
 
-- Catálogo `Área do ENEM -> Matéria -> Assunto -> Questão`.
-- ADM-CON-001 em `/admin/materias.html` e ADM-CON-002 em
-  `/admin/assuntos.html`.
-- Filtros, paginação, criação, edição, ciclo de vida e exclusão segura.
-- Transferência explícita de Assunto com prévia de impacto e histórico.
-- Cadastro e busca de Questões do MVP preservados.
-- Cadastro público de Aluno, login, logout e sessão armazenada no MySQL.
-- Acesso por perfil Aluno/Administrador e reautenticação de operações sensíveis.
+1. Cadastrar Matéria.
+2. Listar Matérias.
+3. Atualizar Matéria.
+4. Excluir Matéria sem vínculos.
+5. Cadastrar Assunto.
+6. Listar Assuntos.
+7. Atualizar Assunto.
+8. Excluir Assunto sem vínculos.
+9. Cadastrar Questão.
+10. Buscar Questões por Assunto.
+11. Cadastrar Aluno.
+12. Fazer login.
+13. Editar Questão.
+14. Publicar Questão com snapshot imutável.
+15. Arquivar Questão preservando histórico.
+16. Iniciar prática de Questão publicada.
+17. Responder prática com correção persistida.
+18. Consultar histórico próprio de práticas.
+19. Criar Simulado manual com composição fixa.
+20. Consultar desempenho por Matéria/Assunto.
+
+A [matriz de entrega](docs/technical/entrega-academica.md) liga cada número à
+interface, API, camadas, persistência e evidência. O
+[diagrama de classes](docs/technical/diagrama-de-classes.md) cobre as vinte Models.
+Os [fluxogramas de casos de uso](docs/technical/fluxogramas-casos-de-uso.md)
+detalham recuperação de dados (diagnóstico) e entrada (finalização de Simulado),
+ambas já implementadas.
+Automação, CI e documentação não são funcionalidades extras nessa contagem.
+
+Também implementados: gestão administrativa filtrada/paginada, ciclo de vida
+e transferência auditada do catálogo; logout e reautenticação; publicação,
+execução, resposta e finalização de Simulados; dashboards; geração, recálculo
+e conclusão manual do plano básico, acessível nas oito páginas do Aluno.
 
 O acesso inicial é `/login`; o cadastro público cria somente Aluno.
 Administrador é criado pelo comando local, sem senha padrão. Antes de iniciar
-esta versão, aplique a migration `005` e configure `AUTH_SECRET_KEY`.
+esta versão, aplique as migrations até `009` e configure `AUTH_SECRET_KEY`.
 Veja [Operação da autenticação escolar](docs/technical/operacao-autenticacao-escolar.md)
 para preparação, comandos, contratos, cookies/origens e recuperação.
 
@@ -80,15 +116,9 @@ autorizado. `/index.html` continua disponível ao Administrador como MVP legado.
 
 ## Componentes implementados
 
-Models:
-
-- `Materia`: campos da matéria, relacionamentos, serialização e CRUD simples.
-- `Assunto`: campos do assunto, vínculo com Matéria, serialização e CRUD simples.
-- `AreaEnem`: catálogo fixo e somente leitura das quatro Áreas do ENEM.
-- `AssuntoTransferencia`: auditoria das transferências entre Matérias.
-- `Questao`: alternativas, resposta, dificuldade, vínculo com Assunto,
-  serialização e CRUD simples.
-- `Usuario`, `Sessao` e `AuthLimite`: identidade, sessão revogável e tentativas.
+As Models concretas, seus principais atributos, FKs, cardinalidades e herança
+via `CrudMixin(db.Model)` estão no [diagrama](docs/technical/diagrama-de-classes.md).
+Desempenho é projeção de respostas concluídas, sem tabela de resultado inventada.
 
 Services de negócio:
 
@@ -100,18 +130,29 @@ Services de negócio:
 
 Repository:
 
-- `QuestaoRepository`: encapsula exclusivamente o `CALL` da consulta de
-  questões por assunto. O cadastro de Questão não utiliza Repository.
+- `QuestaoRepository`: encapsula o `CALL` legado, leituras administrativas,
+  elegibilidade/conteúdo histórico em lote, projeções e locks editoriais.
+  O cadastro de Questão mantém CRUD na Model.
 - `CatalogoRepository`: consultas administrativas, contagens, impacto e locks;
   não duplica CRUD nem controla commits.
 - `AutenticacaoRepository`: consultas de sessão, revogação, locks e limpeza.
+- `PraticaRepository`, `SimuladoRepository`, `DesempenhoRepository` e
+  `PlanoEstudoRepository`: consultas especializadas dos respectivos módulos.
 
 Stored Procedure:
 
 - `sp_questoes_por_assunto`: recebe `assunto_id`, filtra as questões no MySQL
   e devolve o resultado ordenado por `id`.
 
-## Rotas da API
+## Rotas legadas da API
+
+As demais rotas e Services dos vinte casos estão na
+[matriz](docs/technical/entrega-academica.md). Contratos completos por domínio:
+[Questões](docs/technical/operacao-questoes.md),
+[Práticas](docs/technical/operacao-praticas.md),
+[Simulados](docs/technical/operacao-simulados.md),
+[Desempenho](docs/technical/operacao-desempenho.md) e
+[Plano](docs/technical/operacao-plano-estudos.md).
 
 O catálogo administrativo, suas migrations e a auditoria pré-upgrade estão
 detalhados em [Operação do catálogo acadêmico](docs/technical/operacao-catalogo-academico.md).
@@ -175,7 +216,7 @@ python backend/database/migrate.py status
 python backend/database/migrate.py up
 ```
 
-`up` aplica `000` a `005` em ordem. Chamá-lo novamente não reexecuta
+`up` aplica `000` a `009` em ordem. Chamá-lo novamente não reexecuta
 migrations aplicadas. `create_database.sql` permanece como snapshot consolidado
 para compatibilidade; uma instalação feita por ele deve adotar o histórico como
 um banco existente.
@@ -291,9 +332,45 @@ Com GNU Make disponível, os atalhos são:
 | `make test-frontend` | `npm run test:coverage` |
 | `make test-coverage` | runner backend e cobertura frontend |
 | `make test` | igual a `make test-coverage` |
+| `make test-e2e` | `python scripts/run_e2e.py` |
 
 Os gates por stack são 90% de linhas e 85% de branches agregados, além de
 reprovar qualquer arquivo executável zerado.
+
+### Navegador e integração contínua
+
+Com configuração MySQL fornecida **por ambiente** (o runner E2E não lê `.env`)
+e permissão de criar/remover schemas descartáveis:
+
+```powershell
+npx playwright install chromium
+npm run test:e2e:list
+$env:RUN_MYSQL_E2E = "1"
+npm run test:e2e
+Remove-Item Env:RUN_MYSQL_E2E
+```
+
+O runner usa migrations oficiais, operador sintético e API/frontend locais em
+portas livres. A suíte contém **dois testes Playwright**: o
+[primeiro](frontend/e2e/entrega-academica.spec.js) preserva os vinte casos
+numerados, navegação ao plano, cancelamento de descarte e capturas a 1440/390 px.
+O [segundo](frontend/e2e/plano-simulado.spec.js), com conta e conteúdo próprios,
+verifica geração/conclusão manual do Plano, finalização/correção de Simulado e
+recálculo confirmado, cancelamentos e persistência por recarga/GET real.
+Confere 2/5 (40%) no plano inicial, 1/3 (33,33%) no resultado do Simulado e
+3/7 (42,86%) no diagnóstico/novo plano; o branco não entra no diagnóstico.
+Um replay HTTP auxiliar, identificado no teste e sem botão, verifica a geração
+anterior preservada. Nenhuma resposta é simulada. Esses passos adicionais não
+alteram a contagem oficial de vinte funcionalidades. Processos/schema são
+limpos em `finally`, mesmo após falha.
+Relatórios e capturas sintéticas ficam em `test-results/`, sem traces, HAR ou
+storage state. Veja [convenções de testes](docs/conventions/testes.md).
+
+O [workflow GitHub Actions](.github/workflows/testes.yml) usa Python 3.12,
+Node 22 e MySQL 8 descartável com health check; executa cobertura backend com
+os dois opt-ins, cobertura frontend, testes do servidor público e Chromium.
+Preserva gates de 90%/85%, permissões mínimas e timeout. A execução remota
+permanece **pendente até push autorizado**; comandos são validados localmente.
 
 ## Validação antes do push
 
@@ -311,7 +388,8 @@ reinstalar o hook neste clone, execute novamente:
 npm run hooks:install
 ```
 
-Resultado validado no Windows em 7 de outubro de 2026:
+Registro histórico de validação no Windows em 7 de outubro de 2026 (não é a
+execução atual; veja [relatório da consolidação](openspec/changes/archive/2026-11-06-consolidar-entrega-academica/validacao.md)):
 
 - backend: **106 testes unitários + 58 integrações**, 95,54% de linhas e
   87,64% de branches;
@@ -321,6 +399,16 @@ Resultado validado no Windows em 7 de outubro de 2026:
 - cadastro/login inspecionados em navegador a 1440/390 px; fluxos dos dois
   perfis e recuperação de sessão verificados em schema descartável.
 
-Limitações: jsdom não substitui um navegador real e a suíte de integração
-exige MySQL 8 preparado. O projeto usa somente migrations SQL puro; Alembic e
-Flask-Migrate não fazem parte do fluxo.
+Limitações: integrações e E2E exigem MySQL 8; Chromium complementa a suíte DOM.
+Não há redesign mobile nesta consolidação. O projeto usa migrations SQL puro,
+sem Alembic ou Flask-Migrate. A atividade anterior exige pelo menos vinte
+funcionalidades completas e vídeo obrigatório de até cinco minutos. A rubrica
+final recebida exige pelo menos quatro funcionalidades principais não CRUD,
+demonstração de até dois minutos por vídeo ou execução hospedada e slides;
+não exige demonstrar todas as vinte. Não se presume dispensa ou substituição
+da entrega anterior, nem aplicação do cronograma de 2025 à turma de 2026.
+Testes não substituem a demonstração do grupo nem garantem pontuação; consultas
+isoladas não têm contagem garantida entre as quatro ações. Vídeo, slides e
+hospedagem ficam a cargo do grupo. Veja a
+[distinção das entregas](docs/technical/entrega-academica.md#entrega-externa).
+Commit, push e merge ainda não foram autorizados.

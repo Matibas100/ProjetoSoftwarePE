@@ -10,6 +10,7 @@ from app.extensions import db
 from app.models.questao_versao import QuestaoVersao
 from app.services.gestao_questao_service import (
     ConsultarVersaoElegivelService, ConsultarVersaoHistoricaService,
+    ConsultarVersoesElegiveisService, ConsultarVersoesHistoricasService,
     PublicarQuestaoService, EditarQuestaoService,
 )
 from app.exceptions import ConflitoError, RecursoNaoEncontradoError
@@ -49,6 +50,11 @@ class QuestoesVersionadasIntegrationTest(MySQLIntegrationTestCase):
             self.assertNotIn('resposta_correta',seguro); self.assertNotIn('explicacao',seguro)
             original=ConsultarVersaoHistoricaService.executar(versao,correcao=True)
             self.assertEqual(original['resposta_correta'],'A')
+            self.assertEqual(ConsultarVersoesElegiveisService.executar([versao]), {versao: seguro})
+            self.assertEqual(ConsultarVersoesHistoricasService.executar([versao], True), {versao: original})
+            self.assertEqual(ConsultarVersoesHistoricasService.executar([]), {})
+            with self.assertRaises(RecursoNaoEncontradoError):
+                ConsultarVersoesHistoricasService.executar([versao, 2147483647])
         editada=self.client.put(self.path,json={'revisao':1,'enunciado':'Novo enunciado','resposta_correta':'B'})
         self.assertEqual(editada.status_code,200)
         self.assertEqual(editada.get_json()['versao_publicada_id'],versao)
@@ -56,6 +62,7 @@ class QuestoesVersionadasIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             self.assertEqual(ConsultarVersaoHistoricaService.executar(versao,True),original)
             with self.assertRaises(ConflitoError): ConsultarVersaoElegivelService.executar(versao)
+            self.assertEqual(set(ConsultarVersoesElegiveisService.executar([versao, nova])), {nova})
         corpo={'revisao':2,'confirmar':True,'motivo':'Retirada revisada'}
         self.assertEqual(self.client.post(self.path+'/arquivar',json=corpo).status_code,200)
         self.assertEqual(self.client.post(self.path+'/arquivar',json=corpo).status_code,200)
@@ -63,6 +70,8 @@ class QuestoesVersionadasIntegrationTest(MySQLIntegrationTestCase):
         self.assertEqual(self.publicar(2).status_code,409)
         with self.app.app_context():
             with self.assertRaises(ConflitoError): ConsultarVersaoElegivelService.executar(nova)
+            self.assertEqual(ConsultarVersoesElegiveisService.executar([versao, nova]), {})
+            self.assertEqual(ConsultarVersoesHistoricasService.executar([versao], True), {versao: original})
             self.assertEqual(ConsultarVersaoHistoricaService.executar(versao,True),original)
             rows=db.session.execute(text('SELECT acao,ator_id FROM questao_eventos WHERE questao_id=:id'),{'id':self.questao['id']}).all()
             self.assertEqual([r.acao for r in rows].count('publicacao'),2)
@@ -121,8 +130,11 @@ class QuestoesVersionadasIntegrationTest(MySQLIntegrationTestCase):
             versao=QuestaoVersao.buscar_por_id(versao_id)
             evento=db.session.execute(db.select(QuestaoEvento).where(QuestaoEvento.questao_id==self.questao['id'])).scalars().first()
             for registro in (versao,evento):
-                with self.assertRaises(ConflitoError): registro.atualizar(motivo='Alteração')
-                with self.assertRaises(ConflitoError): registro.deletar()
+                self.assertFalse(hasattr(registro, 'atualizar'))
+                self.assertFalse(hasattr(registro, 'deletar'))
+                db.session.delete(registro)
+                with self.assertRaises(ConflitoError): db.session.flush()
+                db.session.rollback()
             versao.enunciado='Mutação proibida'
             with self.assertRaises(ConflitoError): versao.salvar()
             evento=db.session.get(QuestaoEvento,evento.id)

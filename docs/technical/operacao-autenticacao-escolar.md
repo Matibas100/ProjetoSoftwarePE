@@ -1,5 +1,15 @@
 # Operação da autenticação escolar
 
+## Política de falhas HTTP
+
+Controllers reutilizam `app/http_response.py` para adaptar respostas e erros.
+As classes por recurso e as regras nos Services permanecem. Autenticação
+preserva respostas Flask, cookies, `codigo`, Retry-After e no-store; Questões
+preserva seu envelope legado. Não há handler global para erros de roteamento.
+Falhas inesperadas registram somente contexto fixo e classe da exceção, sem
+mensagem, traceback, SQL, parâmetros, corpo, URL, headers, cookies ou configuração.
+Respostas 500 continuam neutras; testes com sentinelas verificam essa política.
+
 ## Escopo e preparação
 
 Esta entrega adiciona cadastro público de Aluno, login por e-mail/senha, sessão

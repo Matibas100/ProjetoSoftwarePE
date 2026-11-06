@@ -24,7 +24,7 @@ async function setup(override = () => undefined) {
     return response();
   });
   globalThis.apiRequest = api;
-  await import("../js/auth-session.js"); AuthUI.navigate = vi.fn();
+  await import("../js/navigation.js"); await import("../js/auth-session.js"); AuthUI.navigate = vi.fn();
   await import("../js/aluno-plano.js"); await settle(); return api;
 }
 const mutations = (api) => api.mock.calls.filter(([,o]) => o?.method === "POST");
@@ -38,7 +38,7 @@ it("consulta plano real sem gerar, renderiza texto seguro e liga ao assunto", as
   expect($("plano-lista").querySelector("a").getAttribute("href")).toBe("/aluno/questoes.html?assunto_id=2");
   expect($("plano-recalcular").hidden).toBe(false); expect($("plano-gerar").hidden).toBe(true);
   expect(document.querySelector('a[href="/aluno/plano.html"][aria-current="page"]')).not.toBeNull();
-  const inicio=fs.readFileSync(path.join(root,"frontend/aluno/inicio.html"),"utf8");expect(inicio).toContain('href="/aluno/plano.html"');
+  // O menu de todas as páginas é verificado após renderização em navigation.test.js.
 });
 it("gera com UUID, comunica base insuficiente e permite prática livre", async () => {
   let noBase=true;

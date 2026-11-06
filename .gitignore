@@ -32,3 +32,8 @@ Thumbs.db
 # Dependencias e caches Node
 node_modules/
 .vitest/
+
+# Relatórios e browsers locais de E2E
+test-results/
+playwright-report/
+.playwright/

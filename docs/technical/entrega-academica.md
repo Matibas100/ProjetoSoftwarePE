@@ -1,0 +1,123 @@
+# Entrega acadêmica
+
+Esta matriz usa a numeração oficial das vinte
+[Funcionalidades Implementadas](../../README.md#funcionalidades-implementadas).
+Não conta CI, testes, documentação ou melhorias internas como novos casos de uso.
+O [diagrama](diagrama-de-classes.md) descreve as vinte Models concretas.
+
+## Rastreabilidade dos vinte casos
+
+UI consome rotas de [routes.py](../../backend/app/routes.py), que delegam a
+Controllers e Services. `AR` abaixo significa CRUD Active Record da Model,
+sem duplicação no Repository. O teste de navegador é
+[entrega-academica.spec.js](../../frontend/e2e/entrega-academica.spec.js),
+com um `test.step` numerado para cada caso; setup adicional é identificado.
+Mutações verificam status real; persistência usa recarga ou leitura independente.
+
+| ID | Tela/ação | Método e rota | Controller → Service | Model / Repository → tabelas | Teste e evidência |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `/index.html`: cadastrar Matéria | `POST /api/materias` | `MateriaController.cadastrar` → `CriarMateriaService` | `Materia` AR; `AreaEnem` → `materias`, `areas_enem` | E2E 01: 201 e cartão após recarga |
+| 2 | `/index.html`: atualizar lista | `GET /api/materias` | `MateriaController.listar` → `ListarMateriasService` | `Materia` AR → `materias` | E2E 02: lista real contém ID criado |
+| 3 | `/index.html`: editar Matéria | `PUT /api/materias/<id>` | `MateriaController.atualizar` → `AtualizarMateriaService` | `Materia` AR; `CatalogoRepository` para impacto → `materias`, vínculos do catálogo | E2E 03: 200 e nome alterado após recarga |
+| 4 | `/index.html`: excluir Matéria livre | `DELETE /api/materias/<id>` | `MateriaController.deletar` → `DeletarMateriaService` | `Materia` AR; `CatalogoRepository` para impacto → `materias`, `assuntos`, `questoes`, `assunto_transferencias` | E2E 04: confirmação, 204 e ausência após recarga |
+| 5 | `/index.html`: cadastrar Assunto | `POST /api/assuntos` | `AssuntoController.cadastrar` → `CriarAssuntoService` | `Assunto` AR; `Materia`; `CatalogoRepository` para unicidade → `assuntos`, `materias` | E2E 05: 201 e cartão após recarga |
+| 6 | `/index.html`: atualizar Assuntos | `GET /api/assuntos` | `AssuntoController.listar` → `ListarAssuntosService` | `CatalogoRepository.listar_assuntos_ativos`; `Assunto` → `assuntos`, `materias` | E2E 06: lista contém ID; integração cobre filtros/status/ordem |
+| 7 | `/index.html`: editar Assunto | `PUT /api/assuntos/<id>` | `AssuntoController.atualizar` → `AtualizarAssuntoService` | `Assunto` AR; `Materia`; `CatalogoRepository` → `assuntos`, `materias` | E2E 07: 200 e nome alterado após recarga |
+| 8 | `/index.html`: excluir Assunto livre | `DELETE /api/assuntos/<id>` | `AssuntoController.deletar` → `DeletarAssuntoService` | `Assunto` AR; `CatalogoRepository` para impacto → `assuntos`, `questoes`, `assunto_transferencias` | E2E 08: confirmação, 204 e ausência após recarga |
+| 9 | `/index.html`: cadastrar Questão | `POST /api/questoes` | `QuestaoController.cadastrar` → `CriarQuestaoService` | `Questao` AR; `QuestaoEvento`; `Assunto`, `Materia` → `questoes`, `questao_eventos`, catálogo | E2E 09: 201; conteúdo recuperado no caso 10 |
+| 10 | `/index.html`: buscar por Assunto | `GET /api/questoes/por-assunto?assunto_id=<id>` | `QuestaoController.buscar_por_assunto` → `BuscarQuestoesPorAssuntoService` | `ConsultaQuestoesPorAssuntoMySQL` → `QuestaoRepository.buscar_por_assunto` → `CALL sp_questoes_por_assunto`, `questoes` | E2E 10: busca após recarga exibe conteúdo persistido |
+| 11 | `/cadastro`: criar conta | `POST /api/auth/cadastro` | `AutenticacaoController.cadastro` → `CadastrarAlunoService`, `CriarUsuarioService` | `Usuario` AR → `usuarios` | E2E 11: 201, redirecionamento; perfil Aluno comprovado no login |
+| 12 | `/login`: entrar | `POST /api/auth/login`; `GET /api/auth/sessao` | `AutenticacaoController.login` → `LoginService` | `Usuario`, `Sessao`, `AuthLimite`; `AutenticacaoRepository` → `usuarios`, `sessoes`, `auth_limites` | E2E 12: 200, sessão consultada independentemente e usuário após recarga |
+| 13 | `/admin/questao.html?id=<id>`: salvar edição | `PUT /api/questoes/<id>` | `QuestaoController.editar` → `EditarQuestaoService` | `Questao`, `QuestaoEvento` AR; `QuestaoRepository` → `questoes`, `questao_eventos`, `questao_versoes` | E2E 13: 200 e campo atualizado após recarga |
+| 14 | Mesma tela: revisar/publicar | `POST /api/questoes/<id>/publicar` | `QuestaoController.publicar` → `PublicarQuestaoService` | `Questao`, `QuestaoVersao`, `QuestaoEvento`; `QuestaoRepository` → conteúdo e snapshots | E2E 14: motivo/confirmação, 200 e estado publicado após recarga |
+| 15 | Mesma tela: arquivar | `POST /api/questoes/<id>/arquivar` | `QuestaoController.arquivar` → `ArquivarQuestaoService` | `Questao`, `QuestaoEvento`; `QuestaoRepository` → `questoes`, `questao_eventos` | E2E 15: 200, estado arquivado após recarga e correção histórica preservada |
+| 16 | `/aluno/questoes.html`: iniciar | `GET /api/aluno/questoes`; `POST /api/aluno/praticas` | `PraticaController.questoes/iniciar` → `ListarQuestoesAlunoService`, `IniciarPraticaService` | `PraticaTentativa`; `PraticaRepository`; `ConsultaQuestoesElegiveisMySQL`/`QuestaoRepository` → `pratica_tentativas`, `questao_versoes` e catálogo | E2E 16: 201; GET independente e recarga; nenhum gabarito/explicação antecipado |
+| 17 | `/aluno/questao.html?tentativa_id=<id>`: responder | `POST /api/aluno/praticas/<id>/resposta` | `PraticaController.responder` → `ResponderPraticaService` | `PraticaTentativa`; `PraticaRepository`; conteúdo histórico de Questões → `pratica_tentativas`, `questao_versoes` | E2E 17: 200 e correção visível após recarga |
+| 18 | `/aluno/historico.html`: consultar | `GET /api/aluno/praticas`; `GET /api/aluno/praticas/<id>` | `PraticaController.historico/detalhe` → `ListarPraticasService`, `ConsultarPraticaService` | `PraticaRepository`; `PraticaTentativa`; conteúdo histórico → `pratica_tentativas`, `questao_versoes` | E2E 18: classificação, resposta e link da tentativa persistidos |
+| 19 | `/admin/simulado.html`: compor/salvar | `POST /api/admin/simulados`; `GET /api/admin/simulados/<id>` | `SimuladoController.criar/admin_detalhe` → `CriarSimuladoService`, `ConsultarSimuladoAdminService` | `Simulado`, `SimuladoRascunhoItem`, `SimuladoEvento`; `SimuladoRepository`; fronteira de Questões → `simulados`, `simulado_rascunho_itens`, `simulado_eventos`, `questao_versoes` | E2E 19: 201, título/composição após recarga |
+| 20 | `/aluno/desempenho.html`: consultar | `GET /api/aluno/desempenho` | `DesempenhoController.diagnostico` → `ConsultarDesempenhoService` | `ConsultaMetricasMySQL`/`DesempenhoRepository`, projeções de Práticas/Simulados/Questões → `pratica_tentativas`, `simulado_tentativas`, `simulado_respostas`, `simulado_versao_itens`, `questao_versoes` | E2E 20: Matéria/Assunto próprios e percentual após recarga |
+
+O caso 15 é executado após práticas e criação/publicação do Simulado: arquivar
+antes impediria os novos usos corretamente. A classificação mostrada no
+histórico é o snapshot da tentativa, sem exigir enunciado nesse DTO de lista.
+
+## Fluxogramas de recuperação e entrada de dados
+
+Os [dois fluxogramas](fluxogramas-casos-de-uso.md) detalham decisões,
+camadas, Repository, Models, MySQL e retorno à interface:
+
+- **Recuperação:** consultar diagnóstico de desempenho, caso 20,
+  `GET /api/aluno/desempenho`, sem gravar métricas.
+- **Entrada:** finalizar tentativa própria de Simulado,
+  `POST /api/aluno/tentativas-simulado/<id>/finalizar`, com confirmação,
+  correção histórica e persistência atômica. É um caso adicional já
+  implementado de execução/resultado; o caso 19 continua sendo criar a
+  composição fixa, e a lista oficial permanece com vinte funcionalidades.
+
+Os fluxogramas acrescentam documentação e rastreabilidade, sem substituir as
+evidências de execução abaixo ou contar como funcionalidades novas.
+
+## Evidências e reprodução
+
+- [Relatório local](../../openspec/changes/archive/2026-11-06-consolidar-entrega-academica/validacao.md):
+  comandos, versões, resultados históricos e limitações da consolidação.
+- [Validação SOLID atual](../../openspec/changes/archive/2026-11-06-refatorar-backend-com-solid/validacao.md):
+  refatoração, preservação do baseline e regressão executada nesta change.
+- A suíte contém **dois testes Playwright**: os vinte casos numerados estão
+  no [primeiro](../../frontend/e2e/entrega-academica.spec.js); o
+  [segundo](../../frontend/e2e/plano-simulado.spec.js) usa conta/conteúdo próprios
+  para gerar/concluir Plano, finalizar/corrigir Simulado e confirmar recálculo.
+  Verifica 2/5 (40%) no plano inicial, resultado 1/3 (33,33%) e diagnóstico/novo
+  plano 3/7 (42,86%), excluindo o branco do diagnóstico, além de cancelamentos
+  sem POST e persistência. O replay HTTP de histórico é auxiliar técnico sem
+  botão, separado das ações pela interface. Não acrescenta funcionalidades à
+  matriz. Estado de execução e limites no
+  [relatório desta change](../../openspec/changes/archive/2026-11-06-validar-fluxos-de-plano-e-simulado/validacao.md).
+- `npm run test:e2e:list` somente descobre os dois testes; `RUN_MYSQL_E2E=1 npm run test:e2e`
+  em shell POSIX ou o exemplo PowerShell do [README](../../README.md) a executa.
+- `test-results/e2e.json` registra os testes e seus passos, incluindo os vinte
+  numerados do primeiro; capturas sintéticas em
+  `test-results/browser/` mostram Plano/Admin a 1440 e 390 px. São artefatos
+  locais ignorados pelo Git, reproduzidos a cada execução, sem sessão exportada.
+- Testes adicionais cobrem exclusões vinculadas 409, ausência de correção
+  antecipada, link do plano nas oito páginas, foco/Enter e cancelamento de
+  descarte com alternativa preservada. A suíte DOM mantém regressões de
+  expiração, troca de conta e recuperação; integrações usam MySQL real.
+- As 29 integrações originais permanecem, complementadas pelas suítes de
+  autenticação, catálogo, versões, Práticas, Simulados, desempenho e plano.
+
+## Entrega externa
+
+As exigências recebidas pertencem a atividades distintas:
+
+| Fonte | Demonstração e escopo informado |
+| --- | --- |
+| Atividade anterior | Pelo menos vinte funcionalidades completas; vídeo obrigatório de até cinco minutos, demonstrando os casos e a arquitetura, além dos demais itens do enunciado. |
+| Rubrica final recebida | Pelo menos quatro funcionalidades principais não CRUD; demonstração de até dois minutos, por vídeo ou execução hospedada. Não exige mostrar todas as vinte. Slides continuam exigidos. |
+
+Não se presume que a rubrica final substitui ou dispensa a entrega anterior.
+O cronograma de 2025 não é atribuído à turma de 2026. Consultas/listagens
+isoladas não têm contagem garantida entre as quatro funcionalidades principais.
+A evidência automatizada comprova somente o que for executado; não substitui
+a demonstração do grupo nem garante nota. Vídeo, slides, roteiro, hospedagem e
+envio não são produzidos por esta change e continuam sob responsabilidade do grupo.
+**Commit, push e merge não foram autorizados.** O workflow está versionável,
+mas a execução remota permanece pendente até push autorizado. O fechamento
+técnico local depende dos testes e da verificação registrados no relatório.
+
+
+## Composição e persistência após SOLID
+
+As vinte entradas mantêm as mesmas rotas e comportamentos. Os casos 10, 16 e 20 agora
+consomem consultas por contratos, compostas na factory. As outras seis consultas do
+recorte apoiam catálogo administrativo, histórico/catálogo de Simulados e dashboards;
+não contam como funcionalidades novas. Ver [aplicação SOLID](aplicacao-solid.md).
+
+O domínio conserva vinte Models: cinco versões/eventos em ModeloBase; PlanoEstudo e
+PlanoEstudoItem em ModeloAtualizavel; treze Models convencionais em CrudMixin. Só mudou
+a capacidade Python oferecida; schema, migrations e procedure permanecem.
+
+Gerar/recalcular plano recebem o seletor que usa o mesmo DiagnosticoAluno do dashboard.
+É adaptação necessária da composição: as dependências concretas de escrita do plano,
+seus locks, replays e TransactionManager permanecem. O plano continua fora da contagem
+dos vinte percursos de referência; sua regressão adicional é preservada.

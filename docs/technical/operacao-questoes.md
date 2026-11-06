@@ -1,5 +1,16 @@
 # Operação de Questões versionadas
 
+## Fronteiras de leitura em lote
+
+`ListarQuestoesAlunoService` serializa diretamente as versões da consulta
+elegível paginada, sem consultar novamente cada item e sem gabarito/explicação.
+`ConsultarVersoesElegiveisService` fornece um mapa somente das versões ainda
+disponíveis; `ConsultarVersoesHistoricasService` exige que todas as versões
+pedidas sejam snapshots publicados, preservando versões superadas/retiradas.
+O consumidor interno autoriza propriedade e conclusão antes de pedir correção.
+Repositories executam as consultas por conjunto. Os contratos unitários e os
+locks das operações de escrita permanecem preservados.
+
 ## Persistência e upgrade
 
 Aplica-se a [gestao-basica-questoes](../../openspec/changes/archive/2026-10-07-gestao-basica-questoes/design.md), com ADRs 001–006. `questoes` preserva seus IDs e campos legados como rascunho administrativo; `questao_versoes` e `questao_eventos` são append-only. Nova Questão tem status `rascunho`, revisão 1 e nenhuma versão publicada. Publicar cria snapshot e três eventos (revisão, aprovação, publicação) na mesma transação do ponteiro. Editar incrementa revisão sem substituir o snapshot publicado; arquivar conserva o ponteiro e o histórico. Não há DELETE, reativação ou publicação automática.
@@ -37,3 +48,9 @@ Erros: 400 entrada inválida, 404 ausente, 409 revisão/estado conflitante, 401 
 `/admin/questoes.html` oferece filtros, paginação e entrada de cadastro; `/admin/questao.html?id=<id>` permite detalhe/edição/revisão/publicação/arquivamento. Formulário e filtros permanecem em falhas; recuperação/reautenticação é contextual e exige novo envio explícito. Troca de identidade bloqueia contexto até descarte/recarga. Alterações não salvas exigem confirmação para navegar/sair; mensagens e confirmações são acessíveis por teclado. Importação, IA, upload e fila multiperfil ficam indisponíveis. Binários oficiais Desktop V1 permanecem congelados.
 
 Integrações criam/limpam schemas temporários MySQL reais. Opt-in somente no processo: `RUN_MYSQL_INTEGRATION=1` e, para migrations, `RUN_MYSQL_MIGRATION_INTEGRATION=1`; nunca persista no `.env`. Execute os runners e gates das [conventions de testes](../conventions/testes.md). Resultados reais ficam no relatório de validação da change.
+
+
+Consultas SOLID: BuscarQuestoesPorAssuntoService recebe a consulta e Callable de existência
+ligado a Assunto.buscar_por_id pela composição; CALL permanece exclusivamente no Repository.
+ListarQuestoesAlunoService recebe ConsultaQuestoesElegiveis; o adaptador representa conteúdo
+seguro em lote antes de devolver registros ao Service. Sem gabarito/explicação ou ORM na fronteira.

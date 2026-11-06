@@ -120,3 +120,10 @@ descartadas por geração/identidade. Não há cache em storage de dados acadêm
 
 Evidências e comandos da entrega ficam em
 [validação da change](../../openspec/changes/archive/2026-10-24-plano-basico-por-desempenho/validacao.md).
+
+Persistência: PlanoEstudo e PlanoEstudoItem usam ModeloAtualizavel, sem deletar.
+Atualizações mantêm campos/transições e guards ORM existentes; contrato HTTP preservado.
+
+SelecionarPlanoService recebe DiagnosticoAluno pela composição; gerar e recalcular recebem
+o mesmo seletor, passado explicitamente à função gerar. É adaptação do diagnóstico:
+dependências de escrita, locks, replay e TransactionManager mantêm suas responsabilidades.

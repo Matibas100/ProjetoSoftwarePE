@@ -15,8 +15,9 @@ def exigir(simulado):
     return simulado
 
 
-def detalhe(simulado):
-    itens = Repo.itens(versao_id=simulado.simulado_versao_id) if simulado.simulado_versao_id else Repo.itens(simulado_id=simulado.id)
+def detalhe(simulado, itens=None):
+    if itens is None:
+        itens = Repo.itens(versao_id=simulado.simulado_versao_id) if simulado.simulado_versao_id else Repo.itens(simulado_id=simulado.id)
     return {"id": simulado.id, "titulo": simulado.titulo, "estado": simulado.estado,
         "revisao": simulado.revisao, "simulado_versao_id": simulado.simulado_versao_id,
         "itens": [{"posicao": i.posicao, "questao_versao_id": i.questao_versao_id} for i in itens]}
@@ -46,7 +47,10 @@ class ListarSimuladosAdminService:
     def executar(filtros):
         valores, estado = paginacao(filtros, admin=True)
         linhas, total = Repo.listar(valores["pagina"], valores["por_pagina"], estado)
-        return _envelope([detalhe(s) for s in linhas], valores["pagina"], valores["por_pagina"], total)
+        rascunhos = Repo.itens_em_lote(simulado_ids=[s.id for s in linhas if not s.simulado_versao_id])
+        publicados = Repo.itens_em_lote(versao_ids=[s.simulado_versao_id for s in linhas if s.simulado_versao_id])
+        return _envelope([detalhe(s, publicados.get(s.simulado_versao_id, []) if s.simulado_versao_id
+            else rascunhos.get(s.id, [])) for s in linhas], valores["pagina"], valores["por_pagina"], total)
 
 
 class ConsultarSimuladoAdminService:

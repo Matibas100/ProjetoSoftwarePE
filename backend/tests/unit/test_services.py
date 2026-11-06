@@ -192,10 +192,24 @@ class AssuntoServicesTest(unittest.TestCase):
         with self.assertRaises(ConflitoError):
             DeletarAssuntoService.executar(1)
 
+    @patch("app.services.listar_assuntos_service.CatalogoRepository")
     @patch("app.services.listar_assuntos_service.Assunto")
-    def test_listar(self, assunto_class):
-        assunto_class.listar_ativos.return_value = [MagicMock(to_dict=lambda: {"id": 1})]
+    def test_listar(self, assunto_class, repository):
+        repository.listar_assuntos_ativos.return_value = [MagicMock(to_dict=lambda: {"id": 1})]
         self.assertEqual(ListarAssuntosService.executar(), [{"id": 1}])
+        repository.listar_assuntos_ativos.assert_called_once_with(None)
+        ListarAssuntosService.executar(materia_id=7)
+        repository.listar_assuntos_ativos.assert_called_with(7)
+        assunto_class.listar_todos.return_value = [MagicMock(to_dict=lambda: {"id": 2})]
+        self.assertEqual(ListarAssuntosService.executar(incluir_inativos=True), [{"id": 2}])
+        assunto_class.listar_todos.assert_called_once_with()
+
+    @patch("app.repositories.catalogo_repository.CatalogoRepository.listar_assuntos_ativos")
+    def test_model_preserva_listagem_compativel(self, listar):
+        from app.models.assunto import Assunto
+
+        self.assertIs(Assunto.listar_ativos(7), listar.return_value)
+        listar.assert_called_once_with(7)
 
 
 class QuestaoServicesTest(unittest.TestCase):
@@ -266,18 +280,19 @@ class QuestaoServicesTest(unittest.TestCase):
              self.assertRaises(ConflitoError):
             CriarQuestaoService.executar(self.valid_data(), 1)
 
-    @patch("app.services.buscar_questoes_por_assunto_service.QuestaoRepository")
-    @patch("app.services.buscar_questoes_por_assunto_service.Assunto")
-    def test_buscar_valida_e_retorna_repository(self, assunto_class, repository):
+    def test_buscar_valida_e_retorna_repository(self):
+        from unittest.mock import Mock
+        repository, existe = Mock(), Mock()
+        service = BuscarQuestoesPorAssuntoService(repository, existe)
         for value in (None, "abc", 0, -1):
             with self.subTest(value=value), self.assertRaises(DadosInvalidosError):
-                BuscarQuestoesPorAssuntoService.executar(value)
-        assunto_class.buscar_por_id.return_value = None
+                service.executar(value)
+        existe.return_value = False
         with self.assertRaises(RecursoNaoEncontradoError):
-            BuscarQuestoesPorAssuntoService.executar("2")
-        assunto_class.buscar_por_id.return_value = object()
+            service.executar("2")
+        existe.return_value = True
         repository.buscar_por_assunto.return_value = [{"id": 4}]
-        self.assertEqual(BuscarQuestoesPorAssuntoService.executar("2"), [{"id": 4}])
+        self.assertEqual(service.executar("2"), [{"id": 4}])
         repository.buscar_por_assunto.assert_called_once_with(2)
 
     def test_health(self):

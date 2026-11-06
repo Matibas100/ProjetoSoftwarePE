@@ -82,24 +82,20 @@ class TransactionManagerTest(unittest.TestCase):
 
 
 class AdminListingServiceTest(unittest.TestCase):
-    @patch("app.services.listar_catalogo_admin_service.CatalogoRepository")
-    def test_materias_paginadas(self, repository):
-        materia = MagicMock(to_dict=lambda: {"id": 1})
-        area = MagicMock(to_dict=lambda: {"id": 3})
-        repository.listar_materias_admin.return_value = ([(materia, area, 2, 7)], 21)
-        result = ListarMateriasAdminService.executar(
+    def test_materias_paginadas(self):
+        consulta = MagicMock()
+        consulta.listar.return_value = ([{'id': 1, 'area_enem': {'id': 3}, 'assuntos': 2, 'questoes': 7}], 21)
+        result = ListarMateriasAdminService(consulta).executar(
             {"pagina": "2", "por_pagina": "10", "busca": " fisica ", "status": "ativa"}
         )
         self.assertEqual(result["total_paginas"], 3)
         self.assertEqual(result["itens"][0]["questoes"], 7)
+        consulta.listar.assert_called_once_with({'busca': 'fisica', 'status': 'ativa', 'area_enem_id': None}, 2, 10)
 
-    @patch("app.services.listar_catalogo_admin_service.CatalogoRepository")
-    def test_assuntos_expoem_resumos_nulos(self, repository):
-        subject = MagicMock(to_dict=lambda: {"id": 1})
-        matter = MagicMock(to_dict=lambda: {"id": 2})
-        area = MagicMock(to_dict=lambda: {"id": 3})
-        repository.listar_assuntos_admin.return_value = ([(subject, matter, area, 4)], 1)
-        result = ListarAssuntosAdminService.executar({})
+    def test_assuntos_expoem_resumos_nulos(self):
+        consulta = MagicMock()
+        consulta.listar.return_value = ([{'id': 1, 'materia': {'id': 2}, 'area_enem': {'id': 3}, 'questoes': 4}], 1)
+        result = ListarAssuntosAdminService(consulta).executar({})
         self.assertIsNone(result["itens"][0]["resumos"])
 
     def test_rejeita_paginacao_busca_status_e_ids_invalidos(self):
@@ -109,7 +105,7 @@ class AdminListingServiceTest(unittest.TestCase):
         ]
         for params in invalid:
             with self.subTest(params=params), self.assertRaises(DadosInvalidosError):
-                ListarAssuntosAdminService.executar(params)
+                ListarAssuntosAdminService(MagicMock()).executar(params)
 
 
 class LifecycleServiceTest(unittest.TestCase):

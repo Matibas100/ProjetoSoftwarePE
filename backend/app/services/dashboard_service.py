@@ -1,17 +1,19 @@
-from app.contexto_leitura import ContextoLeitura
 from app.exceptions import DadosInvalidosError
-from app.repositories.desempenho_repository import DesempenhoRepository as Repo
-from app.services.consultar_desempenho_service import ConsultarDesempenhoService
+from app.contracts.desempenho import DiagnosticoAluno, ConsultaAtividadesAluno, ConsultaContagensAdmin, EscoposLeitura
 from app.services.desempenho_validacao import periodo
 
 
 class ConsultarDashboardAlunoService:
-    @staticmethod
-    def executar(usuario_id, filtros):
-        with ContextoLeitura.usar() as leitura:
-            diagnostico = ConsultarDesempenhoService.executar(usuario_id, filtros, leitura, leitura.instante)
+    def __init__(self, diagnostico: DiagnosticoAluno, atividades: ConsultaAtividadesAluno, escopos: EscoposLeitura):
+        self._diagnostico = diagnostico
+        self._atividades = atividades
+        self._escopos = escopos
+
+    def executar(self, usuario_id, filtros):
+        with self._escopos.usar() as leitura:
+            diagnostico = self._diagnostico.executar(usuario_id, filtros, leitura, leitura.instante)
             _, inicio, fim = periodo(filtros, leitura.instante)
-            atividades = Repo.atividades(leitura, usuario_id, inicio, fim)
+            atividades = self._atividades.atividades(leitura, usuario_id, inicio, fim)
             for a in atividades:
                 a["ocorrido_em"] = a["ocorrido_em"].isoformat() + "Z"
                 destino = "questao" if a["tipo"] == "pratica" else "simulado"
@@ -20,9 +22,12 @@ class ConsultarDashboardAlunoService:
 
 
 class ConsultarDashboardAdminService:
-    @staticmethod
-    def executar(filtros):
+    def __init__(self, contagens: ConsultaContagensAdmin, escopos: EscoposLeitura):
+        self._contagens = contagens
+        self._escopos = escopos
+
+    def executar(self, filtros):
         if filtros:
             raise DadosInvalidosError("O dashboard administrativo não aceita filtros.")
-        with ContextoLeitura.usar() as leitura:
-            return {"calculado_em": leitura.instante.isoformat() + "Z", **Repo.administrativo(leitura)}
+        with self._escopos.usar() as leitura:
+            return {"calculado_em": leitura.instante.isoformat() + "Z", **self._contagens.administrativo(leitura)}

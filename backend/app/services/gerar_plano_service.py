@@ -8,7 +8,7 @@ from app.services.selecionar_plano_service import SelecionarPlanoService
 from app.transaction_manager import TransactionManager
 
 
-def gerar(usuario_id, dados, recalcular=False):
+def gerar(usuario_id, dados, seletor: SelecionarPlanoService, recalcular=False):
     chave, anterior_id = operacao(dados, recalcular)
     tipo = "recalcular" if recalcular else "gerar"
 
@@ -27,7 +27,7 @@ def gerar(usuario_id, dados, recalcular=False):
             raise ConflitoError("Já existe um plano. Consulte-o ou confirme o recálculo.")
         instante = agora_utc()
         with Repo.contexto(instante) as contexto:
-            periodo, itens = SelecionarPlanoService.executar(usuario_id, contexto, instante)
+            periodo, itens = seletor.executar(usuario_id, contexto, instante)
         if not itens:
             return {"estado": "sem_base_suficiente", "plano": plano_dto(atual)}, 200
         # Seleção pronta antes de desativar; qualquer falha reverte toda a troca.
@@ -46,6 +46,8 @@ def gerar(usuario_id, dados, recalcular=False):
 
 
 class GerarPlanoService:
-    @staticmethod
-    def executar(usuario_id, dados):
-        return gerar(usuario_id, dados)
+    def __init__(self, seletor: SelecionarPlanoService):
+        self._seletor = seletor
+
+    def executar(self, usuario_id, dados):
+        return gerar(usuario_id, dados, self._seletor)

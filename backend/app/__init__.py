@@ -23,6 +23,8 @@ def create_app(config_class=Config):
 
     # O import registra as tabelas nos metadados do SQLAlchemy.
     from app import models  # noqa: F401
+    from app.composition import compor
+    app.extensions['servicos'] = compor()
     from app.routes import api_blueprint
 
     app.register_blueprint(api_blueprint, url_prefix="/api")

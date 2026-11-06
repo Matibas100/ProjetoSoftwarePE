@@ -185,3 +185,29 @@ class CatalogoAdminIntegrationTest(MySQLIntegrationTestCase):
         item = next(item for item in response.get_json()["itens"] if item["id"] == subject["id"])
         self.assertIsNone(item["resumos"])
         self.assertEqual(item["area_enem"]["codigo"], "ciencias-humanas")
+
+    def test_listagem_ativa_filtra_status_materia_e_ordena_nome_id(self):
+        matter = self._matter()
+        other = self._matter()
+        suffix = uuid4().hex[:8]
+        last = self._subject(matter["id"], f"Zulu {suffix}")
+        first = self._subject(matter["id"], f"Alfa {suffix}")
+        inactive = self._subject(matter["id"])
+        archived = self._subject(matter["id"])
+        hidden = self._subject(other["id"])
+        self.assertEqual(self.client.post(f"/api/materias/{other['id']}/inativar").status_code, 200)
+        self.assertEqual(self.client.post(f"/api/assuntos/{inactive['id']}/inativar").status_code, 200)
+        self.assertEqual(self.client.post(f"/api/assuntos/{archived['id']}/arquivar").status_code, 200)
+
+        response = self.client.get("/api/assuntos", query_string={"materia_id": matter["id"]})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([row["id"] for row in response.get_json()], [first["id"], last["id"]])
+        all_active = self.client.get("/api/assuntos").get_json()
+        self.assertFalse({inactive["id"], archived["id"], hidden["id"]} & {row["id"] for row in all_active})
+        self.assertEqual(self.client.get("/api/assuntos", query_string={"materia_id": other["id"]}).get_json(), [])
+
+        from app.models.assunto import Assunto
+        from app.repositories.catalogo_repository import CatalogoRepository
+        with self.app.app_context():
+            self.assertEqual([row.id for row in Assunto.listar_ativos(matter["id"])],
+                [row.id for row in CatalogoRepository.listar_assuntos_ativos(matter["id"])])

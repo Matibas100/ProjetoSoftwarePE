@@ -1,12 +1,14 @@
 from fractions import Fraction
 from app.repositories.questao_repository import QuestaoRepository
-from app.services.consultar_desempenho_service import ConsultarDesempenhoService
+from app.contracts.desempenho import DiagnosticoAluno
 
 
 class SelecionarPlanoService:
-    @staticmethod
-    def executar(usuario_id, contexto, instante):
-        diagnostico = ConsultarDesempenhoService.executar(usuario_id, contexto=contexto, instante=instante)
+    def __init__(self, diagnostico: DiagnosticoAluno):
+        self._diagnostico = diagnostico
+
+    def executar(self, usuario_id, contexto, instante):
+        diagnostico = self._diagnostico.executar(usuario_id, contexto=contexto, instante=instante)
         limiar = diagnostico["limiar_amostra"]
         grupos = [a for a in diagnostico["assuntos"] if a["total_respostas"] >= limiar]
         pares = QuestaoRepository.pares_elegiveis_plano([a["assunto_id"] for a in grupos], bloquear=True)

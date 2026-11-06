@@ -1,6 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
-from app.contexto_leitura import ContextoLeitura
-from app.repositories.desempenho_repository import DesempenhoRepository as Repo
+from app.contracts.desempenho import ConsultaMetricasDesempenho, EscoposLeitura
 from app.services.desempenho_validacao import periodo
 
 
@@ -13,13 +12,16 @@ def metrica(linha):
 
 
 class ConsultarDesempenhoService:
-    @staticmethod
-    def executar(usuario_id, filtros=None, contexto=None, instante=None):
+    def __init__(self, consulta: ConsultaMetricasDesempenho, escopos: EscoposLeitura):
+        self._consulta = consulta
+        self._escopos = escopos
+
+    def executar(self, usuario_id, filtros=None, contexto=None, instante=None):
         if type(usuario_id) is not int or usuario_id <= 0:
             raise ValueError("Usuário autorizado obrigatório.")
-        with ContextoLeitura.usar(contexto, instante) as leitura:
+        with self._escopos.usar(contexto, instante) as leitura:
             datas, inicio, fim = periodo({} if filtros is None else filtros, leitura.instante)
-            geral, materias, assuntos = Repo.agregar(leitura, usuario_id, inicio, fim)
+            geral, materias, assuntos = self._consulta.agregar(leitura, usuario_id, inicio, fim)
             resumo = metrica(geral)
             return {"periodo": datas, "calculado_em": leitura.instante.isoformat() + "Z", "limiar_amostra": 5,
                 "base": resumo["base"], "geral": resumo,

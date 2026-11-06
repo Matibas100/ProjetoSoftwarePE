@@ -50,6 +50,35 @@ class SimuladoRepository:
         return db.session.execute(select(entidade).where(condicao).order_by(entidade.posicao)).scalars().all()
 
     @staticmethod
+    def itens_em_lote(simulado_ids=None, versao_ids=None):
+        entidade = SimuladoRascunhoItem if versao_ids is None else SimuladoVersaoItem
+        ids = simulado_ids if versao_ids is None else versao_ids
+        if not ids:
+            return {}
+        chave = entidade.simulado_id if versao_ids is None else entidade.simulado_versao_id
+        grupos = {}
+        for item in db.session.execute(select(entidade).where(chave.in_(ids))
+                .order_by(chave, entidade.posicao)).scalars():
+            id_ = item.simulado_id if versao_ids is None else item.simulado_versao_id
+            grupos.setdefault(id_, []).append(item)
+        return grupos
+
+    @staticmethod
+    def andamentos_em_lote(usuario_id, versao_ids):
+        if not versao_ids:
+            return {}
+        consulta = select(SimuladoTentativa).where(SimuladoTentativa.usuario_id == usuario_id,
+            SimuladoTentativa.simulado_versao_id.in_(versao_ids), SimuladoTentativa.estado == "em_andamento")
+        return {t.simulado_versao_id: t for t in db.session.execute(consulta).scalars()}
+
+    @staticmethod
+    def titulos_em_lote(versao_ids):
+        if not versao_ids:
+            return {}
+        return dict(db.session.execute(select(SimuladoVersao.id, SimuladoVersao.titulo)
+            .where(SimuladoVersao.id.in_(versao_ids))).all())
+
+    @staticmethod
     def listar(pagina, limite, estado=None):
         consulta = select(Simulado)
         if estado:

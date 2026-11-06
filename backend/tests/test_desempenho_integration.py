@@ -10,7 +10,7 @@ from app.models.simulado import SimuladoTentativa
 from app.repositories.pratica_repository import PraticaRepository
 from app.repositories.simulado_repository import SimuladoRepository
 from app.repositories.desempenho_repository import DesempenhoRepository
-from app.services.consultar_desempenho_service import ConsultarDesempenhoService
+from app.http_composition import servicos
 from app.services.listar_praticas_service import ConsultarFatosPraticasService
 from app.services.consultar_simulado_service import ConsultarFatosSimuladosService
 from app.services.iniciar_pratica_service import IniciarPraticaService
@@ -113,12 +113,12 @@ class DesempenhoIntegrationTest(MySQLIntegrationTestCase):
                 db.session.execute(text('UPDATE pratica_tentativas SET iniciada_em=:data,respondida_em=:data WHERE id=:id'),{'data':instante,'id':id_})
             db.session.commit()
             relogio=datetime(2026,10,24,0,0,1)
-            d=ConsultarDesempenhoService.executar(self.usuario,{'inicio':'2026-10-10','fim':'2026-10-10'},instante=relogio)
+            d=servicos().desempenho.executar(self.usuario,{'inicio':'2026-10-10','fim':'2026-10-10'},instante=relogio)
             self.assertEqual(d['geral']['total_respostas'],1);self.assertEqual(d['calculado_em'],'2026-10-24T00:00:01Z')
-            d=ConsultarDesempenhoService.executar(self.usuario,instante=relogio)
+            d=servicos().desempenho.executar(self.usuario,instante=relogio)
             self.assertEqual(d['periodo'],{'inicio':'2026-09-25','fim':'2026-10-24','timezone':'UTC'})
             fim=relogio.date();ini=(fim-timedelta(days=365)).isoformat()
-            d=ConsultarDesempenhoService.executar(self.usuario,{'inicio':ini,'fim':fim.isoformat()},instante=relogio)
+            d=servicos().desempenho.executar(self.usuario,{'inicio':ini,'fim':fim.isoformat()},instante=relogio)
             self.assertEqual(d['geral']['total_respostas'],3)
 
     def test_rotulos_recentes_transferencia_e_media_ponderada(self):
@@ -153,22 +153,22 @@ class DesempenhoIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             instante=agora_utc()
             with ContextoLeitura(instante=instante) as leitura:
-                antes=ConsultarDesempenhoService.executar(self.usuario,contexto=leitura,instante=instante)
+                antes=servicos().desempenho.executar(self.usuario,contexto=leitura,instante=instante)
                 # Outra sessão/conexão confirma uma resposta após a abertura do snapshot.
                 with self.app.app_context():
                     t,_=IniciarPraticaService.executar(self.usuario,{'questao_versao_id':self.versao,'chave_envio':str(uuid4())})
                     ResponderPraticaService.executar(self.usuario,t['id'],{'alternativa':'B'})
-                depois=ConsultarDesempenhoService.executar(self.usuario,contexto=leitura,instante=instante)
+                depois=servicos().desempenho.executar(self.usuario,contexto=leitura,instante=instante)
                 self.assertEqual(antes,depois)
                 _,inicio,fim=__import__('app.services.desempenho_validacao',fromlist=['periodo']).periodo({},instante)
                 self.assertEqual(len(DesempenhoRepository.atividades(leitura,self.usuario,inicio,fim)),1)
-            self.assertEqual(ConsultarDesempenhoService.executar(self.usuario)['geral']['total_respostas'],2)
+            self.assertEqual(servicos().desempenho.executar(self.usuario)['geral']['total_respostas'],2)
             with db.engine.connect().execution_options(isolation_level='REPEATABLE READ') as conexao:
                 transacao=conexao.begin()
                 conexao.execute(text("INSERT INTO materias(nome,area_enem_id) VALUES('Transação externa',4)"))
                 with ContextoLeitura(conexao,instante) as leitura:
-                    ConsultarDesempenhoService.executar(self.usuario,contexto=leitura,instante=instante)
-                    with self.assertRaises(ValueError):ConsultarDesempenhoService.executar(self.usuario,contexto=leitura,instante=instante+timedelta(seconds=1))
+                    servicos().desempenho.executar(self.usuario,contexto=leitura,instante=instante)
+                    with self.assertRaises(ValueError):servicos().desempenho.executar(self.usuario,contexto=leitura,instante=instante+timedelta(seconds=1))
                     self.assertTrue(transacao.is_active)
                 self.assertTrue(transacao.is_active);transacao.rollback()
             self.assertEqual(db.session.execute(text("SELECT COUNT(*) FROM materias WHERE nome='Transação externa'")).scalar_one(),0)
@@ -206,7 +206,7 @@ class DesempenhoIntegrationTest(MySQLIntegrationTestCase):
                 with ContextoLeitura(conexao) as leitura:
                     event.listen(engine,'before_cursor_execute',falhar_diagnostico)
                     try:
-                        with self.assertRaises(RuntimeError):ConsultarDesempenhoService.executar(self.usuario,contexto=leitura)
+                        with self.assertRaises(RuntimeError):servicos().desempenho.executar(self.usuario,contexto=leitura)
                     finally:event.remove(engine,'before_cursor_execute',falhar_diagnostico)
                     self.assertTrue(transacao.is_active)
                 self.assertTrue(transacao.is_active);transacao.rollback()

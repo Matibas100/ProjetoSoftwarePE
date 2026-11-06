@@ -1,9 +1,9 @@
-from flask import current_app, g, jsonify, request
-from app.exceptions import ErroAplicacao
+from flask import g, jsonify, request
+from app.http_response import responder_http, resposta_json, resposta_json_dinamica
 from app.services.gestao_simulado_service import (ListarSimuladosAdminService, ConsultarSimuladoAdminService,
     CriarSimuladoService, EditarSimuladoService, PublicarSimuladoService, ArquivarSimuladoService)
-from app.services.consultar_simulado_service import (ListarSimuladosAlunoService,
-    ListarHistoricoSimuladosService, ConsultarTentativaSimuladoService)
+from app.services.consultar_simulado_service import ConsultarTentativaSimuladoService
+from app.http_composition import servicos
 from app.services.iniciar_simulado_service import IniciarSimuladoService
 from app.services.responder_simulado_service import ResponderSimuladoService
 from app.services.finalizar_simulado_service import FinalizarSimuladoService
@@ -12,15 +12,8 @@ from app.services.finalizar_simulado_service import FinalizarSimuladoService
 class SimuladoController:
     @staticmethod
     def _responder(operacao):
-        try:
-            dados = operacao()
-            payload, status = dados if isinstance(dados, tuple) else (dados, 200)
-            return jsonify(payload), status
-        except ErroAplicacao as erro:
-            return jsonify(erro.to_dict()), erro.status_code
-        except Exception:
-            current_app.logger.error("Falha interna ao processar simulado.")
-            return jsonify({"erro": "Ocorreu um erro interno no servidor."}), 500
+        return responder_http(operacao, contexto="Falha interna: simulado.",
+            adaptar_sucesso=resposta_json_dinamica)
 
     @staticmethod
     def admin_lista():
@@ -48,7 +41,7 @@ class SimuladoController:
 
     @staticmethod
     def catalogo():
-        return SimuladoController._responder(lambda: ListarSimuladosAlunoService.executar(g.auth_sessao.usuario_id, request.args))
+        return SimuladoController._responder(lambda: servicos().simulados_aluno.executar(g.auth_sessao.usuario_id, request.args))
 
     @staticmethod
     def iniciar():
@@ -56,7 +49,7 @@ class SimuladoController:
 
     @staticmethod
     def historico():
-        return SimuladoController._responder(lambda: ListarHistoricoSimuladosService.executar(g.auth_sessao.usuario_id, request.args))
+        return SimuladoController._responder(lambda: servicos().historico_simulados.executar(g.auth_sessao.usuario_id, request.args))
 
     @staticmethod
     def tentativa(tentativa_id, modo=None):

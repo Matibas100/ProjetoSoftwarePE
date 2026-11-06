@@ -1,28 +1,22 @@
-from flask import current_app, g, jsonify, request
-from app.exceptions import ErroAplicacao
-from app.services.consultar_desempenho_service import ConsultarDesempenhoService
-from app.services.dashboard_service import ConsultarDashboardAlunoService, ConsultarDashboardAdminService
+from flask import g, jsonify, request
+from app.http_response import responder_http, resposta_json, resposta_json_dinamica
+from app.http_composition import servicos
 
 
 class DesempenhoController:
     @staticmethod
     def _responder(operacao):
-        try:
-            return jsonify(operacao()), 200
-        except ErroAplicacao as erro:
-            return jsonify(erro.to_dict()), erro.status_code
-        except Exception:
-            current_app.logger.error("Falha interna ao consultar desempenho/dashboard.")
-            return jsonify({"erro": "Ocorreu um erro interno no servidor."}), 500
+        return responder_http(operacao, contexto="Falha interna: desempenho.",
+            adaptar_sucesso=resposta_json)
 
     @staticmethod
     def diagnostico():
-        return DesempenhoController._responder(lambda: ConsultarDesempenhoService.executar(g.auth_sessao.usuario_id, request.args))
+        return DesempenhoController._responder(lambda: servicos().desempenho.executar(g.auth_sessao.usuario_id, request.args))
 
     @staticmethod
     def aluno():
-        return DesempenhoController._responder(lambda: ConsultarDashboardAlunoService.executar(g.auth_sessao.usuario_id, request.args))
+        return DesempenhoController._responder(lambda: servicos().dashboard_aluno.executar(g.auth_sessao.usuario_id, request.args))
 
     @staticmethod
     def admin():
-        return DesempenhoController._responder(lambda: ConsultarDashboardAdminService.executar(request.args))
+        return DesempenhoController._responder(lambda: servicos().dashboard_admin.executar(request.args))

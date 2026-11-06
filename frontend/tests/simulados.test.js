@@ -39,6 +39,7 @@ async function setup(mode, override = () => undefined, search = mode === "aluno-
     return envelope([{ id: 10, titulo: "Prova real", simulado_versao_id: 4, total_questoes: 2, disponivel: true, tentativa_em_andamento_id: null }]);
   });
   globalThis.apiRequest = api;
+  await import("../js/navigation.js");
   if (admin) { await import("../js/admin-common.js"); await import("../js/admin-simulados.js"); }
   else await import("../js/aluno-simulados.js");
   await settle(); return api;
@@ -88,6 +89,10 @@ describe("simulados do aluno", () => {
     window.confirm.mockReturnValue(false); click("sim-item-proxima"); expect(SimuladosAlunoUI.state.index).toBe(0);
     const e = new Event("beforeunload", { cancelable: true }); window.dispatchEvent(e); expect(e.defaultPrevented).toBe(true);
     const link = document.querySelector('a[href="simulados.html"]'); const event = new MouseEvent("click", { bubbles: true, cancelable: true }); link.dispatchEvent(event); expect(event.defaultPrevented).toBe(true);
+    const plano = document.querySelector('[data-navigation] a[href="/aluno/plano.html"]');
+    const sairPlano = new MouseEvent("click", { bubbles: true, cancelable: true });
+    plano.dispatchEvent(sairPlano); expect(sairPlano.defaultPrevented).toBe(true);
+    expect(document.querySelector('input[value="B"]').checked).toBe(true);
     click("sim-recarregar"); await settle(); expect(document.querySelector('input[value="B"]').checked).toBe(true);
     window.confirm.mockReturnValue(true); click("sim-item-proxima"); expect(SimuladosAlunoUI.state.index).toBe(1); click("sim-item-anterior"); expect(SimuladosAlunoUI.state.index).toBe(0);
   });

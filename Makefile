@@ -1,4 +1,4 @@
-.PHONY: db-status db-up db-baseline db-reconcile test-unit test-integration test-backend test-frontend test-coverage test
+.PHONY: db-status db-up db-baseline db-reconcile test-unit test-integration test-backend test-frontend test-coverage test test-e2e
 
 db-status:
 	python backend/database/migrate.py status
@@ -28,3 +28,6 @@ test-frontend:
 test-coverage: test-backend test-frontend
 
 test: test-coverage
+
+test-e2e:
+	python scripts/run_e2e.py

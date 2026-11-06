@@ -34,7 +34,7 @@ async function setup(mode = "questoes", override = () => undefined, search = "?t
     return envelope();
   });
   globalThis.apiRequest = api;
-  await import("../js/auth-session.js");
+  await import("../js/navigation.js"); await import("../js/auth-session.js");
   AuthUI.navigate = vi.fn();
   await import("../js/aluno-praticas.js");
   await settle();

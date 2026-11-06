@@ -2,7 +2,7 @@ from math import ceil
 
 from app.domain.catalogo import STATUS_CATALOGO
 from app.exceptions import DadosInvalidosError
-from app.repositories.catalogo_repository import CatalogoRepository
+from app.contracts.catalogo import ConsultaMateriasAdmin, ConsultaAssuntosAdmin
 
 
 def _inteiro_filtro(valor, campo, minimo=1, maximo=None):
@@ -42,8 +42,10 @@ def _envelope(itens, pagina, por_pagina, total):
 
 
 class ListarMateriasAdminService:
-    @staticmethod
-    def executar(parametros):
+    def __init__(self, consulta: ConsultaMateriasAdmin):
+        self._consulta = consulta
+
+    def executar(self, parametros):
         pagina, por_pagina, busca, status = _parametros(parametros)
         filtros = {
             "busca": busca,
@@ -52,22 +54,17 @@ class ListarMateriasAdminService:
                 parametros.get("area_enem_id"), "area_enem_id"
             ),
         }
-        linhas, total = CatalogoRepository.listar_materias_admin(
+        itens, total = self._consulta.listar(
             filtros, pagina, por_pagina
         )
-        itens = []
-        for materia, area, assuntos, questoes in linhas:
-            item = materia.to_dict()
-            item.update(
-                {"area_enem": area.to_dict(), "assuntos": assuntos, "questoes": questoes}
-            )
-            itens.append(item)
         return _envelope(itens, pagina, por_pagina, total)
 
 
 class ListarAssuntosAdminService:
-    @staticmethod
-    def executar(parametros):
+    def __init__(self, consulta: ConsultaAssuntosAdmin):
+        self._consulta = consulta
+
+    def executar(self, parametros):
         pagina, por_pagina, busca, status = _parametros(parametros)
         filtros = {
             "busca": busca,
@@ -77,19 +74,8 @@ class ListarAssuntosAdminService:
             ),
             "materia_id": _inteiro_filtro(parametros.get("materia_id"), "materia_id"),
         }
-        linhas, total = CatalogoRepository.listar_assuntos_admin(
+        linhas, total = self._consulta.listar(
             filtros, pagina, por_pagina
         )
-        itens = []
-        for assunto, materia, area, questoes in linhas:
-            item = assunto.to_dict()
-            item.update(
-                {
-                    "materia": materia.to_dict(),
-                    "area_enem": area.to_dict(),
-                    "questoes": questoes,
-                    "resumos": None,
-                }
-            )
-            itens.append(item)
+        itens = [{**linha, 'resumos': None} for linha in linhas]
         return _envelope(itens, pagina, por_pagina, total)

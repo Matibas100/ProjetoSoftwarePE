@@ -11,9 +11,12 @@
     "test": "vitest run",
     "test:unit": "vitest run --coverage=false",
     "test:frontend": "vitest run --coverage=false",
-    "test:coverage": "vitest run --coverage && node scripts/validate_frontend_coverage.mjs"
+    "test:coverage": "vitest run --coverage && node scripts/validate_frontend_coverage.mjs",
+    "test:e2e": "python scripts/run_e2e.py",
+    "test:e2e:list": "playwright test --list"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "@vitest/coverage-v8": "4.1.11",
     "jsdom": "29.0.0",
     "vitest": "4.1.11"

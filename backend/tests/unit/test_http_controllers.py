@@ -66,10 +66,11 @@ class ControllerDelegationTest(unittest.TestCase):
         self.client.post("/api/questoes", json={"enunciado": "x"})
         execute.assert_called_once_with({"enunciado": "x"}, 1)
 
-    @patch("app.controllers.questao_controller.BuscarQuestoesPorAssuntoService.executar", return_value=[])
+    @patch("app.controllers.questao_controller.servicos")
     def test_buscar_questoes(self, execute):
+        execute.return_value.questoes_por_assunto.executar.return_value = []
         self.client.get("/api/questoes/por-assunto?assunto_id=3")
-        execute.assert_called_once_with("3")
+        execute.return_value.questoes_por_assunto.executar.assert_called_once_with("3")
 
 
 if __name__ == "__main__":

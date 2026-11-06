@@ -18,7 +18,7 @@ async function setup(file = "login.html", api = vi.fn().mockRejectedValue(expire
   const bootstrap = new Promise((resolve) => { release = resolve; });
   globalThis.apiRequest = (...args) => bootstrap.then(() => api(...args));
   globalThis.resetCsrf = vi.fn();
-  await import("../js/auth-session.js");
+  await import("../js/navigation.js"); await import("../js/auth-session.js");
   globalThis.AuthUI.navigate = vi.fn();
   globalThis.apiRequest = api;
   release();

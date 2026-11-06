@@ -1,9 +1,7 @@
-from flask import current_app, g, jsonify, request
+from flask import g, jsonify, request
 
-from app.exceptions import ErroAplicacao
-from app.services.buscar_questoes_por_assunto_service import (
-    BuscarQuestoesPorAssuntoService,
-)
+from app.http_response import responder_http, resposta_json, resposta_json_dinamica
+from app.http_composition import servicos
 from app.services.criar_questao_service import CriarQuestaoService
 from app.services.gestao_questao_service import (
     ListarQuestoesAdminService, ConsultarQuestaoService, EditarQuestaoService,
@@ -26,7 +24,7 @@ class QuestaoController:
     def buscar_por_assunto():
         assunto_id = request.args.get("assunto_id")
         return QuestaoController._responder(
-            lambda: BuscarQuestoesPorAssuntoService.executar(assunto_id)
+            lambda: servicos().questoes_por_assunto.executar(assunto_id)
         )
 
     @staticmethod
@@ -54,10 +52,6 @@ class QuestaoController:
 
     @staticmethod
     def _responder(operacao, status_sucesso=200):
-        try:
-            return jsonify(operacao()), status_sucesso
-        except ErroAplicacao as erro:
-            return jsonify({"erro": str(erro)}), erro.status_code
-        except Exception:
-            current_app.logger.exception("Erro inesperado ao processar questao")
-            return jsonify({"erro": "Ocorreu um erro interno no servidor."}), 500
+        return responder_http(operacao, contexto="Falha interna: questao.",
+            adaptar_sucesso=lambda dados: resposta_json(dados, status_sucesso),
+            adaptar_erro=lambda erro: (jsonify({"erro": str(erro)}), erro.status_code))

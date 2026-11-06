@@ -114,6 +114,25 @@ class QuestaoRepository:
         return linhas, total
 
     @staticmethod
+    def versoes_elegiveis(ids):
+        if not ids:
+            return []
+        consulta = (select(QuestaoVersao).join(Questao, Questao.id == QuestaoVersao.questao_id)
+            .join(Assunto, Assunto.id == QuestaoVersao.assunto_id)
+            .join(Materia, Materia.id == QuestaoVersao.materia_id)
+            .where(QuestaoVersao.id.in_(ids), QuestaoVersao.estado == "publicada",
+                Questao.status != "arquivada", Questao.versao_publicada_id == QuestaoVersao.id,
+                Assunto.status == "ativa", Materia.status == "ativa"))
+        return db.session.execute(consulta).scalars().all()
+
+    @staticmethod
+    def versoes_historicas(ids):
+        if not ids:
+            return []
+        return db.session.execute(select(QuestaoVersao).where(
+            QuestaoVersao.id.in_(ids), QuestaoVersao.estado == "publicada")).scalars().all()
+
+    @staticmethod
     def buscar_por_assunto(assunto_id):
         resultado = db.session.execute(
             text("CALL sp_questoes_por_assunto(:assunto_id)"),

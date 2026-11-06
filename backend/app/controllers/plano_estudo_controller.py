@@ -1,23 +1,15 @@
-from flask import current_app, g, jsonify, request
-from app.exceptions import ErroAplicacao
+from flask import g, jsonify, request
+from app.http_response import responder_http, resposta_json, resposta_json_dinamica
 from app.services.consultar_plano_service import ConsultarPlanoService
-from app.services.gerar_plano_service import GerarPlanoService
-from app.services.recalcular_plano_service import RecalcularPlanoService
+from app.http_composition import servicos
 from app.services.concluir_plano_item_service import ConcluirPlanoItemService
 
 
 class PlanoEstudoController:
     @staticmethod
     def _responder(operacao):
-        try:
-            dados = operacao()
-            payload, status = dados if isinstance(dados, tuple) else (dados, 200)
-            return jsonify(payload), status
-        except ErroAplicacao as erro:
-            return jsonify(erro.to_dict()), erro.status_code
-        except Exception:
-            current_app.logger.error("Falha interna ao processar plano de estudos.")
-            return jsonify({"erro": "Ocorreu um erro interno no servidor."}), 500
+        return responder_http(operacao, contexto="Falha interna: plano_estudo.",
+            adaptar_sucesso=resposta_json_dinamica)
 
     @staticmethod
     def consultar():
@@ -25,11 +17,11 @@ class PlanoEstudoController:
 
     @staticmethod
     def gerar():
-        return PlanoEstudoController._responder(lambda: GerarPlanoService.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
+        return PlanoEstudoController._responder(lambda: servicos().gerar_plano.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
 
     @staticmethod
     def recalcular():
-        return PlanoEstudoController._responder(lambda: RecalcularPlanoService.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
+        return PlanoEstudoController._responder(lambda: servicos().recalcular_plano.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
 
     @staticmethod
     def concluir(item_id):

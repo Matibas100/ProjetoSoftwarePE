@@ -1,4 +1,5 @@
 from app.models.assunto import Assunto
+from app.repositories.catalogo_repository import CatalogoRepository
 
 
 class ListarAssuntosService:
@@ -7,6 +8,6 @@ class ListarAssuntosService:
         assuntos = (
             Assunto.listar_todos()
             if incluir_inativos
-            else Assunto.listar_ativos(materia_id)
+            else CatalogoRepository.listar_assuntos_ativos(materia_id)
         )
         return [assunto.to_dict() for assunto in assuntos]
