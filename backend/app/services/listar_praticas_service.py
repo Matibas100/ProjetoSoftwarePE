@@ -1,5 +1,5 @@
 from app.repositories.pratica_repository import PraticaRepository
-from app.services.listar_catalogo_admin_service import _envelope
+from app.services.paginacao import envelope_paginado
 from app.services.pratica_validacao import parametros
 
 
@@ -9,7 +9,7 @@ class ListarPraticasService:
         valores = parametros(filtros, {"assunto_id"})
         linhas, total = PraticaRepository.historico(usuario_id, valores["assunto_id"],
             valores["pagina"], valores["por_pagina"])
-        return _envelope([linha.resumo() for linha in linhas], valores["pagina"], valores["por_pagina"], total)
+        return envelope_paginado([linha.resumo() for linha in linhas], valores["pagina"], valores["por_pagina"], total)
 
 
 class ConsultarFatosPraticasService:

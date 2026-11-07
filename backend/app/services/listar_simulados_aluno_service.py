@@ -1,6 +1,6 @@
 from app.contracts.simulados import ConsultaCatalogoSimulados
 from app.contracts.questoes import ConsultaElegibilidadeVersoes
-from app.services.listar_catalogo_admin_service import _envelope
+from app.services.paginacao import envelope_paginado
 from app.services.simulado_validacao import paginacao
 
 
@@ -22,4 +22,4 @@ class ListarSimuladosAlunoService:
             disponivel = bool(composicao) and all(id_ in elegiveis for id_ in composicao)
             itens.append({**s, 'total_questoes': len(composicao), 'disponivel': disponivel,
                           'tentativa_em_andamento_id': andamentos.get(s['simulado_versao_id'])})
-        return _envelope(itens, valores['pagina'], valores['por_pagina'], total)
+        return envelope_paginado(itens, valores['pagina'], valores['por_pagina'], total)

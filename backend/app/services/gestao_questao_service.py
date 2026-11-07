@@ -6,7 +6,7 @@ from app.models.questao_versao import QuestaoVersao
 from app.models.questao_evento import QuestaoEvento
 from app.repositories.questao_repository import QuestaoRepository
 from app.services.criar_questao_service import CriarQuestaoService
-from app.services.listar_catalogo_admin_service import _inteiro_filtro, _envelope
+from app.services.paginacao import inteiro_filtro, envelope_paginado
 from app.transaction_manager import TransactionManager
 
 
@@ -65,11 +65,11 @@ class ListarQuestoesAdminService:
                       "area_enem_id", "materia_id", "assunto_id"}
         if set(parametros) - permitidos:
             raise DadosInvalidosError("Filtro desconhecido.")
-        pagina = _inteiro_filtro(parametros.get("pagina", "1"), "pagina")
-        limite = _inteiro_filtro(parametros.get("por_pagina", "20"), "por_pagina", maximo=100)
+        pagina = inteiro_filtro(parametros.get("pagina", "1"), "pagina")
+        limite = inteiro_filtro(parametros.get("por_pagina", "20"), "por_pagina", maximo=100)
         if pagina is None or limite is None:
             raise DadosInvalidosError("Paginação inválida.")
-        filtros = {campo: _inteiro_filtro(parametros.get(campo), campo)
+        filtros = {campo: inteiro_filtro(parametros.get(campo), campo)
                    for campo in ("area_enem_id", "materia_id", "assunto_id")}
         for campo, validos in (("status", {"rascunho", "publicada", "arquivada"}),
                                ("dificuldade", CriarQuestaoService.DIFICULDADES_VALIDAS)):
@@ -89,7 +89,7 @@ class ListarQuestoesAdminService:
                 versao_publicada_id=questao.versao_publicada_id,
                 assunto=assunto.to_dict(), materia=materia.to_dict(), area_enem=area.to_dict())
             itens.append(item)
-        return _envelope(itens, pagina, limite, total)
+        return envelope_paginado(itens, pagina, limite, total)
 
 
 class EditarQuestaoService:

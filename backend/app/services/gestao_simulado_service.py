@@ -4,7 +4,7 @@ from app.exceptions import DadosInvalidosError, ConflitoError, RecursoNaoEncontr
 from app.models.simulado import Simulado, SimuladoRascunhoItem, SimuladoVersao, SimuladoVersaoItem, SimuladoEvento
 from app.repositories.simulado_repository import SimuladoRepository as Repo
 from app.services.gestao_questao_service import ConsultarVersaoElegivelService, ConsultarVersaoHistoricaService, _confirmacao
-from app.services.listar_catalogo_admin_service import _envelope
+from app.services.paginacao import envelope_paginado
 from app.services.simulado_validacao import composicao, revisao, conferir_revisao, paginacao
 from app.transaction_manager import TransactionManager
 
@@ -49,7 +49,7 @@ class ListarSimuladosAdminService:
         linhas, total = Repo.listar(valores["pagina"], valores["por_pagina"], estado)
         rascunhos = Repo.itens_em_lote(simulado_ids=[s.id for s in linhas if not s.simulado_versao_id])
         publicados = Repo.itens_em_lote(versao_ids=[s.simulado_versao_id for s in linhas if s.simulado_versao_id])
-        return _envelope([detalhe(s, publicados.get(s.simulado_versao_id, []) if s.simulado_versao_id
+        return envelope_paginado([detalhe(s, publicados.get(s.simulado_versao_id, []) if s.simulado_versao_id
             else rascunhos.get(s.id, [])) for s in linhas], valores["pagina"], valores["por_pagina"], total)
 
 

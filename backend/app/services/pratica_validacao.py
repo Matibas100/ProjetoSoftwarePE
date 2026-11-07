@@ -1,7 +1,7 @@
 """Validação dos contratos de prática."""
 from uuid import UUID
 from app.exceptions import DadosInvalidosError
-from app.services.listar_catalogo_admin_service import _inteiro_filtro
+from app.services.paginacao import inteiro_filtro
 
 
 def parametros(parametros, filtros):
@@ -15,7 +15,7 @@ def parametros(parametros, filtros):
         valor = parametros.get(campo, padrao)
         if (valor is not None or campo in parametros) and (not isinstance(valor, str) or len(valor) > 10 or not valor.isascii() or not valor.isdecimal()):
             raise DadosInvalidosError(f"{campo} deve ser um inteiro positivo.")
-        valores[campo] = _inteiro_filtro(valor, campo, maximo=100 if campo == "por_pagina" else 2147483647)
+        valores[campo] = inteiro_filtro(valor, campo, maximo=100 if campo == "por_pagina" else 2147483647)
     return valores
 
 
