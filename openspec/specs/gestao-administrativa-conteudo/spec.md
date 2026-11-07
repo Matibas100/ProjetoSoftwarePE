@@ -87,7 +87,7 @@ As duas telas SHALL tratar operações por bloco e SHALL preservar dados válido
 - **THEN** a tela anuncia sucesso sem obstruir o conteúdo, mantém filtros aplicados e atualiza somente os dados necessários
 
 ### Requirement: Proteção de alterações não salvas
-As telas SHALL detectar mudanças locais ainda não persistidas e SHALL solicitar confirmação antes de descartá-las por cancelar, trocar de item, navegar, sair da conta ou fechar a página. Expiração de sessão, CSRF inválido ou necessidade de reautenticação SHALL bloquear mutações sem apagar campos e contexto. A recuperação da identidade SHALL ocorrer em diálogo no contexto; operação pendente SHALL exigir nova confirmação explícita, sem repetição automática. Se a conta recuperada for diferente, mutações SHALL continuar bloqueadas até descarte e recarga, permitindo copiar os dados locais antes de sair.
+As telas SHALL proteger alterações locais não salvas durante descarte, falha de autenticação e recuperação de identidade.
 
 #### Scenario: Saída com formulário alterado
 - **GIVEN** um formulário modificado após o último salvamento
@@ -124,6 +124,18 @@ As telas SHALL detectar mudanças locais ainda não persistidas e SHALL solicita
 - **WHEN** senha está incorreta ou serviço falha
 - **THEN** o erro aparece no diálogo e campos/contexto originais são preservados
 
+#### Scenario: Descarte e bloqueio sem perda de campos
+- **GIVEN** formulário com mudanças ainda não persistidas
+- **WHEN** ocorre intenção de descarte ou falha de segurança da mutação
+- **THEN** As telas SHALL detectar mudanças locais ainda não persistidas e SHALL solicitar confirmação antes de descartá-las por cancelar, trocar de item, navegar, sair da conta ou fechar a página.
+- **THEN** Expiração de sessão, CSRF inválido ou necessidade de reautenticação SHALL bloquear mutações sem apagar campos e contexto.
+
+#### Scenario: Recuperação da identidade com contexto local
+- **GIVEN** operação pendente e dados locais preservados
+- **WHEN** a identidade é recuperada na mesma conta ou em outra
+- **THEN** A recuperação da identidade SHALL ocorrer em diálogo no contexto; operação pendente SHALL exigir nova confirmação explícita, sem repetição automática.
+- **THEN** Se a conta recuperada for diferente, mutações SHALL continuar bloqueadas até descarte e recarga, permitindo copiar os dados locais antes de sair.
+
 ### Requirement: Acessibilidade operacional
 ADM-CON-001 e ADM-CON-002 SHALL possuir foco visível, navegação por teclado, labels persistentes, mensagens associadas aos campos, alvos de ação com pelo menos 44 px e estados compreensíveis sem depender apenas de cor.
 
@@ -136,7 +148,7 @@ ADM-CON-001 e ADM-CON-002 SHALL possuir foco visível, navegação por teclado, 
 - **THEN** o foco fica contido, o título e a consequência são anunciados e o foco retorna ao disparador ao fechar
 
 ### Requirement: Acesso administrativo autenticado
-ADM-CON-001 e ADM-CON-002 SHALL verificar identidade antes de carregar conteúdo e chamar APIs administrativas. Somente Administrador SHALL utilizar a gestão; anônimo SHALL ir ao login e Aluno SHALL receber acesso negado com retorno ao seu início. A moldura SHALL exibir nome real e ação `Sair`, mantendo composição, fluxos e funcionalidades existentes. Indisponibilidade da consulta de sessão SHALL mostrar erro/tentar novamente, sem conceder acesso. Logout SHALL navegar ao login somente após revogação confirmada.
+As telas de catálogo administrativo SHALL verificar a identidade e permitir a gestão somente ao Administrador.
 
 #### Scenario: Administrador abre a gestão
 - **GIVEN** sessão válida de Administrador
@@ -158,8 +170,21 @@ ADM-CON-001 e ADM-CON-002 SHALL verificar identidade antes de carregar conteúdo
 - **WHEN** aciona Sair e a API confirma logout
 - **THEN** retorna ao login e o cookie anterior deixa de autorizar gestão
 
+#### Scenario: Identidade e moldura da gestão de catálogo
+- **GIVEN** cliente abrindo ADM-CON-001 ou ADM-CON-002
+- **WHEN** a tela resolve a sessão e prepara a gestão
+- **THEN** ADM-CON-001 e ADM-CON-002 SHALL verificar identidade antes de carregar conteúdo e chamar APIs administrativas.
+- **THEN** Somente Administrador SHALL utilizar a gestão; anônimo SHALL ir ao login e Aluno SHALL receber acesso negado com retorno ao seu início.
+- **THEN** A moldura SHALL exibir nome real e ação `Sair`, mantendo composição, fluxos e funcionalidades existentes.
+
+#### Scenario: Falha de sessão e encerramento administrativo
+- **GIVEN** gestão administrativa consultando sessão ou processando logout
+- **WHEN** recebe indisponibilidade ou resultado de revogação
+- **THEN** Indisponibilidade da consulta de sessão SHALL mostrar erro/tentar novamente, sem conceder acesso.
+- **THEN** Logout SHALL navegar ao login somente após revogação confirmada.
+
 ### Requirement: Gestão mínima utilizável de Questões
-As telas `/admin/questoes.html` e `/admin/questao.html` SHALL oferecer listagem, filtros, paginação, cadastro, edição de rascunho, revisão/publicação explícita e arquivamento com confirmação, usando referências ADM-QUE-001/002, moldura e ativos oficiais. SHALL verificar perfil antes de consultar dados e preservar formulário/filtros em falha de negócio, rede ou sessão. Recuperação/reautenticação SHALL ocorrer no contexto, sem repetição automática da mutação; troca de conta SHALL bloquear contexto antigo até descarte/recarga. SHALL proteger alterações não salvas, manter labels, foco e teclado e diferenciar carregamento, vazio, filtros sem resultado, erro e sucesso. Funções fora do recorte SHALL permanecer indisponíveis sem ação fictícia.
+As telas administrativas SHALL oferecer gestão mínima de Questões com autorização, acessibilidade e preservação do contexto.
 
 #### Scenario: Gerir Questão real
 - **GIVEN** Administrador e catálogo ativo
@@ -176,8 +201,25 @@ As telas `/admin/questoes.html` e `/admin/questao.html` SHALL oferecer listagem,
 - **WHEN** percorre filtros, formulário e confirmação de publicação/arquivamento
 - **THEN** foco e consequências são compreensíveis e não há importação, IA ou upload funcional fora deste recorte
 
+#### Scenario: Fluxos e referências oficiais da gestão de Questões
+- **GIVEN** cliente abrindo listagem ou edição administrativa de Questão
+- **WHEN** usa os fluxos implementados de gestão
+- **THEN** As telas `/admin/questoes.html` e `/admin/questao.html` SHALL oferecer listagem, filtros, paginação, cadastro, edição de rascunho, revisão/publicação explícita e arquivamento com confirmação, usando referências ADM-QUE-001/002, moldura e ativos oficiais.
+
+#### Scenario: Perfil e recuperação contextual de Questões
+- **GIVEN** formulário ou filtros de Questões em uso
+- **WHEN** consulta dados ou recupera uma falha de negócio, rede ou identidade
+- **THEN** SHALL verificar perfil antes de consultar dados e preservar formulário/filtros em falha de negócio, rede ou sessão.
+- **THEN** Recuperação/reautenticação SHALL ocorrer no contexto, sem repetição automática da mutação; troca de conta SHALL bloquear contexto antigo até descarte/recarga.
+
+#### Scenario: Estados e acessibilidade da gestão de Questões
+- **GIVEN** pessoa interagindo com a gestão de Questões
+- **WHEN** navega ou aciona um recurso da tela
+- **THEN** SHALL proteger alterações não salvas, manter labels, foco e teclado e diferenciar carregamento, vazio, filtros sem resultado, erro e sucesso.
+- **THEN** Funções fora do recorte SHALL permanecer indisponíveis sem ação fictícia.
+
 ### Requirement: Gestão mínima utilizável de Simulados fixos
-As telas administrativas de Simulados SHALL usar referências ADM-SIM-001/002 para listar, cadastrar composição manual ordenada, editar rascunho, revisar/publicar e arquivar, com dados reais e APIs protegidas. SHALL preservar campos, seleção, revisão e filtros diante de erro/sessão expirada, proteger alterações não salvas e exigir confirmação/reautenticação contextual em publicação/arquivamento. SHALL permitir teclado/foco e mostrar vazio, carregamento, falha e sucesso. Geradores, importação, calendário, TRI e recursos fora do recorte SHALL permanecer indisponíveis.
+As telas administrativas SHALL oferecer gestão mínima de Simulados fixos com dados reais e confirmação contextual.
 
 #### Scenario: Publicação de composição real
 - **GIVEN** Administrador com rascunho válido
@@ -188,3 +230,19 @@ As telas administrativas de Simulados SHALL usar referências ADM-SIM-001/002 pa
 - **GIVEN** rascunho com Questões selecionadas e ainda não salvo
 - **WHEN** falha gravação, expira sessão ou tenta sair
 - **THEN** seleção é preservada, descarte exige confirmação e recuperação não repete mutação automaticamente
+
+#### Scenario: Composição manual e referências da gestão de Simulados
+- **GIVEN** Administrador usando a gestão de Simulados
+- **WHEN** lista ou mantém a composição fixa
+- **THEN** As telas administrativas de Simulados SHALL usar referências ADM-SIM-001/002 para listar, cadastrar composição manual ordenada, editar rascunho, revisar/publicar e arquivar, com dados reais e APIs protegidas.
+
+#### Scenario: Preservação e confirmação da gestão de Simulados
+- **GIVEN** formulário de Simulado com campos e seleção locais
+- **WHEN** ocorre erro, expiração de sessão ou ação de publicação ou arquivamento
+- **THEN** SHALL preservar campos, seleção, revisão e filtros diante de erro/sessão expirada, proteger alterações não salvas e exigir confirmação/reautenticação contextual em publicação/arquivamento.
+
+#### Scenario: Estados acessíveis e limites da gestão de Simulados
+- **GIVEN** pessoa interagindo com as telas administrativas de Simulados
+- **WHEN** navega ou busca os recursos disponíveis
+- **THEN** SHALL permitir teclado/foco e mostrar vazio, carregamento, falha e sucesso.
+- **THEN** Geradores, importação, calendário, TRI e recursos fora do recorte SHALL permanecer indisponíveis.

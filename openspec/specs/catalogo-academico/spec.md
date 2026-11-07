@@ -136,7 +136,7 @@ O sistema SHALL oferecer consultas administrativas paginadas de Matérias e Assu
 - **THEN** o sistema retorna uma página vazia com metadados coerentes, sem tratar o resultado como erro
 
 ### Requirement: Compatibilidade dos consumidores existentes
-O sistema SHALL preservar as rotas de leitura existentes e os campos legados de Matéria e Assunto para consumidores autenticados. As leituras simples SHALL aceitar Aluno ou Administrador; consultas com `status=todos` e consultas administrativas SHALL exigir Administrador. Anônimo SHALL receber 401 e perfil insuficiente SHALL receber 403, sem retornar dados protegidos. Seletores destinados a novos vínculos SHALL obter apenas itens ativos, enquanto consultas administrativas SHALL poder incluir todos os estados. A introdução de autenticação SHALL NOT alterar payloads, ordenação, filtros, regras de negócio ou respostas de sucesso para o perfil autorizado.
+O sistema SHALL preservar os contratos dos consumidores existentes, com autorização e disponibilidade do catálogo compatíveis.
 
 #### Scenario: Leitura legada
 - **GIVEN** consumidor existente autenticado com perfil autorizado
@@ -162,3 +162,16 @@ O sistema SHALL preservar as rotas de leitura existentes e os campos legados de 
 - **GIVEN** sessão válida de Administrador
 - **WHEN** consulta todos os estados ou a listagem administrativa
 - **THEN** os contratos existentes continuam incluindo itens inativos e arquivados conforme os filtros
+
+#### Scenario: Permissões nas leituras legadas do catálogo
+- **GIVEN** cliente consultando catálogo por rota existente
+- **WHEN** o servidor verifica a autorização da leitura
+- **THEN** O sistema SHALL preservar as rotas de leitura existentes e os campos legados de Matéria e Assunto para consumidores autenticados.
+- **THEN** As leituras simples SHALL aceitar Aluno ou Administrador; consultas com `status=todos` e consultas administrativas SHALL exigir Administrador.
+- **THEN** Anônimo SHALL receber 401 e perfil insuficiente SHALL receber 403, sem retornar dados protegidos.
+
+#### Scenario: Estados e contratos dos consumidores do catálogo
+- **GIVEN** consumidor de seletores ou consultas administrativas
+- **WHEN** a autenticação é aplicada e os itens são selecionados
+- **THEN** Seletores destinados a novos vínculos SHALL obter apenas itens ativos, enquanto consultas administrativas SHALL poder incluir todos os estados.
+- **THEN** A introdução de autenticação SHALL NOT alterar payloads, ordenação, filtros, regras de negócio ou respostas de sucesso para o perfil autorizado.

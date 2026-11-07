@@ -62,19 +62,25 @@ evidências de execução abaixo ou contar como funcionalidades novas.
 
 - [Relatório local](../../openspec/changes/archive/2026-11-06-consolidar-entrega-academica/validacao.md):
   comandos, versões, resultados históricos e limitações da consolidação.
-- [Validação SOLID atual](../../openspec/changes/archive/2026-11-06-refatorar-backend-com-solid/validacao.md):
-  refatoração, preservação do baseline e regressão executada nesta change.
-- A suíte contém **dois testes Playwright**: os vinte casos numerados estão
-  no [primeiro](../../frontend/e2e/entrega-academica.spec.js); o
-  [segundo](../../frontend/e2e/plano-simulado.spec.js) usa conta/conteúdo próprios
+- [Relatório SOLID](../../openspec/changes/archive/2026-11-06-refatorar-backend-com-solid/validacao.md):
+  refatoração, preservação do baseline e regressão executada naquela change.
+- A suíte contém **três testes Playwright**: os vinte casos numerados estão
+  em [entrega-academica.spec.js](../../frontend/e2e/entrega-academica.spec.js);
+  [plano-simulado.spec.js](../../frontend/e2e/plano-simulado.spec.js) usa conta/conteúdo próprios
   para gerar/concluir Plano, finalizar/corrigir Simulado e confirmar recálculo.
   Verifica 2/5 (40%) no plano inicial, resultado 1/3 (33,33%) e diagnóstico/novo
   plano 3/7 (42,86%), excluindo o branco do diagnóstico, além de cancelamentos
   sem POST e persistência. O replay HTTP de histórico é auxiliar técnico sem
   botão, separado das ações pela interface. Não acrescenta funcionalidades à
   matriz. Estado de execução e limites no
-  [relatório desta change](../../openspec/changes/archive/2026-11-06-validar-fluxos-de-plano-e-simulado/validacao.md).
-- `npm run test:e2e:list` somente descobre os dois testes; `RUN_MYSQL_E2E=1 npm run test:e2e`
+  [relatório do percurso](../../openspec/changes/archive/2026-11-06-validar-fluxos-de-plano-e-simulado/validacao.md).
+  [privacidade.spec.js](../../frontend/e2e/privacidade.spec.js) cobre documentos
+  públicos, cadastro com aceite explícito, recusa mantendo práticas/Simulados,
+  autorização/geração/conclusão do plano, revogação com eliminação e nova
+  autorização, incluindo plano aberto em outra aba. Esses percursos adicionais
+  não alteram os IDs 1–20 da matriz.
+- `npm run test:e2e:list` somente descobre os três testes, sem executar seus
+  percursos nem comprovar aprovação; `RUN_MYSQL_E2E=1 npm run test:e2e`
   em shell POSIX ou o exemplo PowerShell do [README](../../README.md) a executa.
 - `test-results/e2e.json` registra os testes e seus passos, incluindo os vinte
   numerados do primeiro; capturas sintéticas em
@@ -86,6 +92,14 @@ evidências de execução abaixo ou contar como funcionalidades novas.
   expiração, troca de conta e recuperação; integrações usam MySQL real.
 - As 29 integrações originais permanecem, complementadas pelas suítes de
   autenticação, catálogo, versões, Práticas, Simulados, desempenho e plano.
+- O checkpoint publicado
+  [`6f40f1303560cad908fbdd752fd0aaa4dd285b3b`](https://github.com/Matibas100/ProjetoSoftwarePE/commit/6f40f1303560cad908fbdd752fd0aaa4dd285b3b)
+  teve CI concluído com sucesso na
+  [execução 42337772001](https://github.com/Matibas100/ProjetoSoftwarePE/actions/runs/42337772001),
+  em 7 de novembro de 2026. Esse resultado se limita àquele SHA; alterações
+  posteriores, incluindo este alinhamento documental local, não herdam a aprovação.
+  Os relatórios históricos mantêm seus resultados originais. Essa publicação
+  de código não comprova hospedagem na AWS ou demonstração acadêmica do grupo.
 
 ## Entrega externa
 
@@ -146,7 +160,8 @@ e [fluxogramas](fluxogramas-casos-de-uso.md).
 `/aluno/privacidade.html` mostra evidências e escolhas; início/plano e navegação
 oferecem acesso. Recusa/revogação mantém práticas, simulados e diagnóstico;
 elimina somente planos próprios, sem restaurá-los na autorização posterior.
-O E2E independente cobre esse percurso; a lista original de vinte casos é mantida.
+O [E2E de privacidade](../../frontend/e2e/privacidade.spec.js) cobre esse percurso;
+a lista original de vinte casos é mantida.
 
 Responsável informado: Matheus Gabriel Oliveira Martins. Contato
 `contato@plataformaenem.example` fictício e não operacional. Entrega demonstrativa

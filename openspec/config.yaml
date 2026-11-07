@@ -15,7 +15,8 @@ context: |
   CRUD simples permanece nas Models Active Record. Repository é reservado
   para acesso especializado e todo CALL de Stored Procedure fica nele.
 
-  Preserve os contratos atuais, as 10 funcionalidades, os 29 testes de
+  Preserve os contratos atuais, as 10 funcionalidades do MVP original e os
+  20 casos atuais da entrega, os 29 testes de
   integração originais e a suíte automatizada ampliada, os dados existentes
   e os artefatos congelados do Desktop V1.
   Antes de propor ou aplicar uma change, leia AGENTS.md, as conventions

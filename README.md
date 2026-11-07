@@ -376,16 +376,21 @@ Remove-Item Env:RUN_MYSQL_E2E
 ```
 
 O runner usa migrations oficiais, operador sintético e API/frontend locais em
-portas livres. A suíte contém **dois testes Playwright**: o
-[primeiro](frontend/e2e/entrega-academica.spec.js) preserva os vinte casos
+portas livres. A suíte contém **três testes Playwright**:
+[entrega-academica.spec.js](frontend/e2e/entrega-academica.spec.js) preserva os vinte casos
 numerados, navegação ao plano, cancelamento de descarte e capturas a 1440/390 px.
-O [segundo](frontend/e2e/plano-simulado.spec.js), com conta e conteúdo próprios,
+[plano-simulado.spec.js](frontend/e2e/plano-simulado.spec.js), com conta e conteúdo próprios,
 verifica geração/conclusão manual do Plano, finalização/correção de Simulado e
 recálculo confirmado, cancelamentos e persistência por recarga/GET real.
 Confere 2/5 (40%) no plano inicial, 1/3 (33,33%) no resultado do Simulado e
 3/7 (42,86%) no diagnóstico/novo plano; o branco não entra no diagnóstico.
 Um replay HTTP auxiliar, identificado no teste e sem botão, verifica a geração
-anterior preservada. Nenhuma resposta é simulada. Esses passos adicionais não
+anterior preservada.
+[privacidade.spec.js](frontend/e2e/privacidade.spec.js) cobre documentos públicos,
+cadastro com aceite explícito, recusa mantendo estudo real, autorização do plano,
+revogação com eliminação e nova autorização, incluindo outra aba aberta.
+`npm run test:e2e:list` apenas descobre os três testes; não executa seus percursos
+nem comprova aprovação. Nenhuma resposta é simulada. Esses passos adicionais não
 alteram a contagem oficial de vinte funcionalidades. Processos/schema são
 limpos em `finally`, mesmo após falha.
 Relatórios e capturas sintéticas ficam em `test-results/`, sem traces, HAR ou
@@ -398,14 +403,16 @@ Preserva gates de 90%/85%, permissões mínimas e timeout.
 
 ### Checkpoint publicado e CI
 
-Em 6 de novembro de 2026, o checkpoint
-[`37b9b0c`](https://github.com/Matibas100/ProjetoSoftwarePE/commit/37b9b0ccf0bb4640527628b7f719c14ec987e0fe)
-foi publicado e a [execução 42315102152](https://github.com/Matibas100/ProjetoSoftwarePE/actions/runs/42315102152)
-concluiu com sucesso. Esse resultado valida aquele SHA. A reorganização de
-migrations, a limpeza de legibilidade e a extensão de privacidade posteriores
-têm evidências nos relatórios de suas changes arquivadas. Para cada publicação,
-consulte a execução do Actions correspondente ao respectivo SHA; a aprovação
-do checkpoint anterior não valida automaticamente alterações posteriores.
+Em 7 de novembro de 2026, o checkpoint
+[`6f40f1303560cad908fbdd752fd0aaa4dd285b3b`](https://github.com/Matibas100/ProjetoSoftwarePE/commit/6f40f1303560cad908fbdd752fd0aaa4dd285b3b)
+foi publicado na branch `main` e a
+[execução 42337772001](https://github.com/Matibas100/ProjetoSoftwarePE/actions/runs/42337772001)
+concluiu com sucesso para esse mesmo SHA. A evidência inclui a extensão de
+privacidade e a preservação dos bytes dos termos no Windows. A aprovação se
+refere somente àquela revisão; alterações posteriores, incluindo este alinhamento
+documental local, dependem de sua própria validação e publicação.
+Os relatórios arquivados preservam suas execuções originais. Publicação do código
+e CI aprovado não comprovam hospedagem na AWS nem demonstração acadêmica do grupo.
 
 ## Validação antes do push
 
