@@ -29,7 +29,8 @@ class PlanoEstudoRepository:
 
     @staticmethod
     def itens(plano_id):
-        return db.session.execute(select(Item).where(Item.plano_id == plano_id).order_by(Item.posicao)).scalars().all()
+        return db.session.execute(select(Item).where(Item.plano_id == plano_id).order_by(Item.posicao)
+            .with_for_update().execution_options(populate_existing=True)).scalars().all()
 
     @staticmethod
     def item_proprio(usuario_id, item_id):

@@ -5,6 +5,21 @@ questões do ENEM. As áreas administrativa e do Aluno usam HTML, CSS e
 JavaScript, consumindo uma API Flask persistida em MySQL. Inclui conteúdo
 versionado, práticas, simulados, desempenho e plano básico de estudos.
 
+Os [Termos de Uso](frontend/legal/termo-de-uso-v1.html) e o
+[Consentimento do plano](frontend/legal/termo-de-consentimento-plano-v1.html)
+são documentos completos, públicos e imprimíveis. O cadastro exige aceite
+explícito de uso; o plano depende de autorização opcional posterior em
+`/aluno/privacidade.html`. Recusa ou revogação confirmada apaga os planos
+próprios e suas conclusões; questões, práticas, simulados e desempenho continuam
+disponíveis. Nova autorização permite começar outro plano, sem restaurar o antigo.
+
+Esta extensão é uma demonstração acadêmica com dados sintéticos. O responsável
+informado é Matheus Gabriel Oliveira Martins e o contato `.example` é fictício,
+não operacional. Antes de dados reais, definir canal válido, política geral de
+retenção/direitos e proteção/autorização de menores. Não há adequação jurídica
+integral ou bônus garantido. Veja [fontes e limites](docs/legal/README.md) e
+[operação de privacidade](docs/technical/operacao-privacidade.md).
+
 ## Tecnologias utilizadas
 
 - Python 3.10 ou mais recente
@@ -387,9 +402,10 @@ Em 6 de novembro de 2026, o checkpoint
 [`37b9b0c`](https://github.com/Matibas100/ProjetoSoftwarePE/commit/37b9b0ccf0bb4640527628b7f719c14ec987e0fe)
 foi publicado e a [execução 42315102152](https://github.com/Matibas100/ProjetoSoftwarePE/actions/runs/42315102152)
 concluiu com sucesso. Esse resultado valida aquele SHA. A reorganização de
-migrations e a limpeza de legibilidade posteriores ainda estão locais e não
-são validadas por essa execução. Para alterações posteriores, consulte o
-estado Git e a execução do Actions correspondente ao respectivo SHA.
+migrations, a limpeza de legibilidade e a extensão de privacidade posteriores
+têm evidências nos relatórios de suas changes arquivadas. Para cada publicação,
+consulte a execução do Actions correspondente ao respectivo SHA; a aprovação
+do checkpoint anterior não valida automaticamente alterações posteriores.
 
 ## Validação antes do push
 

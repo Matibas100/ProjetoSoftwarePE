@@ -8,6 +8,7 @@
     ["grupo", "MINHA EVOLUÇÃO"],
     ["desempenho", "/aluno/desempenho.html", "Desempenho"],
     ["plano", "/aluno/plano.html", "Plano de Estudos"],
+    ["privacidade", "/aluno/privacidade.html", "Privacidade e termos"],
     ["grupo", "EM BREVE"],
     ["indisponivel", "Resumos · indisponível"],
     ["indisponivel", "Tutor IA · indisponível"],

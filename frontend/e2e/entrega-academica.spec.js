@@ -130,6 +130,7 @@ test("vinte funcionalidades com persistência e regressões de navegação", asy
       await aluno.locator("#auth-email").fill(process.env.E2E_STUDENT_EMAIL);
       await aluno.locator("#auth-password").fill(process.env.E2E_STUDENT_PASSWORD);
       await aluno.locator("#auth-confirmation").fill(process.env.E2E_STUDENT_PASSWORD);
+      await aluno.locator("#auth-terms").check();
       await mutacao(aluno, "/auth/cadastro", "POST", () => aluno.locator('#auth-form button[type="submit"]').click(), 201);
       await expect(aluno).toHaveURL(/\/login$/);
     });
@@ -219,6 +220,9 @@ test("vinte funcionalidades com persistência e regressões de navegação", asy
       await expect(aluno.locator("#pratica-correcao")).toContainText("A");
     });
     await test.step("Smoke de oito páginas, teclado e capturas 1440/390", async () => {
+      await abrir(aluno, "/aluno/privacidade.html");
+      await mutacao(aluno, "/aluno/privacidade/consentimento-plano/aceitar", "POST", () => aluno.locator("#privacidade-aceitar").click(), 201);
+      await expect(aluno.locator("#privacidade-plano")).toContainText("Plano liberado");
       for (const file of ["inicio", "questoes", `questao?tentativa_id=${tentativa.id}`, "historico", "simulados", `simulado?tentativa_id=${execucao.id}`, "desempenho", "plano"]) {
         const [name, query] = file.split("?");
         await abrir(aluno, `/aluno/${name}.html${query ? "?" + query : ""}`);

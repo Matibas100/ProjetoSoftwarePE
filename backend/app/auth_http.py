@@ -12,6 +12,8 @@ def proteger_api():
         return None
     if request.path in {"/api/health", "/api/auth/csrf"}:
         return None
+    if request.path == "/api/termos" and request.method in {"GET", "HEAD"}:
+        return None
     identificador = request.cookies.get(COOKIE)
     chave = current_app.config["AUTH_KEY_BYTES"]
     origens = current_app.config["CORS_ORIGINS"]
@@ -57,6 +59,6 @@ def proteger_api():
 
 
 def sem_cache_auth(resposta):
-    if request.path.startswith(("/api/auth/", "/api/aluno/", "/api/admin/")) or getattr(g, "auth_sessao", None) is not None:
+    if request.path == "/api/termos" or request.path.startswith(("/api/auth/", "/api/aluno/", "/api/admin/")) or getattr(g, "auth_sessao", None) is not None:
         resposta.headers["Cache-Control"] = "no-store"
     return resposta

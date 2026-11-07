@@ -403,3 +403,7 @@ button:disabled {
 .navigation-slot {
   display: contents;
 }
+.auth-terms { font-size: .875rem; margin: 1rem 0; }
+.auth-terms label { display: flex; align-items: flex-start; gap: .6rem; }
+.auth-terms input[type="checkbox"] { width: 1.2rem; height: 1.2rem; flex: 0 0 auto; margin-top: .15rem; }
+.auth-legal-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; font-size: .875rem; margin-top: 1rem; }

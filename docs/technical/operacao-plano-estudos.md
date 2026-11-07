@@ -2,6 +2,12 @@
 
 ## Escopo e seleção
 
+O plano exige aceite de uso e consentimento específico vigentes, conferidos no
+servidor depois do lock do usuário e antes de replay, item, snapshot ou diagnóstico.
+Ausência retorna 403 `consentimento_plano_necessario`, sem expor existência de
+item. Falha na consulta de consentimento retorna 500. A consulta também usa uma
+transação curta com esse lock e leitura corrente. Ver [privacidade](operacao-privacidade.md).
+
 Recorte de ALU-PLA-001: lista de até três Assuntos para prática. Sem agenda,
 disponibilidade semanal, duração, prazo, notificações, IA ou reagendamento.
 Referência visual: Protótipo Desktop V1, página 23; IDs e fluxo conferidos no
@@ -54,7 +60,12 @@ DDL MySQL não possui rollback transacional geral. Reversão usa restauração d
 backup ou migration compensatória revisada; suspender novas gravações antes.
 Após uso real, preservar planos/itens/conclusões e suas referências. Não apagar
 tabelas para retornar código antigo; preferir desabilitar o acesso à funcionalidade
-até a compensação. Retenção e purge permanecem fora do escopo.
+até a compensação. A migration 010 acrescenta evidências de privacidade, sem
+backfill ou exclusão no upgrade. A exceção posterior é uma negativa confirmada,
+conforme [ADR-009](adr/ADR-009-consentimento-e-eliminacao-do-plano.md): elimina
+itens e todas as gerações próprias atomicamente com a decisão, preservando
+respostas, simulados e outra conta. Guards normais continuam impedindo exclusão.
+Nova autorização não restaura planos apagados. Retenção geral continua pendente.
 
 ## Transação e concorrência
 

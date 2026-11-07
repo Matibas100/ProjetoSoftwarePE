@@ -15,7 +15,13 @@ from tests import test_praticas_integration as fixture
 class PlanosIntegrationTest(MySQLIntegrationTestCase):
     conta = fixture.PraticasIntegrationTest.conta
     publicar = fixture.PraticasIntegrationTest.publicar
-    setUp = fixture.PraticasIntegrationTest.setUp
+    def setUp(self):
+        fixture.PraticasIntegrationTest.setUp(self)
+        from uuid import uuid4
+        for cliente in (self.aluno,self.outro):
+            resposta=cliente.post('/api/aluno/privacidade/consentimento-plano/aceitar',json={
+                'versao':'1.0','chave_envio':str(uuid4()),'revisao':0})
+            self.assertEqual(resposta.status_code,201)
     url = '/api/aluno/plano'
 
     def base(self, acertos=2, total=5, versao=None):

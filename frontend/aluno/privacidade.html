@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Privacidade e termos | Plataforma ENEM</title>
+<link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/aluno.css"><link rel="stylesheet" href="../css/privacidade.css"></head>
+<body data-auth="aluno">
+  <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section>
+  <div id="auth-content" class="aluno-shell" hidden>
+    <nav class="aluno-nav" aria-label="Navegação do aluno"><img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM"><div class="navigation-slot" data-navigation="aluno" data-current="privacidade"></div></nav>
+    <div class="aluno-main"><header class="aluno-top"><strong>Privacidade e termos</strong><div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
+    <main class="aluno-page"><h1>Privacidade e termos</h1>
+      <p class="aluno-subtitle">Consulte seus registros e escolha se deseja utilizar o plano personalizado.</p>
+      <p class="pratica-card">Demonstração acadêmica com dados sintéticos. O contato informado nos textos é fictício e não operacional. Dados reais exigem contato válido, política geral de retenção e proteção/autorização de menores.</p>
+      <p id="privacidade-status" class="pratica-status" role="status" aria-live="polite" tabindex="-1">Consultando privacidade...</p>
+      <div class="privacidade-acoes"><button id="privacidade-consultar" type="button" class="auth-secondary">Consultar novamente</button><button id="privacidade-retentar" type="button" class="auth-secondary" hidden>Tentar decisão pendente</button></div>
+      <div id="privacidade-conteudo" aria-busy="true">
+        <section class="pratica-card" aria-labelledby="uso-titulo"><h2 id="uso-titulo">Termo de Uso</h2>
+          <a id="privacidade-uso-link" href="/legal/termo-de-uso-v1.html">Ler o Termo de Uso completo</a>
+          <p id="privacidade-uso" data-privacidade-private></p>
+          <button id="privacidade-aceitar-uso" type="button" class="auth-secondary" data-privacidade-action="termos-uso" hidden>Aceitar Termo de Uso</button>
+        </section>
+        <section class="pratica-card" aria-labelledby="plano-titulo"><h2 id="plano-titulo">Consentimento opcional do plano</h2>
+          <a id="privacidade-plano-link" href="/legal/termo-de-consentimento-plano-v1.html">Ler o Consentimento do plano completo</a>
+          <p>Utilizar meu próprio desempenho para selecionar até três assuntos e manter planos e conclusões manuais. Recusar ou revogar mantém questões, práticas, simulados e desempenho disponíveis.</p>
+          <p id="privacidade-plano" data-privacidade-private></p>
+          <div class="privacidade-acoes">
+            <button id="privacidade-aceitar" type="button" class="auth-secondary" data-privacidade-action="aceitar" hidden>Autorizar plano</button>
+            <button id="privacidade-recusar" type="button" class="auth-secondary" data-privacidade-action="recusar" hidden>Recusar plano</button>
+            <button id="privacidade-revogar" type="button" class="auth-secondary" data-privacidade-action="revogar" hidden>Revogar autorização do plano</button>
+          </div>
+          <p><a href="/aluno/plano.html">Abrir Plano de Estudos</a> · <a href="/aluno/questoes.html">Praticar questões</a></p>
+        </section>
+      </div>
+    </main></div>
+  </div>
+  <dialog id="privacidade-confirmacao" class="auth-dialog" aria-labelledby="privacidade-confirmacao-titulo" aria-describedby="privacidade-confirmacao-texto">
+    <h2 id="privacidade-confirmacao-titulo">Confirmar decisão?</h2>
+    <p id="privacidade-confirmacao-texto">Se houver planos salvos, eles e suas conclusões serão apagados. Suas respostas, simulados e desempenho continuarão disponíveis. A eliminação é irreversível na aplicação.</p>
+    <div class="auth-dialog-actions"><button id="privacidade-cancelar" type="button" class="auth-secondary">Cancelar</button><button id="privacidade-confirmar" type="button" class="auth-secondary">Confirmar eliminação e decisão</button></div>
+  </dialog>
+  <script src="../js/navigation.js"></script><script src="../js/api.js"></script><script src="../js/auth-session.js"></script><script src="../js/aluno-privacidade.js"></script>
+</body></html>

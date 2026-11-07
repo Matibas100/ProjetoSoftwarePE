@@ -114,10 +114,14 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
       await aluno.locator("#auth-email").fill(email);
       await aluno.locator("#auth-password").fill(senha);
       await aluno.locator("#auth-confirmation").fill(senha);
+      await aluno.locator("#auth-terms").check();
       await mutacao(aluno, "/auth/cadastro", "POST", () => aluno.locator('#auth-form button[type="submit"]').click(), 201);
       await expect(aluno).toHaveURL(/\/login$/);
       await login(aluno, email, senha);
       expect((await consultar(aluno, "/auth/sessao")).usuario.perfil).toBe("aluno");
+      await abrir(aluno, "/aluno/privacidade.html");
+      await mutacao(aluno, "/aluno/privacidade/consentimento-plano/aceitar", "POST", () => aluno.locator("#privacidade-aceitar").click(), 201);
+      await expect(aluno.locator("#privacidade-plano")).toContainText("Plano liberado");
     });
 
     async function praticar(alternativa) {

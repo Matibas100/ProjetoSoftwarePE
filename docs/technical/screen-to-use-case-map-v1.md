@@ -1530,6 +1530,14 @@ Regra de governança corrigida pela [Errata do Desktop V1](../design/desktop-v1/
 
 ## Relação explícita com as 10 funcionalidades do MVP
 
+Extensão acadêmica implementada: `/aluno/privacidade.html` consulta evidências,
+aceita uso de contas anteriores e autoriza/recusa/revoga a finalidade do plano.
+Entrada fixa por início/plano e navegação do Aluno. `/login` e `/cadastro`
+oferecem leitura pública dos dois documentos; cadastro exige somente uso.
+ALU-PLA-001 exige ambos os aceites vigentes; negativa mantém outros fluxos de
+estudo. Esta extensão não altera os IDs ou binários congelados do Desktop V1
+nem renumera a matriz acadêmica. Ver [operação](operacao-privacidade.md).
+
 | # | Funcionalidade existente | Tela administrativa relacionada | Contrato preservado | Evolução posterior |
 | ---: | --- | --- | --- | --- |
 | 1 | Cadastrar matéria | ADM-CON-001 | `POST /api/materias` | Adicionar área, status, permissões e auditoria sem quebrar o contrato atual. |

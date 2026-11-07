@@ -24,6 +24,24 @@
     message("A conta mudou. Recarregue a página para continuar.", true);
   }
   document.addEventListener("auth-identity-changed", clearIdentity);
+  function clearPlan(discard = false) {
+    state.plan = null; state.loaded = false;
+    if (discard) state.pending = null;
+    document.querySelectorAll('[data-plano-private]').forEach(n => n.replaceChildren());
+    $("plano-gerar").hidden = true; $("plano-recalcular").hidden = true;
+    if (dialog.open) dialog.close();
+  }
+  async function checkPermission(generation, user) {
+    const privacy = await apiRequest("/aluno/privacidade");
+    if (!valid(generation, user)) return false;
+    $("plano-privacidade").hidden = privacy.plano_liberado;
+    if (!privacy.plano_liberado) {
+      clearPlan(true);
+      message("O plano depende da sua escolha de privacidade. Questões, simulados e desempenho continuam disponíveis.");
+      return false;
+    }
+    return true;
+  }
   function render(plan) {
     state.plan = plan; state.loaded = true;
     $("plano-gerar").hidden = !!plan; $("plano-recalcular").hidden = !plan;
@@ -52,13 +70,16 @@
   async function load() {
     if (!available() || state.busy) return;
     const generation = ++state.generation, user = AuthUI.user.id;
+    clearPlan();
     busy(true); message("Consultando plano...");
     try {
       if (!await AuthUI.checkIdentity() || !valid(generation, user)) return;
+      if (!await checkPermission(generation, user)) return;
       const data = await apiRequest("/aluno/plano");
       if (!valid(generation, user) || !await AuthUI.checkIdentity() || !valid(generation, user)) return;
+      if (!await checkPermission(generation, user)) return;
       render(data.plano); message(data.plano ? "Plano consultado. Novas respostas só entram após um recálculo confirmado." : "Gere seu plano ou pratique questões para formar a base do diagnóstico.");
-    } catch (e) { if (generation === state.generation) message(e.message, true); }
+    } catch (e) { if (generation === state.generation) { clearPlan(e.status === 403); message(e.message, true); } }
     finally { if (generation === state.generation) busy(false); }
   }
   async function mutate(action, itemId = null) {
@@ -72,9 +93,11 @@
     busy(true); message("Salvando...");
     try {
       if (!await AuthUI.checkIdentity() || !valid(generation, user)) return;
+      if (!await checkPermission(generation, user)) return;
       const route = action === "concluir" ? `itens/${itemId}/concluir` : action;
       let data = await apiRequest(`/aluno/plano/${route}`, { method: "POST", body: JSON.stringify(pending.body) });
       if (!valid(generation, user) || !await AuthUI.checkIdentity() || !valid(generation, user)) return;
+      if (!await checkPermission(generation, user)) return;
       if (action === "concluir") {
         state.plan.itens = state.plan.itens.map((i) => i.id === data.id ? data : i);
         render(state.plan);
@@ -92,6 +115,7 @@
     } catch (e) {
       if (generation === state.generation) {
         if ([400, 404, 409].includes(e.status)) state.pending = null;
+        clearPlan(e.status === 403);
         message(`${e.message} Confirme a ação novamente para tentar.`, true, true);
       }
     } finally { if (generation === state.generation) busy(false); }
@@ -99,7 +123,8 @@
   function closeDialog() { dialog.close(); $("plano-recalcular").focus(); }
   $("plano-gerar").addEventListener("click", () => mutate("gerar"));
   $("plano-recarregar").addEventListener("click", load);
-  $("plano-retentar").addEventListener("click", () => {
+  $("plano-retentar").addEventListener("click", async () => {
+    if (!state.loaded) await load();
     if (state.pending) mutate(state.pending.action, state.pending.itemId);
   });
   $("plano-recalcular").addEventListener("click", () => {
@@ -109,6 +134,14 @@
   $("plano-cancelar").addEventListener("click", closeDialog);
   dialog.addEventListener("cancel", (e) => { e.preventDefault(); closeDialog(); });
   $("plano-confirmar").addEventListener("click", () => { closeDialog(); mutate("recalcular"); });
-  globalThis.PlanoUI = { state, load, destroy() { state.generation++; document.removeEventListener("auth-identity-changed", clearIdentity); } };
+  function onReturn() {
+    if (document.visibilityState === "hidden" || !available()) return;
+    state.generation++; clearPlan(); busy(false); load();
+  }
+  function onSessionRequired() { state.generation++; clearPlan(); busy(false); }
+  window.addEventListener("focus", onReturn); document.addEventListener("visibilitychange", onReturn);
+  document.addEventListener("auth-required", onSessionRequired);
+  globalThis.PlanoUI = { state, load, destroy() { state.generation++; document.removeEventListener("auth-identity-changed", clearIdentity);
+    window.removeEventListener("focus", onReturn); document.removeEventListener("visibilitychange", onReturn); document.removeEventListener("auth-required", onSessionRequired); } };
   AuthUI.ready.then((ready) => { if (ready && available()) load(); });
 })();

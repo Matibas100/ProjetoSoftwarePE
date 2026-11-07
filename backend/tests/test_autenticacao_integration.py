@@ -34,7 +34,7 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
 
     def cadastro(self, email=None, client=None):
         return self.request("/api/auth/cadastro", {"nome": "Aluno teste", "email": email or self.email,
-            "senha": SENHA, "senha_confirmacao": SENHA}, client)
+            "senha": SENHA, "senha_confirmacao": SENHA, "termos_uso":{"versao":"1.0","aceito":True}}, client)
 
     def login(self, email=None, client=None, senha=SENHA):
         return self.request("/api/auth/login", {"email": email or self.email, "senha": senha}, client)
@@ -75,7 +75,8 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         self.assertEqual(self.client.get("/api/materias").status_code, 401)
 
     def test_validacao_duplicidade_e_perfil(self):
-        dados = {"nome": "Teste", "email": self.email, "senha": SENHA, "senha_confirmacao": SENHA}
+        dados = {"nome": "Teste", "email": self.email, "senha": SENHA, "senha_confirmacao": SENHA,
+            "termos_uso":{"versao":"1.0","aceito":True}}
         for alteracao in ({"perfil": "administrador"}, {"nome": " "}, {"email": "a@b"},
                           {"senha": "curta"}, {"senha_confirmacao": "outra"}):
             self.assertEqual(self.request("/api/auth/cadastro", {**dados, **alteracao}).status_code, 400)
@@ -95,7 +96,7 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
             for argumento in rule.arguments - set(rule.defaults or {}):
                 path = path.replace(f"<int:{argumento}>", "2147483647")
             for method in rule.methods - {"OPTIONS"}:
-                public = path == "/api/health"
+                public = path in {"/api/health", "/api/termos"}
                 leitura = method in {"GET", "HEAD"} and path in {"/api/areas-enem", "/api/materias", "/api/assuntos"}
                 anonymous = self.app.test_client().open(path, method=method)
                 self.assertEqual(anonymous.status_code, 200 if public else 401, (path, method))
@@ -104,6 +105,8 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
                 if path.startswith('/api/aluno/'):
                     headers['X-CSRF-Token'] = self.client.get('/api/auth/sessao').json['csrf_token']
                     esperado = (404 if '/2147483647' in path else 200) if method in {'GET','HEAD'} else 400
+                    if path == '/api/aluno/plano' and method in {'GET','HEAD'}:
+                        esperado = 403  # Conta nova ainda não autorizou o plano.
                 aluno = self.client.open(path, method=method, json={}, headers=headers)
                 self.assertEqual(aluno.status_code, esperado, (path, method))
         for path in ("/api/materias?status=todos", "/api/assuntos?status=todos"):

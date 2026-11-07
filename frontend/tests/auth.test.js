@@ -6,8 +6,9 @@ import { root, settle } from "./helpers/classic-app.js";
 const aluno = { id: 1, nome: "Aluno <teste>", email: "aluno@teste.local", perfil: "aluno" };
 const admin = { ...aluno, perfil: "administrador" };
 const expired = () => Object.assign(new Error("Entre novamente"), { code: "sessao_invalida" });
+const metadata = () => ({ termos_uso: { versao: "1.0", url: "/legal/termo-de-uso-v1.html", sha256: "a".repeat(64) }, consentimento_plano: { versao: "1.0", url: "/legal/termo-de-consentimento-plano-v1.html", sha256: "b".repeat(64) } });
 
-async function setup(file = "login.html", api = vi.fn().mockRejectedValue(expired())) {
+async function setup(file = "login.html", api = vi.fn().mockRejectedValue(expired()), termsApi = vi.fn(async () => metadata())) {
   vi.resetModules(); globalThis.AuthUI?.destroy?.();
   const html = fs.readFileSync(path.join(root, "frontend", file), "utf8").replace(/<script\s+src="[^"]+"><\/script>/g, "");
   document.open(); document.write(html); document.close();
@@ -20,7 +21,7 @@ async function setup(file = "login.html", api = vi.fn().mockRejectedValue(expire
   globalThis.resetCsrf = vi.fn();
   await import("../js/navigation.js"); await import("../js/auth-session.js");
   globalThis.AuthUI.navigate = vi.fn();
-  globalThis.apiRequest = api;
+  globalThis.apiRequest = (route, ...args) => route === "/termos" ? termsApi() : api(route, ...args);
   release();
   if (["login.html", "cadastro.html"].includes(file)) await import("../js/auth-page.js");
   await settle();
@@ -33,6 +34,7 @@ function fill(signup = false) {
   if (signup) {
     document.querySelector("#auth-name").value = aluno.nome;
     document.querySelector("#auth-confirmation").value = "senha correta";
+    document.querySelector("#auth-terms").checked = true;
   }
 }
 const submit = () => document.querySelector("#auth-form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
@@ -59,7 +61,8 @@ describe("cadastro e login", () => {
     const api = await setup("cadastro.html");
     api.mockResolvedValueOnce({ usuario: aluno }); fill(true); submit(); await settle();
     const body = JSON.parse(api.mock.calls[1][1].body);
-    expect(Object.keys(body).sort()).toEqual(["email", "nome", "senha", "senha_confirmacao"]);
+    expect(Object.keys(body).sort()).toEqual(["email", "nome", "senha", "senha_confirmacao", "termos_uso"]);
+    expect(body.termos_uso).toEqual({ versao: "1.0", aceito: true });
     expect(sessionStorage.getItem("cadastro-email")).toBe(aluno.email);
     expect(sessionStorage.getItem("senha")).toBeNull();
     expect(AuthUI.navigate).toHaveBeenCalledWith("/login");
@@ -111,6 +114,38 @@ describe("cadastro e login", () => {
     expect(AuthUI.navigate).toHaveBeenCalledWith("/admin/materias.html");
     api.mockResolvedValueOnce({ usuario: aluno }); fill(); submit(); await settle();
     expect(AuthUI.navigate).toHaveBeenCalledWith("/aluno/inicio.html");
+  });
+
+  it("carrega metadados antes de permitir aceite, trata falha e exige checkbox explícito", async () => {
+    const termos = vi.fn().mockRejectedValueOnce(new Error("Sem metadados")).mockResolvedValue(metadata());
+    const api = await setup("cadastro.html", undefined, termos);
+    expect(document.querySelector("#auth-terms").checked).toBe(false);
+    expect(document.querySelector("#auth-terms").disabled).toBe(true);
+    expect(document.querySelector('[type="submit"]').disabled).toBe(true);
+    document.querySelector("#auth-terms-retry").click(); await settle();
+    expect(document.querySelector("#auth-terms").disabled).toBe(false);
+    fill(true); document.querySelector("#auth-terms").checked = false; submit();
+    expect(document.querySelector("#auth-terms").getAttribute("aria-invalid")).toBe("true");
+    expect(api).toHaveBeenCalledTimes(1);
+  });
+
+  it("desmarca aceite após versão desatualizada, preserva nome/e-mail e não reenvia cadastro", async () => {
+    const termos = vi.fn().mockResolvedValueOnce(metadata()).mockResolvedValue({ ...metadata(), termos_uso: { ...metadata().termos_uso, versao: "2.0", url: "/legal/termo-de-uso-v2.html" } });
+    const api = await setup("cadastro.html", undefined, termos); fill(true);
+    api.mockRejectedValueOnce(Object.assign(new Error("O documento mudou"), { code: "termo_desatualizado", status: 409 }));
+    submit(); await settle();
+    expect(document.querySelector("#auth-terms").checked).toBe(false);
+    expect(document.querySelector("#auth-name").value).toBe(aluno.nome);
+    expect(document.querySelector("#auth-email").value).toBe(aluno.email);
+    expect(document.querySelector("#auth-terms-version").textContent).toContain("2.0");
+    expect(document.querySelector("#auth-terms-link").getAttribute("href")).toBe("/legal/termo-de-uso-v2.html");
+    expect(api).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejeita metadados malformados sem habilitar cadastro", async () => {
+    await setup("cadastro.html", undefined, vi.fn(async () => ({ termos_uso: { versao: "1.0", url: "https://externo.test" } })));
+    expect(document.querySelector('[type="submit"]').disabled).toBe(true);
+    expect(document.querySelector("#auth-terms-version").textContent).toContain("indisponíveis");
   });
 });
 

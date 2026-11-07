@@ -6,8 +6,8 @@ class PlanosMigrationIntegrationTest(MySQLMigrationTestCase):
     def test_upgrade_vazio_reexecucao_constraints_e_historico(self):
         migrate.run_up(self.connection, self.settings, self.migrations[:9])
         self.assertEqual(migrate.detect_legacy_prefix(self.connection), '008')
-        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 1)
-        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations[:10]), 1)
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations[:10]), 0)
         self.assertEqual(migrate.detect_legacy_prefix(self.connection), '009')
         with self.connection.cursor() as c:
             for table in migrate.PLANOS_FINGERPRINTS:

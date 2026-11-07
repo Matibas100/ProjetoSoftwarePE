@@ -3,7 +3,8 @@
 Esta matriz usa a numeração oficial das vinte
 [Funcionalidades Implementadas](../../README.md#funcionalidades-implementadas).
 Não conta CI, testes, documentação ou melhorias internas como novos casos de uso.
-O [diagrama](diagrama-de-classes.md) descreve as vinte Models concretas.
+O [diagrama](diagrama-de-classes.md) descreve as 21 Models concretas, incluindo
+a evidência de privacidade da extensão acadêmica.
 
 ## Rastreabilidade dos vinte casos
 
@@ -26,7 +27,7 @@ Mutações verificam status real; persistência usa recarga ou leitura independe
 | 8 | `/index.html`: excluir Assunto livre | `DELETE /api/assuntos/<id>` | `AssuntoController.deletar` → `DeletarAssuntoService` | `Assunto` AR; `CatalogoRepository` para impacto → `assuntos`, `questoes`, `assunto_transferencias` | E2E 08: confirmação, 204 e ausência após recarga |
 | 9 | `/index.html`: cadastrar Questão | `POST /api/questoes` | `QuestaoController.cadastrar` → `CriarQuestaoService` | `Questao` AR; `QuestaoEvento`; `Assunto`, `Materia` → `questoes`, `questao_eventos`, catálogo | E2E 09: 201; conteúdo recuperado no caso 10 |
 | 10 | `/index.html`: buscar por Assunto | `GET /api/questoes/por-assunto?assunto_id=<id>` | `QuestaoController.buscar_por_assunto` → `BuscarQuestoesPorAssuntoService` | `ConsultaQuestoesPorAssuntoMySQL` → `QuestaoRepository.buscar_por_assunto` → `CALL sp_questoes_por_assunto`, `questoes` | E2E 10: busca após recarga exibe conteúdo persistido |
-| 11 | `/cadastro`: criar conta | `POST /api/auth/cadastro` | `AutenticacaoController.cadastro` → `CadastrarAlunoService`, `CriarUsuarioService` | `Usuario` AR → `usuarios` | E2E 11: 201, redirecionamento; perfil Aluno comprovado no login |
+| 11 | `/cadastro`: criar conta com aceite de uso | `POST /api/auth/cadastro` | `AutenticacaoController.cadastro` → `CadastrarAlunoService` | `Usuario` e `RegistroPrivacidade` AR → `usuarios`, `registros_privacidade`, uma transação | E2E 11: checkbox explícito, 201, redirecionamento; perfil Aluno comprovado no login |
 | 12 | `/login`: entrar | `POST /api/auth/login`; `GET /api/auth/sessao` | `AutenticacaoController.login` → `LoginService` | `Usuario`, `Sessao`, `AuthLimite`; `AutenticacaoRepository` → `usuarios`, `sessoes`, `auth_limites` | E2E 12: 200, sessão consultada independentemente e usuário após recarga |
 | 13 | `/admin/questao.html?id=<id>`: salvar edição | `PUT /api/questoes/<id>` | `QuestaoController.editar` → `EditarQuestaoService` | `Questao`, `QuestaoEvento` AR; `QuestaoRepository` → `questoes`, `questao_eventos`, `questao_versoes` | E2E 13: 200 e campo atualizado após recarga |
 | 14 | Mesma tela: revisar/publicar | `POST /api/questoes/<id>/publicar` | `QuestaoController.publicar` → `PublicarQuestaoService` | `Questao`, `QuestaoVersao`, `QuestaoEvento`; `QuestaoRepository` → conteúdo e snapshots | E2E 14: motivo/confirmação, 200 e estado publicado após recarga |
@@ -115,11 +116,40 @@ consomem consultas por contratos, compostas na factory. As outras seis consultas
 recorte apoiam catálogo administrativo, histórico/catálogo de Simulados e dashboards;
 não contam como funcionalidades novas. Ver [aplicação SOLID](aplicacao-solid.md).
 
-O domínio conserva vinte Models: cinco versões/eventos em ModeloBase; PlanoEstudo e
-PlanoEstudoItem em ModeloAtualizavel; treze Models convencionais em CrudMixin. Só mudou
-a capacidade Python oferecida; schema, migrations e procedure permanecem.
+O recorte SOLID conservou vinte Models. A extensão de privacidade acrescenta
+`RegistroPrivacidade` em ModeloBase: são agora 21 Models, seis em ModeloBase,
+PlanoEstudo/PlanoEstudoItem em ModeloAtualizavel e treze em CrudMixin.
+A migration 010 acrescenta a tabela de evidências; migrations anteriores e
+procedure permanecem intactas.
 
 Gerar/recalcular plano recebem o seletor que usa o mesmo DiagnosticoAluno do dashboard.
 É adaptação necessária da composição: as dependências concretas de escrita do plano,
 seus locks, replays e TransactionManager permanecem. O plano continua fora da contagem
 dos vinte percursos de referência; sua regressão adicional é preservada.
+
+## Extensão acadêmica de termos e consentimento
+
+Os dois documentos completos estão em [docs/legal](../legal/README.md), com
+fontes HTML públicas, versão, data e impressão. Foram adaptados dos modelos do
+professor e descrevem apenas o sistema implementado, sem CPF/testemunhas,
+assinatura, IA ou certificação ISO presumidas.
+
+`PrivacidadeController` encaminha metadados/consulta aos Services respectivos
+e quatro ações fixas a `AceitarTermosUsoService`, `ConsentirPlanoService`,
+`RecusarConsentimentoPlanoService` e `RevogarConsentimentoPlanoService`.
+`RegistroPrivacidade` grava a evidência; `PrivacidadeRepository` lê decisões
+correntes/replays e elimina derivados próprios somente na negativa confirmada.
+Os quatro casos de plano validam os dois aceites vigentes no servidor. Consulte
+[contratos e efeitos](operacao-privacidade.md), [diagrama](diagrama-de-classes.md)
+e [fluxogramas](fluxogramas-casos-de-uso.md).
+
+`/aluno/privacidade.html` mostra evidências e escolhas; início/plano e navegação
+oferecem acesso. Recusa/revogação mantém práticas, simulados e diagnóstico;
+elimina somente planos próprios, sem restaurá-los na autorização posterior.
+O E2E independente cobre esse percurso; a lista original de vinte casos é mantida.
+
+Responsável informado: Matheus Gabriel Oliveira Martins. Contato
+`contato@plataformaenem.example` fictício e não operacional. Entrega demonstrativa
+com dados sintéticos; contato válido, retenção geral/direitos e proteção de menores
+dependem de outra change antes de dados reais. Os termos não garantem bônus ou
+adequação jurídica integral. Esta change não publica, hospeda ou envia a entrega.

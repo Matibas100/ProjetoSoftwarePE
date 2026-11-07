@@ -413,9 +413,24 @@ def _detect_planos_prefix(connection, tables: set[str]) -> str:
     return "009"
 
 
+PRIVACIDADE_FINGERPRINT = "e7da6a5f88f3190a8b42f73fb534826898bdd9e56b18025508d830db77ae5698"
+
+
+def _detect_privacidade_prefix(connection, tables: set[str]) -> str:
+    _detect_planos_prefix(connection, tables - {"registros_privacidade"})
+    with connection.cursor() as cursor:
+        cursor.execute("SHOW CREATE TABLE registros_privacidade")
+        ddl = re.sub(r"AUTO_INCREMENT=\d+\s*", "", cursor.fetchone()["Create Table"])
+        if hashlib.sha256(ddl.encode("utf-8")).hexdigest() != PRIVACIDADE_FINGERPRINT:
+            raise MigrationError("Fingerprint de privacidade divergente.")
+    return "010"
+
+
 def detect_legacy_prefix(connection) -> str:
     expected_tables = set(EXPECTED_COLUMNS)
     user_tables = _user_tables(connection)
+    if "registros_privacidade" in user_tables:
+        return _detect_privacidade_prefix(connection, user_tables)
     if set(PLANOS_FINGERPRINTS) & user_tables:
         return _detect_planos_prefix(connection, user_tables)
     if set(SIMULADOS_FINGERPRINTS) & user_tables:

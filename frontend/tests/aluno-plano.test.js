@@ -20,6 +20,7 @@ async function setup(override = () => undefined) {
   const api = vi.fn(async (route, options) => {
     const custom = override(route, options); if (custom !== undefined) return custom;
     if (route.startsWith("/auth/")) return { usuario: aluno };
+    if (route === "/aluno/privacidade") return { plano_liberado: true };
     if (route.includes("/concluir")) return { ...item(), estado: "concluido", concluido_em: "2026-10-24T11:00:00Z" };
     return response();
   });
@@ -30,6 +31,31 @@ async function setup(override = () => undefined) {
 const mutations = (api) => api.mock.calls.filter(([,o]) => o?.method === "POST");
 const confirm = async () => { $("plano-recalcular").click(); $("plano-confirmar").click(); await settle(); };
 afterEach(() => { globalThis.PlanoUI?.destroy(); globalThis.AuthUI?.destroy(); delete globalThis.PlanoUI; delete globalThis.AuthUI; delete globalThis.apiRequest; vi.restoreAllMocks(); });
+
+it("não consulta plano sem consentimento e continua oferecendo prática livre", async () => {
+  const api=await setup(r=>r==="/aluno/privacidade"?{plano_liberado:false}:undefined);
+  expect(api.mock.calls.some(([r])=>r==="/aluno/plano")).toBe(false);
+  expect($("plano-privacidade").hidden).toBe(false);expect($("plano-lista").children).toHaveLength(0);
+  expect($("plano-gerar").hidden).toBe(true);expect(PlanoUI.state.pending).toBeNull();
+});
+it("revogação em outra aba retira plano, intenção e ignora resposta atrasada", async () => {
+  let allowed=true;const pending=deferred();
+  const api=await setup((r,o)=>r==="/aluno/privacidade"?{plano_liberado:allowed}:o?.method?pending.promise:undefined);
+  await confirm();allowed=false;window.dispatchEvent(new Event("focus"));
+  expect($("plano-lista").children).toHaveLength(0);await settle();
+  expect(PlanoUI.state.pending).toBeNull();pending.resolve(response());await settle();
+  expect($("plano-lista").children).toHaveLength(0);expect($("plano-privacidade").hidden).toBe(false);
+  expect(mutations(api)).toHaveLength(1);
+});
+it("perda de permissão após POST ou erro 403 limpa dados e não reenvia intenção", async () => {
+  let allowed=true;
+  const api=await setup((r,o)=>r==="/aluno/privacidade"?{plano_liberado:allowed}:o?.method?(()=>{allowed=false;return response();})():undefined);
+  await confirm();expect(PlanoUI.state.plan).toBeNull();expect(PlanoUI.state.pending).toBeNull();
+  expect(mutations(api)).toHaveLength(1);
+  allowed=true;await PlanoUI.load();api.mockImplementationOnce(async()=>({usuario:aluno}));
+  allowed=false;document.dispatchEvent(new Event("visibilitychange"));await settle();
+  expect(PlanoUI.state.plan).toBeNull();
+});
 
 it("consulta plano real sem gerar, renderiza texto seguro e liga ao assunto", async () => {
   const api=await setup(); expect(mutations(api)).toHaveLength(0);
@@ -70,19 +96,19 @@ it("confirma substituição, cancela por botão/Escape e devolve foco", async ()
 it("preserva plano após recálculo sem base e após falha de rede, sem replay automático", async () => {
   let fault=true;
   const api=await setup((r)=>r.endsWith("/recalcular") ? fault ? Promise.reject(new Error("Sem rede")) : {estado:"sem_base_suficiente",plano:plan()} : undefined);
-  await confirm();expect($("plano-lista").children).toHaveLength(1);expect($("plano-status").textContent).toContain("Sem rede");
+  await confirm();expect($("plano-lista").children).toHaveLength(0);expect($("plano-status").textContent).toContain("Sem rede");
   const first=mutations(api)[0][1].body;await settle();expect(mutations(api)).toHaveLength(1);
-  fault=false;await confirm();expect(mutations(api)[1][1].body).toBe(first);expect($("plano-status").textContent).toContain("anterior foi preservado");
+  fault=false;$("plano-retentar").click();await settle();expect(mutations(api)[1][1].body).toBe(first);expect($("plano-status").textContent).toContain("anterior foi preservado");
 });
 it("bloqueia troca de ação pendente e descarta chave após conflito conhecido", async () => {
   let code=500;
   const api=await setup((r,o)=>o?.method ? Promise.reject(Object.assign(new Error("Falha"),{status:code})) : undefined);
-  await confirm();$("plano-lista").querySelector("button").click();await settle();expect(mutations(api)).toHaveLength(1);expect($("plano-status").textContent).toContain("ação pendente");
-  code=409;await confirm();expect(PlanoUI.state.pending).toBeNull();$("plano-lista").querySelector("button").click();await settle();expect(mutations(api)).toHaveLength(3);
+  await confirm();await PlanoUI.load();$("plano-lista").querySelector("button").click();await settle();expect(mutations(api)).toHaveLength(1);expect($("plano-status").textContent).toContain("ação pendente");
+  code=409;$("plano-retentar").click();await settle();expect(PlanoUI.state.pending).toBeNull();await PlanoUI.load();$("plano-lista").querySelector("button").click();await settle();expect(mutations(api)).toHaveLength(3);
 });
-it("consulta após falha preserva dados válidos e permite tentar novamente", async () => {
+it("consulta após falha retira snapshots e permite tentar novamente", async () => {
   let fail=false;const api=await setup((r)=>r==="/aluno/plano" && fail ? Promise.reject(new Error("Consulta falhou")) : undefined);
-  fail=true;$("plano-recarregar").click();await settle();expect($("plano-lista").children).toHaveLength(1);expect($("plano-status").textContent).toContain("Consulta falhou");
+  fail=true;$("plano-recarregar").click();await settle();expect($("plano-lista").children).toHaveLength(0);expect($("plano-status").textContent).toContain("Consulta falhou");
   fail=false;$("plano-recarregar").click();await settle();expect(api.mock.calls.filter(([r])=>r==="/aluno/plano")).toHaveLength(3);
 });
 it("não duplica mutações durante loading", async () => {
@@ -94,10 +120,10 @@ it("não duplica mutações durante loading", async () => {
 it("recupera mesma sessão sem reenviar a ação e exige novo clique", async () => {
   let fail=true;
   const api=await setup((r)=>r.endsWith("/concluir") && fail ? (()=>{document.dispatchEvent(new CustomEvent("auth-required",{detail:"sessao_invalida"}));return Promise.reject(Object.assign(new Error("Sessão expirada"),{status:401}));})() : undefined);
-  $("plano-lista").querySelector("button").click();await settle();expect(AuthUI.blocked).toBe(true);expect(PlanoUI.state.plan.id).toBe(7);
+  $("plano-lista").querySelector("button").click();await settle();expect(AuthUI.blocked).toBe(true);expect(PlanoUI.state.plan).toBeNull();
   $("auth-recovery-password").value="Senha de teste";$("auth-recovery-form").dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));await settle();
-  expect(AuthUI.blocked).toBe(false);expect(mutations(api)).toHaveLength(1);expect($("plano-lista").children).toHaveLength(1);
-  fail=false;$("plano-lista").querySelector("button").click();await settle();expect(mutations(api)).toHaveLength(2);
+  expect(AuthUI.blocked).toBe(false);expect(mutations(api)).toHaveLength(1);expect($("plano-lista").children).toHaveLength(0);
+  fail=false;$("plano-retentar").click();await settle();expect(mutations(api)).toHaveLength(2);
 });
 it("limpa plano/chave na troca de conta e descarta resposta atrasada", async () => {
   const pending=deferred();const api=await setup((r)=>r.endsWith("/recalcular") ? pending.promise : undefined);

@@ -11,13 +11,14 @@ from app.models.questao_versao import QuestaoVersao
 from app.models.questao_evento import QuestaoEvento
 from app.models.simulado import SimuladoVersao, SimuladoVersaoItem, SimuladoEvento
 from app.models.plano_estudo import PlanoEstudo, PlanoEstudoItem
+from app.models.registro_privacidade import RegistroPrivacidade
 
 
 class PersistenciaCapacidadesTest(unittest.TestCase):
     def test_bases_abstratas_com_um_caminho_ate_model(self):
         configure_mappers()
-        self.assertEqual(len(list(db.Model.registry.mappers)), 20)
-        self.assertEqual(len(db.metadata.tables), 20)
+        self.assertEqual(len(list(db.Model.registry.mappers)), 21)
+        self.assertEqual(len(db.metadata.tables), 21)
         self.assertEqual(CrudMixin.__bases__, (ModeloAtualizavel,))
         self.assertEqual(ModeloAtualizavel.__bases__, (ModeloBase,))
         self.assertEqual(ModeloBase.__bases__, (db.Model,))
@@ -28,9 +29,9 @@ class PersistenciaCapacidadesTest(unittest.TestCase):
         self.assertFalse(hasattr(ModeloBase, 'deletar'))
         self.assertFalse(hasattr(ModeloAtualizavel, 'deletar'))
 
-    def test_capacidades_das_vinte_models(self):
+    def test_capacidades_das_vinte_e_uma_models(self):
         imutaveis = {QuestaoVersao, QuestaoEvento, SimuladoVersao,
-                     SimuladoVersaoItem, SimuladoEvento}
+                     SimuladoVersaoItem, SimuladoEvento, RegistroPrivacidade}
         planos = {PlanoEstudo, PlanoEstudoItem}
         for mapper in db.Model.registry.mappers:
             model = mapper.class_

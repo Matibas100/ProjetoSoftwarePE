@@ -6,6 +6,7 @@ from app.models.questao import Questao
 from app.models.questao_versao import QuestaoVersao
 from app.models.questao_evento import QuestaoEvento
 from app.models.usuario import Usuario
+from app.models.registro_privacidade import RegistroPrivacidade
 from app.models.sessao import Sessao
 from app.models.auth_limite import AuthLimite
 from app.models.pratica_tentativa import PraticaTentativa

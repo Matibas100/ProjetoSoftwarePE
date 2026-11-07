@@ -15,4 +15,8 @@ Este índice consolida as decisões arquiteturais do projeto. A aceitação dos 
 
 ## Pendência condicionante
 
+[ADR-009 — Consentimento e eliminação do plano](ADR-009-consentimento-e-eliminacao-do-plano.md):
+aceites separados, evidência imutável e exceção confirmada e atômica de eliminação
+dos planos próprios; preservação de respostas e guards usuais.
+
 O ADR-001 oficializa o runner SQL versionado com ordem, checksum, lock, baseline e bloqueio seguro após falha.

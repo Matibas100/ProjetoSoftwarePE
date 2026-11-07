@@ -7,6 +7,35 @@ decisões e o retorno à interface pelas camadas reais. Não acrescentam funçõ
 
 ## Recuperação: consultar diagnóstico de desempenho
 
+O diagnóstico continua acessível após recusa/revogação do plano. A extensão
+acadêmica de privacidade usa este fluxo próprio, sem alterar os vinte casos:
+
+```mermaid
+flowchart TD
+  A[Aluno lê os dois documentos] --> B{Escolha explícita}
+  B -->|Aceitar uso| U[Gravar evidência de uso]
+  B -->|Autorizar plano| C[Exigir aceite de uso vigente]
+  B -->|Recusar ou revogar| D{Confirmar eliminação?}
+  D -->|Cancelar| E[Não enviar POST]
+  D -->|Confirmar| F[Controller chama Service da decisão]
+  U --> G[Transação com lock do usuário]
+  C --> G
+  F --> G
+  G --> H{Chave já processada?}
+  H -->|Sim e idêntica| I[Registro original e estado atual sem novos efeitos]
+  H -->|Não| J[Validar versão, revisão e transição]
+  J --> K[Salvar decisão; negativa elimina planos próprios]
+  K --> L{Persistência concluída?}
+  L -->|Não| M[Rollback integral e erro]
+  L -->|Sim| N[Único commit e estado atual]
+  N --> O[Plano exige dois aceites vigentes antes de dados ou replay]
+```
+
+Revisão/chave conflitante retorna 409; campos inválidos, 400. O servidor aplica
+sessão, perfil, Origin/CSRF e no-store. Guard do plano precede diagnóstico,
+snapshot e item. Eliminação é irreversível na aplicação, restrita ao plano próprio
+e confirmada com a negativa. Ver [operação](operacao-privacidade.md).
+
 **Objetivo:** apresentar respostas concluídas do próprio Aluno, agregadas por
 Matéria/Assunto, com período e base explícitos. Perfil: Aluno autenticado;
 ausência de respostas é um resultado válido.

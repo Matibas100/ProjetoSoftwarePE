@@ -37,7 +37,9 @@ class PraticasIntegrationTest(MySQLIntegrationTestCase):
         cliente = self.app.test_client()
         cliente.csrf = cliente.get('/api/auth/csrf').get_json()['csrf_token']
         email = uuid4().hex+'@teste.local'
-        r = cliente.post('/api/auth/cadastro', json={'nome':'Estudante','email':email,'senha':self.senha,'senha_confirmacao':self.senha})
+        from app.domain.privacidade import VIGENTES
+        r = cliente.post('/api/auth/cadastro', json={'nome':'Estudante','email':email,'senha':self.senha,'senha_confirmacao':self.senha,
+            'termos_uso':{'versao':VIGENTES['uso'],'aceito':True}})
         self.assertEqual(r.status_code,201)
         r = cliente.post('/api/auth/login', json={'email':email,'senha':self.senha})
         self.assertEqual(r.status_code,200)

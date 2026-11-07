@@ -5,6 +5,7 @@ from app.repositories.questao_repository import QuestaoRepository
 from app.services.consultar_plano_service import item_dto
 from app.services.plano_validacao import confirmacao
 from app.transaction_manager import TransactionManager
+from app.services.validar_permissao_plano_service import ValidarPermissaoPlanoService
 
 
 class ConcluirPlanoItemService:
@@ -14,6 +15,7 @@ class ConcluirPlanoItemService:
 
         def concluir():
             Repo.bloquear_usuario(usuario_id)
+            ValidarPermissaoPlanoService.executar(usuario_id)
             linha = Repo.item_proprio(usuario_id, item_id)
             if linha is None:
                 raise RecursoNaoEncontradoError("Item não encontrado.")

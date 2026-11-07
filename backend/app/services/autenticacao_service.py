@@ -2,6 +2,7 @@
 import hmac
 import math
 import secrets
+from uuid import uuid4
 from datetime import timedelta
 
 from sqlalchemy.exc import IntegrityError
@@ -13,6 +14,8 @@ from app.domain.autenticacao import (
 )
 from app.models.sessao import Sessao
 from app.models.usuario import Usuario
+from app.models.registro_privacidade import RegistroPrivacidade
+from app.services.privacidade_validacao import validar_versao
 from app.repositories.autenticacao_repository import AutenticacaoRepository as Repo
 from app.transaction_manager import TransactionManager
 
@@ -83,21 +86,44 @@ class CriarSessaoService:
 class CadastrarAlunoService:
     @staticmethod
     def executar(dados):
-        return CriarUsuarioService.executar(dados, "aluno")
+        validar_dados(dados, {"nome", "email", "senha", "senha_confirmacao", "termos_uso"})
+        termos = dados["termos_uso"]
+        validar_dados(termos, {"versao", "aceito"})
+        if termos["aceito"] is not True or not isinstance(termos["versao"], str):
+            raise AutenticacaoError("Confirme explicitamente o Termo de Uso.")
+        doc = validar_versao("uso", termos["versao"])
+        usuario = preparar_usuario({k: v for k, v in dados.items() if k != "termos_uso"}, "aluno")
+        def cadastrar():
+            usuario.salvar(confirmar=False)
+            RegistroPrivacidade(usuario_id=usuario.id, tipo="uso", acao="aceitar", versao=doc["versao"],
+                documento_sha256=doc["sha256"], chave_envio=str(uuid4()), revisao_base=0).salvar(confirmar=False)
+            return usuario.to_dict()
+        return persistir_usuario(cadastrar)
+
+
+def preparar_usuario(dados, perfil):
+    nome, email, senha = validar_cadastro(dados)
+    if perfil not in {"aluno", "administrador"}:
+        raise AutenticacaoError("Perfil inválido.")
+    return Usuario(nome=nome, email=email, perfil=perfil, ativo=True,
+        senha_hash=generate_password_hash(senha, method="scrypt:32768:8:1"), criado_em=agora_utc())
+
+
+def persistir_usuario(operacao):
+    try:
+        return TransactionManager.executar(operacao)
+    except IntegrityError as erro:
+        # Só uma violação da chave do e-mail é duplicidade de cadastro.
+        if "uq_usuarios_email" in str(erro.orig):
+            raise AutenticacaoError("Este e-mail já está cadastrado. Entre na sua conta.", 409, "email_em_uso") from None
+        raise
 
 
 class CriarUsuarioService:
     @staticmethod
     def executar(dados, perfil):
-        nome, email, senha = validar_cadastro(dados)
-        if perfil not in {"aluno", "administrador"}:
-            raise AutenticacaoError("Perfil inválido.")
-        usuario = Usuario(nome=nome, email=email, perfil=perfil, ativo=True,
-            senha_hash=generate_password_hash(senha, method="scrypt:32768:8:1"), criado_em=agora_utc())
-        try:
-            return TransactionManager.executar(lambda: usuario.salvar(confirmar=False).to_dict())
-        except IntegrityError:
-            raise AutenticacaoError("Este e-mail já está cadastrado. Entre na sua conta.", 409, "email_em_uso") from None
+        usuario = preparar_usuario(dados, perfil)
+        return persistir_usuario(lambda: usuario.salvar(confirmar=False).to_dict())
 
 
 class ValidarSenhaService:

@@ -1,6 +1,8 @@
 from app.exceptions import DadosInvalidosError
 from app.repositories.plano_estudo_repository import PlanoEstudoRepository as Repo
 from app.repositories.questao_repository import QuestaoRepository
+from app.services.validar_permissao_plano_service import ValidarPermissaoPlanoService
+from app.transaction_manager import TransactionManager
 
 
 def item_dto(item, pares):
@@ -24,5 +26,9 @@ class ConsultarPlanoService:
     def executar(usuario_id, filtros=None):
         if filtros:
             raise DadosInvalidosError("A consulta do plano não aceita filtros.")
-        plano = Repo.atual(usuario_id)
-        return {"estado": "disponivel" if plano else "sem_plano", "plano": plano_dto(plano)}
+        def consultar():
+            Repo.bloquear_usuario(usuario_id)
+            ValidarPermissaoPlanoService.executar(usuario_id)
+            plano = Repo.atual(usuario_id, bloquear=True)
+            return {"estado": "disponivel" if plano else "sem_plano", "plano": plano_dto(plano)}
+        return TransactionManager.executar(consultar)

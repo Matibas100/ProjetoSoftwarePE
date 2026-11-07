@@ -6,6 +6,7 @@ from app.services.consultar_plano_service import plano_dto
 from app.services.plano_validacao import operacao
 from app.services.selecionar_plano_service import SelecionarPlanoService
 from app.transaction_manager import TransactionManager
+from app.services.validar_permissao_plano_service import ValidarPermissaoPlanoService
 
 
 def gerar(usuario_id, dados, seletor: SelecionarPlanoService, recalcular=False):
@@ -14,6 +15,7 @@ def gerar(usuario_id, dados, seletor: SelecionarPlanoService, recalcular=False):
 
     def executar():
         Repo.bloquear_usuario(usuario_id)
+        ValidarPermissaoPlanoService.executar(usuario_id)
         existente = Repo.por_chave(usuario_id, chave)
         if existente is not None:
             if existente.operacao != tipo or existente.plano_anterior_id != anterior_id:

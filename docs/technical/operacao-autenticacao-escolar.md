@@ -12,6 +12,16 @@ Respostas 500 continuam neutras; testes com sentinelas verificam essa política.
 
 ## Escopo e preparação
 
+O cadastro público agora exige também `termos_uso:{versao,aceito:true}`. Conta
+e evidência do aceite são persistidas juntas, com um único commit. Corpo antigo,
+aceite ausente/falso/não booleano ou campos extras geram 400; versão antiga gera
+409 `termo_desatualizado`. Preserva DTO 201, validações de credenciais,
+duplicidade 409 e ausência de login automático. O cadastro não autoriza o plano.
+`CriarUsuarioService` compartilha a preparação do usuário e mantém a CLI
+administrativa com os quatro campos originais, sem aceite fictício.
+Metadados públicos: GET/HEAD `/api/termos`, no-store. Ver [operação de
+privacidade](operacao-privacidade.md) para registros e contas legadas.
+
 Esta entrega adiciona cadastro público de Aluno, login por e-mail/senha, sessão
 individual e acesso administrativo. Mantém Flask, frontend estático e MySQL 8.
 Não inclui recuperação/verificação de e-mail, onboarding ou dashboard. E-mail

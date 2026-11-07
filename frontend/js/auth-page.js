@@ -6,6 +6,30 @@
   const button = form.querySelector('[type="submit"]');
   const password = form.elements.senha;
   const email = form.elements.email;
+  const terms = document.querySelector("#auth-terms");
+  let metadata = null;
+  async function loadTerms() {
+    metadata = null; terms.checked = false; terms.disabled = true; button.disabled = true;
+    document.querySelector("#auth-terms-retry").hidden = true;
+    try {
+      const data = await apiRequest("/termos");
+      const knownLocal = /^\/legal\/termo-de-(uso|consentimento-plano)-v[0-9][0-9.-]*\.html$/;
+      if (![data.termos_uso, data.consentimento_plano].every(doc => typeof doc?.versao === "string" && doc.versao
+          && knownLocal.test(doc.url) && /^[a-f0-9]{64}$/.test(doc.sha256))) throw new Error("Metadados dos termos indisponíveis.");
+      metadata = data;
+      document.querySelector("#auth-terms-link").href = data.termos_uso.url;
+      document.querySelector("#auth-plan-link").href = data.consentimento_plano.url;
+      document.querySelector("#auth-terms-version").textContent = `Termo de Uso vigente: versão ${data.termos_uso.versao}.`;
+      terms.disabled = false; button.disabled = false;
+    } catch (error) {
+      document.querySelector("#auth-terms-version").textContent = error.message;
+      document.querySelector("#auth-terms-retry").hidden = false;
+    }
+  }
+  if (signup) {
+    document.querySelector("#auth-terms-retry").addEventListener("click", loadTerms);
+    loadTerms();
+  }
   const prefill = sessionStorage.getItem("cadastro-email");
   if (!signup && prefill) {
     email.value = prefill; sessionStorage.removeItem("cadastro-email");
@@ -43,8 +67,10 @@
     }
     button.disabled = true; message.dataset.error = "false"; message.textContent = signup ? "Criando sua conta..." : "Entrando...";
     try {
+      const body = Object.fromEntries(new FormData(form));
+      if (signup) body.termos_uso = { versao: metadata.termos_uso.versao, aceito: terms.checked === true };
       const data = await apiRequest(`/auth/${signup ? "cadastro" : "login"}`, {
-        method: "POST", body: JSON.stringify(Object.fromEntries(new FormData(form))),
+        method: "POST", body: JSON.stringify(body),
       });
       password.value = "";
       if (signup) {
@@ -53,9 +79,10 @@
       } else AuthUI.navigate(data.usuario.perfil === "administrador" ? "/admin/materias.html" : "/aluno/inicio.html");
     } catch (error) {
       message.dataset.error = "true"; message.textContent = error.message;
+      if (signup && error.code === "termo_desatualizado") await loadTerms();
       if (error.code === "email_em_uso") {
         email.setAttribute("aria-invalid", "true"); document.getElementById(`${email.id}-error`).textContent = error.message;
       }
-    } finally { button.disabled = false; }
+    } finally { button.disabled = signup && !metadata; }
   });
 })();

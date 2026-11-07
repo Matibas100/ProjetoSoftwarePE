@@ -1,11 +1,53 @@
 # Diagrama de classes implementadas
 
 Referência: [Models](../../backend/app/models/), migrations
-[000–009](../../backend/database/migrations/) e [arquitetura](architecture-master-v1.md).
-As quatro visões de domínio cobrem as **vinte Models concretas** atuais. Classes
+[000–010](../../backend/database/migrations/) e [arquitetura](architecture-master-v1.md).
+As visões de domínio cobrem as **21 Models concretas** atuais. Classes
 repetidas entre visões são referências à mesma entidade, sem duplicar tabelas.
 `PK` indica chave primária; `FK` indica referência; `?` indica campo opcional.
 Os atributos são os principais, não uma reprodução integral do schema.
+
+## Privacidade — uma Model adicional
+
+```mermaid
+classDiagram
+class ModeloBase
+class Usuario
+class RegistroPrivacidade {
+  bigint id PK
+  int usuario_id FK
+  string tipo
+  string acao
+  string versao
+  char64 documento_sha256
+  datetime registrado_em
+  uuid chave_envio
+  bigint revisao_base
+}
+ModeloBase <|-- RegistroPrivacidade
+Usuario "1" --> "0..*" RegistroPrivacidade
+PrivacidadeController --> ConsultarTermosService
+PrivacidadeController --> ConsultarPrivacidadeService
+PrivacidadeController --> AceitarTermosUsoService
+PrivacidadeController --> ConsentirPlanoService
+PrivacidadeController --> RecusarConsentimentoPlanoService
+PrivacidadeController --> RevogarConsentimentoPlanoService
+ConsultarPrivacidadeService --> PrivacidadeRepository
+AceitarTermosUsoService --> RegistroPrivacidade
+ConsentirPlanoService --> RegistroPrivacidade
+RecusarConsentimentoPlanoService --> PrivacidadeRepository
+RevogarConsentimentoPlanoService --> PrivacidadeRepository
+ValidarPermissaoPlanoService --> PrivacidadeRepository
+GerarPlanoService --> ValidarPermissaoPlanoService
+RecalcularPlanoService --> ValidarPermissaoPlanoService
+ConsultarPlanoService --> ValidarPermissaoPlanoService
+ConcluirPlanoItemService --> ValidarPermissaoPlanoService
+CadastrarAlunoService --> RegistroPrivacidade
+```
+
+`RegistroPrivacidade` possui salvar/consultar e guards de imutabilidade, sem
+atualizar/deletar. A negativa confirmada usa eliminação especializada de planos
+no Repository, sem relaxar seus guards ORM, conforme [ADR-009](adr/ADR-009-consentimento-e-eliminacao-do-plano.md).
 
 ## Herança e persistência
 

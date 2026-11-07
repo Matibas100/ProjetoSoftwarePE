@@ -189,3 +189,12 @@ api_blueprint.add_url_rule(
     view_func=AssuntoController.deletar,
     methods=["DELETE"],
 )
+
+from app.controllers.privacidade_controller import PrivacidadeController
+
+api_blueprint.add_url_rule("/termos", view_func=PrivacidadeController.termos, methods=["GET"])
+api_blueprint.add_url_rule("/aluno/privacidade", view_func=PrivacidadeController.consultar, methods=["GET"])
+api_blueprint.add_url_rule("/aluno/privacidade/termos-uso", view_func=PrivacidadeController.aceitar_uso, methods=["POST"])
+api_blueprint.add_url_rule("/aluno/privacidade/consentimento-plano/aceitar", view_func=PrivacidadeController.consentir, methods=["POST"])
+api_blueprint.add_url_rule("/aluno/privacidade/consentimento-plano/recusar", view_func=PrivacidadeController.recusar, methods=["POST"])
+api_blueprint.add_url_rule("/aluno/privacidade/consentimento-plano/revogar", view_func=PrivacidadeController.revogar, methods=["POST"])
