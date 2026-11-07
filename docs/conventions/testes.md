@@ -20,7 +20,8 @@ permitidos somente nos testes unitários; nunca substituem as integrações.
 - `backend/tests/unit/`: testes Python sem `.env` e sem conexão MySQL.
 - `backend/tests/*_integration.py`: 29 integrações originais preservadas e
   complementos de regressão com MySQL 8 real.
-- `frontend/tests/`: contrato HTML e testes DOM dos quatro scripts clássicos.
+- `frontend/tests/`: suítes de contrato HTML e testes DOM de API, autenticação,
+  navegação e áreas do Aluno e da Administração.
 - `scripts/`: validadores agregados de cobertura por stack.
 
 ## Pré-requisitos de desenvolvimento

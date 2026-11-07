@@ -101,9 +101,11 @@ isoladas não têm contagem garantida entre as quatro funcionalidades principais
 A evidência automatizada comprova somente o que for executado; não substitui
 a demonstração do grupo nem garante nota. Vídeo, slides, roteiro, hospedagem e
 envio não são produzidos por esta change e continuam sob responsabilidade do grupo.
-**Commit, push e merge não foram autorizados.** O workflow está versionável,
-mas a execução remota permanece pendente até push autorizado. O fechamento
-técnico local depende dos testes e da verificação registrados no relatório.
+O [registro de publicação e CI no README](../../README.md#checkpoint-publicado-e-ci)
+identifica o checkpoint aprovado e distingue as alterações posteriores ainda
+locais. Commit, push e merge dependem de autorização explícita para a operação;
+esta limpeza não autoriza novas operações Git. O fechamento técnico local
+depende dos testes e da verificação registrados no relatório.
 
 
 ## Composição e persistência após SOLID

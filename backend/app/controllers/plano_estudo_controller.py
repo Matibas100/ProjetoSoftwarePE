@@ -1,5 +1,5 @@
-from flask import g, jsonify, request
-from app.http_response import responder_http, resposta_json, resposta_json_dinamica
+from flask import g, request
+from app.http_response import responder_http, resposta_json_dinamica
 from app.services.consultar_plano_service import ConsultarPlanoService
 from app.http_composition import servicos
 from app.services.concluir_plano_item_service import ConcluirPlanoItemService

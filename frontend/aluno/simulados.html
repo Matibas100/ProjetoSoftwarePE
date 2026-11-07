@@ -1,9 +1,50 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Simulados | Plataforma ENEM</title><link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/aluno.css"><link rel="stylesheet" href="../css/simulados.css"></head>
-<body data-auth="aluno" data-simulado="aluno-lista"><section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section>
-<div id="auth-content" class="aluno-shell" hidden><nav class="aluno-nav" aria-label="Navegação do aluno"><img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM"><div class="navigation-slot" data-navigation="aluno" data-current="simulados"></div></nav>
-<div class="aluno-main"><header class="aluno-top"><strong>Simulados</strong><div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
-<main class="aluno-page"><h1>Simulados</h1><p class="aluno-subtitle">Escolha uma composição publicada. Responda no seu ritmo, sem limite de tempo.</p>
-<form id="sim-filtros" class="pratica-card"><label for="sim-modo">Mostrar</label><select id="sim-modo"><option value="catalogo">Simulados disponíveis</option><option value="historico">Meu histórico de simulados</option></select><button class="auth-primary">Consultar</button></form>
-<ul id="sim-lista" class="pratica-lista" data-sim-private></ul><p id="sim-status" role="status" tabindex="-1" aria-live="polite"></p><button id="sim-recarregar" type="button" class="button button--outline auth-secondary">Recarregar</button><nav class="pratica-paginacao" aria-label="Paginação"><button id="sim-anterior" type="button">Anterior</button><span id="sim-pagina"></span><button id="sim-proxima" type="button">Próxima</button></nav><p class="pratica-aviso">Composição manual fixa. Cronômetro, geração automática, TRI e recomendações estão indisponíveis.</p></main></div></div>
-<script src="../js/navigation.js"></script><script src="../js/api.js"></script><script src="../js/auth-session.js"></script><script src="../js/aluno-simulados.js"></script></body></html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Simulados | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/aluno.css">
+    <link rel="stylesheet" href="../css/simulados.css">
+  </head>
+  <body data-auth="aluno" data-simulado="aluno-lista">
+    <section class="auth-status-panel" id="auth-loading">
+      <p role="status">Verificando sua sessão...</p>
+    </section>
+    <div id="auth-content" class="aluno-shell" hidden>
+      <nav class="aluno-nav" aria-label="Navegação do aluno">
+        <img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+        <div class="navigation-slot" data-navigation="aluno" data-current="simulados"></div>
+      </nav>
+      <div class="aluno-main">
+        <header class="aluno-top">
+          <strong>Simulados</strong>
+          <div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div>
+        </header>
+        <main class="aluno-page">
+          <h1>Simulados</h1>
+          <p class="aluno-subtitle">Escolha uma composição publicada. Responda no seu ritmo, sem limite de tempo.</p>
+          <form id="sim-filtros" class="pratica-card">
+            <label for="sim-modo">Mostrar</label>
+            <select id="sim-modo"><option value="catalogo">Simulados disponíveis</option><option value="historico">Meu histórico de simulados</option></select>
+            <button class="auth-primary">Consultar</button>
+          </form>
+          <ul id="sim-lista" class="pratica-lista" data-sim-private></ul>
+          <p id="sim-status" role="status" tabindex="-1" aria-live="polite"></p>
+          <button id="sim-recarregar" type="button" class="button button--outline auth-secondary">Recarregar</button>
+          <nav class="pratica-paginacao" aria-label="Paginação">
+            <button id="sim-anterior" type="button">Anterior</button>
+            <span id="sim-pagina"></span>
+            <button id="sim-proxima" type="button">Próxima</button>
+          </nav>
+          <p class="pratica-aviso">Composição manual fixa. Cronômetro, geração automática, TRI e recomendações estão indisponíveis.</p>
+        </main>
+      </div>
+    </div>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth-session.js"></script>
+    <script src="../js/aluno-simulados.js"></script>
+  </body>
+</html>

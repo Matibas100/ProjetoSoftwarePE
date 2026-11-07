@@ -1,6 +1,6 @@
 from flask import g, jsonify, request
 
-from app.http_response import responder_http, resposta_json, resposta_json_dinamica
+from app.http_response import responder_http, resposta_json
 from app.http_composition import servicos
 from app.services.criar_questao_service import CriarQuestaoService
 from app.services.gestao_questao_service import (

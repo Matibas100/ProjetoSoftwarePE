@@ -1,2 +1,139 @@
-.dash-filtros{display:flex;gap:16px;flex-wrap:wrap;align-items:end}.dash-filtros label{display:block;font-size:14px;font-weight:700;margin-bottom:8px}.dash-filtros input{padding:11px;min-height:44px;border:1px solid #8794ab;border-radius:8px;font:inherit;background:white}.dash-acoes{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}.dash-colunas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.dash-block{min-width:0;margin:20px 0;padding:24px}.dash-block h2{font-size:20px;margin:0 0 16px}.dash-block[data-estado=erro]{border-left:4px solid #b42318}.dash-block[data-estado=erro] [data-dash-message]{color:#b42318}.dash-block[data-estado=amostra_pequena]{border-left:4px solid #b37705}.dash-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:18px}.dash-card{border:1px solid #e0e5ef;border-radius:10px;padding:18px}.dash-card strong{display:block;font-size:28px;color:#242f42;margin-top:10px}.dash-card p{margin:0;font-size:14px;color:#566580}.dash-scroll{overflow:auto}.dash-table{width:100%;border-collapse:collapse;font-size:14px}.dash-table th,.dash-table td{text-align:left;padding:12px;border-bottom:1px solid #e0e5ef;vertical-align:top}.dash-table th{white-space:nowrap}.dash-table td:first-child{min-width:130px;overflow-wrap:anywhere}.dash-table small{display:block;line-height:1.5;min-width:100px}.dash-atividades{list-style:none;padding:0}.dash-atividades li{padding:14px 0;border-bottom:1px solid #e0e5ef}.dash-atividades small{display:block;color:#566580;margin-top:8px}#dash-meta{font-size:14px;color:#566580}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #5143df;outline-offset:3px}@media(max-width:1150px){.dash-colunas{grid-template-columns:1fr}}@media(max-width:800px){.dash-filtros{align-items:stretch}.dash-filtros>div{width:100%}.dash-filtros input{width:100%}.dash-block{padding:18px}}
-.aluno-page .dash-colunas{grid-template-columns:1fr}
+.dash-filtros {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+.dash-filtros label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.dash-filtros input {
+  padding: 11px;
+  min-height: 44px;
+  border: 1px solid #8794ab;
+  border-radius: 8px;
+  font: inherit;
+  background: white;
+}
+.dash-acoes {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.dash-colunas {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 24px;
+}
+.dash-block {
+  min-width: 0;
+  margin: 20px 0;
+  padding: 24px;
+}
+.dash-block h2 {
+  font-size: 20px;
+  margin: 0 0 16px;
+}
+.dash-block[data-estado=erro] {
+  border-left: 4px solid #b42318;
+}
+.dash-block[data-estado=erro] [data-dash-message] {
+  color: #b42318;
+}
+.dash-block[data-estado=amostra_pequena] {
+  border-left: 4px solid #b37705;
+}
+.dash-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+  gap: 18px;
+}
+.dash-card {
+  border: 1px solid #e0e5ef;
+  border-radius: 10px;
+  padding: 18px;
+}
+.dash-card strong {
+  display: block;
+  font-size: 28px;
+  color: #242f42;
+  margin-top: 10px;
+}
+.dash-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #566580;
+}
+.dash-scroll {
+  overflow: auto;
+}
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.dash-table th,.dash-table td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #e0e5ef;
+  vertical-align: top;
+}
+.dash-table th {
+  white-space: nowrap;
+}
+.dash-table td:first-child {
+  min-width: 130px;
+  overflow-wrap: anywhere;
+}
+.dash-table small {
+  display: block;
+  line-height: 1.5;
+  min-width: 100px;
+}
+.dash-atividades {
+  list-style: none;
+  padding: 0;
+}
+.dash-atividades li {
+  padding: 14px 0;
+  border-bottom: 1px solid #e0e5ef;
+}
+.dash-atividades small {
+  display: block;
+  color: #566580;
+  margin-top: 8px;
+}
+#dash-meta {
+  font-size: 14px;
+  color: #566580;
+}
+button:focus-visible,a:focus-visible,input:focus-visible {
+  outline: 3px solid #5143df;
+  outline-offset: 3px;
+}
+@media(max-width:1150px) {
+  .dash-colunas {
+    grid-template-columns: 1fr;
+  }
+}
+@media(max-width:800px) {
+  .dash-filtros {
+    align-items: stretch;
+  }
+  .dash-filtros>div {
+    width: 100%;
+  }
+  .dash-filtros input {
+    width: 100%;
+  }
+  .dash-block {
+    padding: 18px;
+  }
+}
+.aluno-page .dash-colunas {
+  grid-template-columns: 1fr;
+}

@@ -1,6 +1,6 @@
-from flask import jsonify, request
+from flask import request
 
-from app.http_response import responder_http, resposta_json, resposta_json_dinamica
+from app.http_response import responder_http, resposta_json
 from app.services.atualizar_assunto_service import AtualizarAssuntoService
 from app.services.criar_assunto_service import CriarAssuntoService
 from app.services.deletar_assunto_service import DeletarAssuntoService

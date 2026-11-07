@@ -1,7 +1,71 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Desempenho | Plataforma ENEM</title><link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/aluno.css"><link rel="stylesheet" href="../css/desempenho.css"></head>
-<body data-auth="aluno" data-desempenho="desempenho"><section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section>
-<div id="auth-content" class="aluno-shell" hidden><nav class="aluno-nav" aria-label="Navegação do aluno"><img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM"><div class="navigation-slot" data-navigation="aluno" data-current="desempenho"></div></nav>
-<div class="aluno-main"><header class="aluno-top"><strong>Desempenho</strong><div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
-<main class="aluno-page"><h1>Desempenho</h1><p class="aluno-subtitle">Respostas reais, período e quantidade da amostra. Acertos não equivalem a nota TRI.</p><nav class="dash-acoes" aria-label="Ações de estudo"><a href="/aluno/questoes.html">Praticar questões</a><a href="/aluno/historico.html">Meu histórico</a><a href="/aluno/simulados.html">Simulados</a><a href="/aluno/desempenho.html">Ver desempenho</a></nav><form id="dash-filtros" class="dash-filtros pratica-card"><div><label for="inicio">Início (UTC)</label><input type="date" id="inicio" name="inicio"></div><div><label for="fim">Fim (UTC)</label><input type="date" id="fim" name="fim"></div><button class="auth-primary" type="submit">Consultar período</button><button class="auth-secondary" id="dash-padrao" type="button">Últimos 30 dias</button></form><p id="dash-meta" data-dash-private></p><button id="dash-recarregar" class="auth-secondary" type="button">Recarregar dados</button><section class="dash-block pratica-card card" id="dash-geral" data-dash-block aria-busy="true"><h2>Resumo de respostas</h2><p data-dash-message role="status" aria-live="polite">Carregando...</p><div data-dash-body data-dash-private></div><button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button></section><div class="dash-colunas"><section class="dash-block pratica-card card" id="dash-materias" data-dash-block aria-busy="true"><h2>Desempenho por Matéria</h2><p data-dash-message role="status" aria-live="polite">Carregando...</p><div data-dash-body data-dash-private></div><button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button></section><section class="dash-block pratica-card card" id="dash-assuntos" data-dash-block aria-busy="true"><h2>Desempenho por Assunto</h2><p data-dash-message role="status" aria-live="polite">Carregando...</p><div data-dash-body data-dash-private></div><button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button></section></div><p class="pratica-aviso">Sem resposta não significa desempenho zero. Repetições reais contam novamente. O limiar de cinco respostas é operacional, sem garantia estatística. Redação, tutor e recomendações avançadas ainda estão indisponíveis.</p></main></div></div>
-<script src="../js/navigation.js"></script><script src="../js/api.js"></script><script src="../js/auth-session.js"></script><script src="../js/desempenho.js"></script></body></html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Desempenho | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/aluno.css">
+    <link rel="stylesheet" href="../css/desempenho.css">
+  </head>
+  <body data-auth="aluno" data-desempenho="desempenho">
+    <section class="auth-status-panel" id="auth-loading">
+      <p role="status">Verificando sua sessão...</p>
+    </section>
+    <div id="auth-content" class="aluno-shell" hidden>
+      <nav class="aluno-nav" aria-label="Navegação do aluno">
+        <img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+        <div class="navigation-slot" data-navigation="aluno" data-current="desempenho"></div>
+      </nav>
+      <div class="aluno-main">
+        <header class="aluno-top">
+          <strong>Desempenho</strong>
+          <div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div>
+        </header>
+        <main class="aluno-page">
+          <h1>Desempenho</h1>
+          <p class="aluno-subtitle">Respostas reais, período e quantidade da amostra. Acertos não equivalem a nota TRI.</p>
+          <nav class="dash-acoes" aria-label="Ações de estudo">
+            <a href="/aluno/questoes.html">Praticar questões</a>
+            <a href="/aluno/historico.html">Meu histórico</a>
+            <a href="/aluno/simulados.html">Simulados</a>
+            <a href="/aluno/desempenho.html">Ver desempenho</a>
+          </nav>
+          <form id="dash-filtros" class="dash-filtros pratica-card">
+            <div><label for="inicio">Início (UTC)</label><input type="date" id="inicio" name="inicio"></div>
+            <div><label for="fim">Fim (UTC)</label><input type="date" id="fim" name="fim"></div>
+            <button class="auth-primary" type="submit">Consultar período</button>
+            <button class="auth-secondary" id="dash-padrao" type="button">Últimos 30 dias</button>
+          </form>
+          <p id="dash-meta" data-dash-private></p>
+          <button id="dash-recarregar" class="auth-secondary" type="button">Recarregar dados</button>
+          <section class="dash-block pratica-card card" id="dash-geral" data-dash-block aria-busy="true">
+            <h2>Resumo de respostas</h2>
+            <p data-dash-message role="status" aria-live="polite">Carregando...</p>
+            <div data-dash-body data-dash-private></div>
+            <button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button>
+          </section>
+          <div class="dash-colunas">
+            <section class="dash-block pratica-card card" id="dash-materias" data-dash-block aria-busy="true">
+              <h2>Desempenho por Matéria</h2>
+              <p data-dash-message role="status" aria-live="polite">Carregando...</p>
+              <div data-dash-body data-dash-private></div>
+              <button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button>
+            </section>
+            <section class="dash-block pratica-card card" id="dash-assuntos" data-dash-block aria-busy="true">
+              <h2>Desempenho por Assunto</h2>
+              <p data-dash-message role="status" aria-live="polite">Carregando...</p>
+              <div data-dash-body data-dash-private></div>
+              <button type="button" class="auth-secondary button button--outline" data-dash-retry hidden>Tentar novamente</button>
+            </section>
+          </div>
+          <p class="pratica-aviso">Sem resposta não significa desempenho zero. Repetições reais contam novamente. O limiar de cinco respostas é operacional, sem garantia estatística. Redação, tutor e recomendações avançadas ainda estão indisponíveis.</p>
+        </main>
+      </div>
+    </div>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth-session.js"></script>
+    <script src="../js/desempenho.js"></script>
+  </body>
+</html>

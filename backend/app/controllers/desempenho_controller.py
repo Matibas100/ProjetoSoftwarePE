@@ -1,5 +1,5 @@
-from flask import g, jsonify, request
-from app.http_response import responder_http, resposta_json, resposta_json_dinamica
+from flask import g, request
+from app.http_response import responder_http, resposta_json
 from app.http_composition import servicos
 
 

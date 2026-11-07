@@ -1,9 +1,51 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Questões | Plataforma ENEM</title><link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/aluno.css"></head>
-<body data-auth="aluno" data-pratica="questoes"><section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section>
-<div id="auth-content" class="aluno-shell" hidden><nav class="aluno-nav" aria-label="Navegação do aluno"><img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM"><div class="navigation-slot" data-navigation="aluno" data-current="questoes"></div></nav>
-<div class="aluno-main"><header class="aluno-top"><strong>Questões</strong><div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
-<main class="aluno-page"><h1 id="pratica-titulo">Questões</h1><p class="aluno-subtitle">Escolha uma questão publicada para praticar. A correção será exibida após salvar sua resposta.</p><form id="pratica-filtros" class="pratica-card pratica-filtros"><div><label for="materia_id">Matéria</label><select name="materia_id" id="materia_id"><option value="">Todas as matérias</option></select></div><div><label for="assunto_id">Assunto</label><select name="assunto_id" id="assunto_id"><option value="">Todos os assuntos</option></select></div><button class="auth-primary" type="submit">Aplicar filtros</button></form><ul id="pratica-lista" class="pratica-lista" data-pratica-private></ul>
-<div class="pratica-acoes"><p id="pratica-status" class="pratica-status" role="status" aria-live="polite"></p><button id="pratica-recarregar" class="auth-secondary" type="button" data-pratica-action>Recarregar</button></div>
-<nav class="pratica-paginacao" aria-label="Páginas"><button id="pratica-anterior" class="auth-secondary" type="button" data-pratica-action>Anterior</button><span id="pratica-pagina" data-pratica-private></span><button id="pratica-proxima" class="auth-secondary" type="button" data-pratica-action>Próxima</button></nav><p class="pratica-aviso">Uma questão por tentativa. Novas tentativas são independentes. Recursos de sequência, cronômetro, resumos e tutor ainda estão indisponíveis.</p></main></div></div>
-<script src="../js/navigation.js"></script><script src="../js/api.js"></script><script src="../js/auth-session.js"></script><script src="../js/aluno-praticas.js"></script></body></html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Questões | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/aluno.css">
+  </head>
+  <body data-auth="aluno" data-pratica="questoes">
+    <section class="auth-status-panel" id="auth-loading">
+      <p role="status">Verificando sua sessão...</p>
+    </section>
+    <div id="auth-content" class="aluno-shell" hidden>
+      <nav class="aluno-nav" aria-label="Navegação do aluno">
+        <img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+        <div class="navigation-slot" data-navigation="aluno" data-current="questoes"></div>
+      </nav>
+      <div class="aluno-main">
+        <header class="aluno-top">
+          <strong>Questões</strong>
+          <div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div>
+        </header>
+        <main class="aluno-page">
+          <h1 id="pratica-titulo">Questões</h1>
+          <p class="aluno-subtitle">Escolha uma questão publicada para praticar. A correção será exibida após salvar sua resposta.</p>
+          <form id="pratica-filtros" class="pratica-card pratica-filtros">
+            <div><label for="materia_id">Matéria</label><select name="materia_id" id="materia_id"><option value="">Todas as matérias</option></select></div>
+            <div><label for="assunto_id">Assunto</label><select name="assunto_id" id="assunto_id"><option value="">Todos os assuntos</option></select></div>
+            <button class="auth-primary" type="submit">Aplicar filtros</button>
+          </form>
+          <ul id="pratica-lista" class="pratica-lista" data-pratica-private></ul>
+          <div class="pratica-acoes">
+            <p id="pratica-status" class="pratica-status" role="status" aria-live="polite"></p>
+            <button id="pratica-recarregar" class="auth-secondary" type="button" data-pratica-action>Recarregar</button>
+          </div>
+          <nav class="pratica-paginacao" aria-label="Páginas">
+            <button id="pratica-anterior" class="auth-secondary" type="button" data-pratica-action>Anterior</button>
+            <span id="pratica-pagina" data-pratica-private></span>
+            <button id="pratica-proxima" class="auth-secondary" type="button" data-pratica-action>Próxima</button>
+          </nav>
+          <p class="pratica-aviso">Uma questão por tentativa. Novas tentativas são independentes. Recursos de sequência, cronômetro, resumos e tutor ainda estão indisponíveis.</p>
+        </main>
+      </div>
+    </div>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth-session.js"></script>
+    <script src="../js/aluno-praticas.js"></script>
+  </body>
+</html>

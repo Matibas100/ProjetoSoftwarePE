@@ -12,28 +12,43 @@ from app.transaction_manager import TransactionManager
 class FinalizarSimuladoService:
     @staticmethod
     def executar(usuario_id, tentativa_id, dados):
-        corpo(dados, {"revisao", "confirmar"}); valor = revisao(dados)
+        corpo(dados, {"revisao", "confirmar"})
+        revisao_recebida = revisao(dados)
         if dados["confirmar"] is not True:
             raise DadosInvalidosError("Confirme explicitamente a finalização.")
+
         def operacao():
-            t = propria(usuario_id, tentativa_id, bloquear=True)
-            if t.estado == "finalizada":
-                return t.resultado()
-            conferir_revisao(t, valor)
-            respostas = Repo.respostas(t.id, bloquear=True)
+            tentativa = propria(usuario_id, tentativa_id, bloquear=True)
+            if tentativa.estado == "finalizada":
+                return tentativa.resultado()
+            conferir_revisao(tentativa, revisao_recebida)
+            respostas = Repo.respostas(tentativa.id, bloquear=True)
             acertos = erros = brancos = 0
-            for r, i in respostas:
-                if r.alternativa is None:
+            for resposta, item in respostas:
+                if resposta.alternativa is None:
                     brancos += 1
                 else:
-                    q = ConsultarVersaoHistoricaService.executar(i.questao_versao_id, correcao=True)
-                    r.correta = r.alternativa == q["resposta_correta"]
-                    acertos += int(r.correta); erros += int(not r.correta)
-                    r.salvar(confirmar=False)
-            t.total = len(respostas); t.respondidas = acertos + erros
-            t.acertos = acertos; t.erros = erros; t.em_branco = brancos
-            t.percentual_acerto = (Decimal(100) * acertos / t.total).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
-            t.finalizada_em = agora_utc(); t.estado = "finalizada"; t.revisao += 1
-            t.salvar(confirmar=False)
-            return t.resultado()
+                    versao_historica = ConsultarVersaoHistoricaService.executar(
+                        item.questao_versao_id, correcao=True
+                    )
+                    resposta.correta = (
+                        resposta.alternativa == versao_historica["resposta_correta"]
+                    )
+                    acertos += int(resposta.correta)
+                    erros += int(not resposta.correta)
+                    resposta.salvar(confirmar=False)
+            tentativa.total = len(respostas)
+            tentativa.respondidas = acertos + erros
+            tentativa.acertos = acertos
+            tentativa.erros = erros
+            tentativa.em_branco = brancos
+            tentativa.percentual_acerto = (
+                Decimal(100) * acertos / tentativa.total
+            ).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
+            tentativa.finalizada_em = agora_utc()
+            tentativa.estado = "finalizada"
+            tentativa.revisao += 1
+            tentativa.salvar(confirmar=False)
+            return tentativa.resultado()
+
         return TransactionManager.executar(operacao)

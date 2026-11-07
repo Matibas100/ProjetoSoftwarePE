@@ -1,5 +1,5 @@
-from flask import g, jsonify, request
-from app.http_response import responder_http, resposta_json, resposta_json_dinamica
+from flask import g, request
+from app.http_response import responder_http, resposta_json_dinamica
 from app.services.gestao_simulado_service import (ListarSimuladosAdminService, ConsultarSimuladoAdminService,
     CriarSimuladoService, EditarSimuladoService, PublicarSimuladoService, ArquivarSimuladoService)
 from app.services.consultar_simulado_service import ConsultarTentativaSimuladoService

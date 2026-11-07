@@ -4,7 +4,7 @@ from flask import current_app, g, jsonify, request
 from app.domain.autenticacao import AutenticacaoError, agora_utc, token_assinado
 from app.http_response import responder_http
 from app.services.autenticacao_service import (
-    CadastrarAlunoService, ConsultarSessaoService, LoginService, LogoutService,
+    CadastrarAlunoService, LoginService, LogoutService,
     PrepararCsrfService, ReautenticarService, destino,
 )
 

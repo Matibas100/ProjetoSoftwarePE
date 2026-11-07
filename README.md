@@ -55,6 +55,9 @@ Plataforma ENEM/
     │   └── routes.py                registro das rotas
     ├── database/
     │   ├── migrate.py                   runner oficial de migrations SQL
+    │   ├── migration_types.py           tipos compartilhados de migration e erro
+    │   ├── sql_scripts.py               leitura, validação e separação do SQL
+    │   ├── legacy_schema.py             reconhecimento de schemas históricos
     │   ├── migrations/
     │   └── create_database.sql
     ├── tests/
@@ -207,6 +210,13 @@ O `.env` está listado no `.gitignore` e não deve ser enviado ao repositório.
 As migrations oficiais são arquivos SQL em `backend/database/migrations/`.
 `migrate.py` controla ordem, checksum SHA-256, lock e histórico na tabela
 `schema_migrations`, sem Alembic ou Flask-Migrate.
+
+`migration_types.py` reúne os tipos compartilhados e `sql_scripts.py` cuida
+da leitura, validação, separação e execução das instruções SQL.
+`legacy_schema.py` reconhece estruturas históricas para o baseline.
+`migrate.py` continua sendo a entrada oficial e coordena configuração,
+histórico, locks e comandos. Essa divisão separa responsabilidades da
+infraestrutura, preservando os comandos abaixo.
 
 O schema configurado deve existir antes do runner. Para uma instalação nova,
 crie-o vazio com `utf8mb4_unicode_ci`, configure o `.env` e execute:
@@ -369,8 +379,17 @@ storage state. Veja [convenções de testes](docs/conventions/testes.md).
 O [workflow GitHub Actions](.github/workflows/testes.yml) usa Python 3.12,
 Node 22 e MySQL 8 descartável com health check; executa cobertura backend com
 os dois opt-ins, cobertura frontend, testes do servidor público e Chromium.
-Preserva gates de 90%/85%, permissões mínimas e timeout. A execução remota
-permanece **pendente até push autorizado**; comandos são validados localmente.
+Preserva gates de 90%/85%, permissões mínimas e timeout.
+
+### Checkpoint publicado e CI
+
+Em 6 de novembro de 2026, o checkpoint
+[`37b9b0c`](https://github.com/Matibas100/ProjetoSoftwarePE/commit/37b9b0ccf0bb4640527628b7f719c14ec987e0fe)
+foi publicado e a [execução 42315102152](https://github.com/Matibas100/ProjetoSoftwarePE/actions/runs/42315102152)
+concluiu com sucesso. Esse resultado valida aquele SHA. A reorganização de
+migrations e a limpeza de legibilidade posteriores ainda estão locais e não
+são validadas por essa execução. Para alterações posteriores, consulte o
+estado Git e a execução do Actions correspondente ao respectivo SHA.
 
 ## Validação antes do push
 
@@ -411,4 +430,5 @@ Testes não substituem a demonstração do grupo nem garantem pontuação; consu
 isoladas não têm contagem garantida entre as quatro ações. Vídeo, slides e
 hospedagem ficam a cargo do grupo. Veja a
 [distinção das entregas](docs/technical/entrega-academica.md#entrega-externa).
-Commit, push e merge ainda não foram autorizados.
+Commit, push e merge dependem sempre de autorização explícita para a operação.
+Esta limpeza não autoriza novas operações Git.
