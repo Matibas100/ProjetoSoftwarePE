@@ -37,11 +37,14 @@ describe("apiRequest", () => {
     );
   });
 
-  it("retorna null para 204 sem tentar interpretar JSON", async () => {
+  it.each([
+    { path: "/materias/1", method: "DELETE" },
+    { path: "/auth/logout", method: "POST" },
+  ])("retorna null para 204 em $method $path sem tentar interpretar JSON", async ({ path, method }) => {
     const json = vi.fn(() => { throw new Error("204 não deve ler o corpo"); });
     window.fetch.mockResolvedValueOnce(response({ csrf_token: "temporario" }))
       .mockResolvedValueOnce({ status: 204, ok: true, json });
-    await expect(request("/materias/1", { method: "DELETE" })).resolves.toBeNull();
+    await expect(request(path, { method })).resolves.toBeNull();
     expect(json).not.toHaveBeenCalled();
   });
 
@@ -67,9 +70,43 @@ describe("apiRequest", () => {
     });
   });
 
-  it.each([{ data: {} }, { data: [{ id: 1 }, { id: 2 }] }])("preserva JSON valido: $data", async ({ data }) => {
+  it.each([{ data: {} }, { data: [{ id: 1 }, { id: 2 }] },
+    { data: { descricao: null, itens: [null, { id: 1 }] } }, { data: [null, { descricao: null }] },
+  ])("preserva JSON valido: $data", async ({ data }) => {
     window.fetch.mockResolvedValueOnce(response(data));
     await expect(request()).resolves.toBe(data);
+  });
+
+  it.each([200, 201])("rejeita JSON raiz nulo com status %i e mensagem segura", async (status) => {
+    window.fetch.mockResolvedValueOnce(response(null, status));
+    const error = await request().catch((received) => received);
+    expect(error).toBeInstanceOf(globalThis.ApiError);
+    expect(error).toMatchObject({
+      name: "ApiError", status, code: "resposta_invalida", details: null,
+      message: "Resposta inválida do servidor. Confira os dados antes de tentar novamente.",
+    });
+    expect(String(error)).not.toMatch(/TypeError|csrf_token/);
+    expect(window.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([400, 401, 403, 409, 500])("preserva erro HTTP %i com JSON raiz nulo sem inferir sessao", async (status) => {
+    const listener = vi.fn();
+    const recover = vi.fn();
+    globalThis.AuthUI = { blocked: false, recover };
+    document.addEventListener("auth-required", listener);
+    try {
+      window.fetch.mockResolvedValueOnce(response(null, status));
+      const error = await request().catch((received) => received);
+      expect(error).toBeInstanceOf(globalThis.ApiError);
+      expect(error).toMatchObject({
+        name: "ApiError", status, code: null, details: null,
+        message: "Não foi possível concluir a operação.",
+      });
+      expect(String(error)).not.toMatch(/TypeError|csrf_token/);
+      expect(listener).not.toHaveBeenCalled();
+      expect(recover).not.toHaveBeenCalled();
+      expect(window.fetch).toHaveBeenCalledTimes(1);
+    } finally { document.removeEventListener("auth-required", listener); }
   });
 
   it.each([200, 201])("rejeita JSON ilegivel com status %i sem expor corpo ou parser", async (status) => {
@@ -126,7 +163,8 @@ describe("apiRequest", () => {
     }
   });
 
-  it.each([200, 201])("nao repete POST ilegivel %i nem recupera sessao e permite consulta", async (status) => {
+  it.each([200, 201].flatMap((status) => ["ilegivel", "nulo"].map((body) => ({ status, body }))))(
+    "nao repete POST $body $status nem recupera sessao e permite consulta", async ({ status, body }) => {
     const listener = vi.fn();
     const recover = vi.fn();
     globalThis.AuthUI = { blocked: false, recover };
@@ -135,7 +173,8 @@ describe("apiRequest", () => {
       window.fetch.mockResolvedValueOnce(response({ csrf_token: "preservado" }))
         .mockResolvedValueOnce({
           status, ok: true,
-          json: vi.fn().mockRejectedValue(new SyntaxError('corpo-privado csrf_token="invalido" sessao_invalida')),
+          json: body === "nulo" ? vi.fn().mockResolvedValue(null)
+            : vi.fn().mockRejectedValue(new SyntaxError('corpo-privado csrf_token="invalido" sessao_invalida')),
         })
         .mockResolvedValueOnce(response([{ id: 1 }]))
         .mockResolvedValueOnce(response({ id: 2 }, 201));
@@ -158,7 +197,7 @@ describe("apiRequest", () => {
       expect(window.fetch).toHaveBeenCalledTimes(3);
       expect(window.fetch.mock.calls[2][1]).toMatchObject({ credentials: "include" });
       expect(window.fetch.mock.calls[2][1].headers).not.toHaveProperty("X-CSRF-Token");
-      // Outra ação explícita conserva o token; o corpo ilegível não o limpa nem o substitui.
+      // Outra ação explícita conserva o token; o corpo inutilizável não o limpa nem o substitui.
       await expect(request("/assuntos", { method: "POST" })).resolves.toEqual({ id: 2 });
       expect(window.fetch).toHaveBeenCalledTimes(4);
       expect(window.fetch.mock.calls[3][1]).toMatchObject({
@@ -169,7 +208,7 @@ describe("apiRequest", () => {
     } finally { document.removeEventListener("auth-required", listener); }
   });
 
-  it("impede POSTs concorrentes apos bootstrap ilegivel e libera nova tentativa explicita", async () => {
+  it.each(["ilegivel", "nulo"])("impede POSTs concorrentes apos bootstrap %s e libera nova tentativa explicita", async (body) => {
     const listener = vi.fn();
     const recover = vi.fn();
     globalThis.AuthUI = { blocked: false, recover };
@@ -177,7 +216,8 @@ describe("apiRequest", () => {
     try {
       window.fetch.mockResolvedValueOnce({
         status: 200, ok: true,
-        json: vi.fn().mockRejectedValue(new SyntaxError("bootstrap ilegivel")),
+        json: body === "nulo" ? vi.fn().mockResolvedValue(null)
+          : vi.fn().mockRejectedValue(new SyntaxError("bootstrap ilegivel")),
       }).mockResolvedValueOnce(response({ csrf_token: "novo" }))
         .mockResolvedValueOnce(response({ id: 1 }, 201));
       const results = await Promise.allSettled([
@@ -205,6 +245,8 @@ describe("apiRequest", () => {
           "Content-Type": "application/json", "X-CSRF-Token": "novo",
         } },
       ]);
+      expect(listener).not.toHaveBeenCalled();
+      expect(recover).not.toHaveBeenCalled();
     } finally { document.removeEventListener("auth-required", listener); }
   });
 

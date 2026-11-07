@@ -44,6 +44,7 @@ async function apiRequest(caminho, opcoes = {}) {
   let dados;
   try {
     dados = await resposta.json();
+    if (dados === null) throw new Error();
   } catch {
     throw new ApiError(
       resposta.ok

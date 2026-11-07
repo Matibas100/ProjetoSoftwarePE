@@ -4,65 +4,150 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Matérias | Plataforma ENEM</title>
-    <link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/admin.css">
   </head>
   <body data-auth="administrador" class="admin-page--materias">
-    <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section><div id="auth-content" hidden><div class="admin-shell">
-      <aside class="sidebar" aria-label="Navegação administrativa">
-        <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
-        <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
-        <div class="navigation-slot" data-navigation="admin" data-current="materias"></div>
-        <div class="sidebar-user">
-          <div class="user-row"><span class="avatar">A</span><span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span></div>
-          <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
-        </div>
-      </aside>
-
-      <div class="admin-main">
-        <header class="topbar"><strong class="topbar-title">Matérias</strong><div class="topbar-actions"><span class="environment-badge">Ambiente administrativo</span><span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span><span class="avatar">A</span></div></header>
-        <main class="main-content">
-          <header class="page-heading">
-            <div><h1>Gestão de Matérias</h1><p>Cadastre e mantenha matérias vinculadas às áreas do ENEM.</p></div>
-            <button id="nova-materia" class="button button--primary" type="button">Nova matéria</button>
-          </header>
-
-          <form id="materias-filtros" class="card filters" role="search">
-            <div class="field"><label for="materias-busca">Busca</label><div class="search-wrap"><svg class="search-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#search"></use></svg><input id="materias-busca" maxlength="100" placeholder="Buscar por nome ou descrição"></div></div>
-            <div class="field"><label for="materias-status">Status</label><select id="materias-status"><option value="">Todos</option><option value="ativa">Ativas</option><option value="inativa">Inativas</option><option value="arquivada">Arquivadas</option></select></div>
-            <button id="materias-limpar" class="button button--outline" type="button">Limpar filtros</button>
-          </form>
-
-          <section class="card table-card" aria-labelledby="materias-lista-titulo">
-            <h2 id="materias-lista-titulo" hidden>Matérias cadastradas</h2>
-            <div class="table-scroll"><table><thead><tr><th>Nome</th><th>Área do ENEM</th><th>Descrição</th><th>Assuntos</th><th>Questões</th><th>Status</th><th>Atualização</th><th>Ações</th></tr></thead><tbody id="materias-corpo"></tbody></table></div>
-            <p id="materias-estado" class="table-state" role="status">Carregando matérias...</p>
-            <nav class="pagination" aria-label="Paginação de matérias"><span id="materias-total">0 matérias</span><span><button id="materias-anterior" class="button button--text" type="button">Anterior</button><span id="materias-pagina">Página 1</span><button id="materias-proxima" class="button button--text" type="button">Próxima</button></span></nav>
-          </section>
-
-          <div class="editor-grid">
-            <section id="materia-editor" class="card editor-card" aria-labelledby="materia-editor-titulo">
-              <h2 id="materia-editor-titulo">Criar matéria <span id="materia-unsaved" class="unsaved" hidden>Alterações não salvas</span></h2>
-              <form id="materia-form" novalidate>
-                <input id="materia-id" name="id" type="hidden">
-                <div class="editor-fields">
-                  <div class="field"><label for="materia-nome">Nome</label><input id="materia-nome" name="nome" aria-describedby="materia-nome-erro" maxlength="100" required><p id="materia-nome-erro" class="field-error" role="alert"></p></div>
-                  <div class="field"><label for="materia-area">Área do ENEM</label><select id="materia-area" name="area_enem_id" required><option value="">Selecione</option></select><p class="field-error"></p></div>
-                  <div class="field field--wide"><label for="materia-descricao">Descrição</label><textarea id="materia-descricao" name="descricao"></textarea></div>
-                  <div class="field"><label for="materia-status-form">Status</label><select id="materia-status-form" name="status"><option value="ativa">Ativa</option><option value="inativa">Inativa</option><option value="arquivada">Arquivada</option></select></div>
-                </div>
-                <div id="materia-mensagem" class="notice" role="status" aria-live="polite" hidden></div>
-                <div class="form-actions"><button id="materia-cancelar" class="button button--outline" type="button">Cancelar</button><button id="materia-salvar" class="button button--primary" type="submit">Salvar matéria</button></div>
-              </form>
-            </section>
-            <aside class="card state-card" aria-labelledby="materia-ajuda"><h2 id="materia-ajuda">Regras e estados</h2><div id="materia-contexto" class="notice notice--info">Selecione uma matéria para editar ou crie uma nova.</div><p>Exclusão em cascata não é permitida. Matérias vinculadas devem ser arquivadas ou ter seus assuntos transferidos.</p></aside>
+    <section class="auth-status-panel" id="auth-loading">
+      <p role="status">Verificando sua sessão...</p>
+    </section>
+    <div id="auth-content" hidden>
+      <div class="admin-shell">
+        <aside class="sidebar" aria-label="Navegação administrativa">
+          <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+          <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+          <div class="navigation-slot" data-navigation="admin" data-current="materias"></div>
+          <div class="sidebar-user">
+            <div class="user-row">
+              <span class="avatar">A</span>
+              <span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span>
+            </div>
+            <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
           </div>
-          <p class="screen-note">Exclusão em cascata não é permitida. Alterações não salvas exigem confirmação antes de sair.</p>
-        </main>
+        </aside>
+        <div class="admin-main">
+          <header class="topbar">
+            <strong class="topbar-title">Matérias</strong>
+            <div class="topbar-actions">
+              <span class="environment-badge">Ambiente administrativo</span>
+              <span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span>
+              <span class="avatar">A</span>
+            </div>
+          </header>
+          <main class="main-content">
+            <header class="page-heading">
+              <div>
+                <h1>Gestão de Matérias</h1>
+                <p>Cadastre e mantenha matérias vinculadas às áreas do ENEM.</p>
+              </div>
+              <button id="nova-materia" class="button button--primary" type="button">Nova matéria</button>
+            </header>
+            <form id="materias-filtros" class="card filters" role="search">
+              <div class="field">
+                <label for="materias-busca">Busca</label>
+                <div class="search-wrap">
+                  <svg class="search-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#search"></use></svg>
+                  <input id="materias-busca" maxlength="100" placeholder="Buscar por nome ou descrição">
+                </div>
+              </div>
+              <div class="field">
+                <label for="materias-status">Status</label>
+                <select id="materias-status">
+                  <option value="">Todos</option>
+                  <option value="ativa">Ativas</option>
+                  <option value="inativa">Inativas</option>
+                  <option value="arquivada">Arquivadas</option>
+                </select>
+              </div>
+              <button id="materias-limpar" class="button button--outline" type="button">Limpar filtros</button>
+            </form>
+            <section class="card table-card" aria-labelledby="materias-lista-titulo">
+              <h2 id="materias-lista-titulo" hidden>Matérias cadastradas</h2>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Área do ENEM</th>
+                      <th>Descrição</th>
+                      <th>Assuntos</th>
+                      <th>Questões</th>
+                      <th>Status</th>
+                      <th>Atualização</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="materias-corpo"></tbody>
+                </table>
+              </div>
+              <p id="materias-estado" class="table-state" role="status">Carregando matérias...</p>
+              <nav class="pagination" aria-label="Paginação de matérias">
+                <span id="materias-total">0 matérias</span>
+                <span><button id="materias-anterior" class="button button--text" type="button">Anterior</button><span id="materias-pagina">Página 1</span><button id="materias-proxima" class="button button--text" type="button">Próxima</button></span>
+              </nav>
+            </section>
+            <div class="editor-grid">
+              <section id="materia-editor" class="card editor-card" aria-labelledby="materia-editor-titulo">
+                <h2 id="materia-editor-titulo">Criar matéria <span id="materia-unsaved" class="unsaved" hidden>Alterações não salvas</span></h2>
+                <form id="materia-form" novalidate>
+                  <input id="materia-id" name="id" type="hidden">
+                  <div class="editor-fields">
+                    <div class="field">
+                      <label for="materia-nome">Nome</label>
+                      <input id="materia-nome" name="nome" aria-describedby="materia-nome-erro" maxlength="100" required>
+                      <p id="materia-nome-erro" class="field-error" role="alert"></p>
+                    </div>
+                    <div class="field">
+                      <label for="materia-area">Área do ENEM</label>
+                      <select id="materia-area" name="area_enem_id" required>
+                        <option value="">Selecione</option>
+                      </select>
+                      <p class="field-error"></p>
+                    </div>
+                    <div class="field field--wide">
+                      <label for="materia-descricao">Descrição</label>
+                      <textarea id="materia-descricao" name="descricao"></textarea>
+                    </div>
+                    <div class="field">
+                      <label for="materia-status-form">Status</label>
+                      <select id="materia-status-form" name="status">
+                        <option value="ativa">Ativa</option>
+                        <option value="inativa">Inativa</option>
+                        <option value="arquivada">Arquivada</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="materia-mensagem" class="notice" role="status" aria-live="polite" hidden></div>
+                  <div class="form-actions">
+                    <button id="materia-cancelar" class="button button--outline" type="button">Cancelar</button>
+                    <button id="materia-salvar" class="button button--primary" type="submit">Salvar matéria</button>
+                  </div>
+                </form>
+              </section>
+              <aside class="card state-card" aria-labelledby="materia-ajuda">
+                <h2 id="materia-ajuda">Regras e estados</h2>
+                <div id="materia-contexto" class="notice notice--info">Selecione uma matéria para editar ou crie uma nova.</div>
+                <p>Exclusão em cascata não é permitida. Matérias vinculadas devem ser arquivadas ou ter seus assuntos transferidos.</p>
+              </aside>
+            </div>
+            <p class="screen-note">Exclusão em cascata não é permitida. Alterações não salvas exigem confirmação antes de sair.</p>
+          </main>
+        </div>
       </div>
+      <dialog id="admin-modal" aria-labelledby="admin-modal-titulo">
+        <div class="modal-body">
+          <h2 id="admin-modal-titulo"></h2>
+          <p id="admin-modal-texto"></p>
+          <div class="modal-actions">
+            <button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button>
+            <button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button>
+          </div>
+        </div>
+      </dialog>
     </div>
-
-    <dialog id="admin-modal" aria-labelledby="admin-modal-titulo"><div class="modal-body"><h2 id="admin-modal-titulo"></h2><p id="admin-modal-texto"></p><div class="modal-actions"><button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button><button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button></div></div></dialog>
-    </div><script src="../js/navigation.js"></script><script src="../js/api.js"></script><script src="../js/auth-session.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth-session.js"></script>
     <script src="../js/admin-common.js"></script>
     <script src="../js/admin-materias.js"></script>
   </body>

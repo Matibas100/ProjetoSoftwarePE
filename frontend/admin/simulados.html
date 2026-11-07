@@ -4,30 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulados | Plataforma ENEM</title>
-    <link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/admin.css">
-  <link rel="stylesheet" href="../css/simulados.css"></head>
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/simulados.css">
+  </head>
   <body data-auth="administrador" data-simulado="admin-lista" class="admin-page--questoes">
-    <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section><div id="auth-content" hidden><div class="admin-shell">
-      <aside class="sidebar" aria-label="Navegação administrativa">
-        <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
-        <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
-        <div class="navigation-slot" data-navigation="admin" data-current="simulados"></div>
-        <div class="sidebar-user">
-          <div class="user-row"><span class="avatar">A</span><span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span></div>
-          <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
+    <section class="auth-status-panel" id="auth-loading">
+      <p role="status">Verificando sua sessão...</p>
+    </section>
+    <div id="auth-content" hidden>
+      <div class="admin-shell">
+        <aside class="sidebar" aria-label="Navegação administrativa">
+          <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+          <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+          <div class="navigation-slot" data-navigation="admin" data-current="simulados"></div>
+          <div class="sidebar-user">
+            <div class="user-row">
+              <span class="avatar">A</span>
+              <span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span>
+            </div>
+            <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
+          </div>
+        </aside>
+        <div class="admin-main">
+          <header class="topbar">
+            <strong class="topbar-title">Simulados</strong>
+            <div class="topbar-actions">
+              <span class="environment-badge">Ambiente administrativo</span>
+              <span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span>
+              <span class="avatar">A</span>
+            </div>
+          </header>
+          <main class="main-content">
+            <header class="page-heading">
+              <div>
+                <h1>Gestão de Simulados</h1>
+                <p>Composições manuais, versões preservadas e publicação revisada.</p>
+              </div>
+              <a class="button button--primary" href="simulado.html">Criar simulado manual</a>
+            </header>
+            <form id="sim-filtros" class="card pratica-card">
+              <label for="status">Estado</label>
+              <select id="status" name="status">
+                <option value="">Todos</option>
+                <option value="rascunho">Rascunho</option>
+                <option value="publicado">Publicado</option>
+                <option value="arquivado">Arquivado</option>
+              </select>
+              <button class="button button--primary">Filtrar</button>
+            </form>
+            <section class="card pratica-card">
+              <ul id="sim-lista" class="pratica-lista" data-sim-private></ul>
+              <p id="sim-status" role="status" tabindex="-1" aria-live="polite"></p>
+              <button id="sim-recarregar" type="button" class="button button--outline auth-secondary">Recarregar</button>
+              <nav class="pratica-paginacao" aria-label="Paginação"><button id="sim-anterior" type="button">Anterior</button><span id="sim-pagina"></span><button id="sim-proxima" type="button">Próxima</button></nav>
+            </section>
+            <p>Geradores, importação oficial, calendário e TRI estão indisponíveis.</p>
+          </main>
         </div>
-      </aside>
-
-      <div class="admin-main">
-        <header class="topbar"><strong class="topbar-title">Simulados</strong><div class="topbar-actions"><span class="environment-badge">Ambiente administrativo</span><span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span><span class="avatar">A</span></div></header>
-        <main class="main-content"><header class="page-heading"><div><h1>Gestão de Simulados</h1><p>Composições manuais, versões preservadas e publicação revisada.</p></div><a class="button button--primary" href="simulado.html">Criar simulado manual</a></header>
-<form id="sim-filtros" class="card pratica-card"><label for="status">Estado</label><select id="status" name="status"><option value="">Todos</option><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option><option value="arquivado">Arquivado</option></select><button class="button button--primary">Filtrar</button></form>
-<section class="card pratica-card"><ul id="sim-lista" class="pratica-lista" data-sim-private></ul><p id="sim-status" role="status" tabindex="-1" aria-live="polite"></p><button id="sim-recarregar" type="button" class="button button--outline auth-secondary">Recarregar</button><nav class="pratica-paginacao" aria-label="Paginação"><button id="sim-anterior" type="button">Anterior</button><span id="sim-pagina"></span><button id="sim-proxima" type="button">Próxima</button></nav></section><p>Geradores, importação oficial, calendário e TRI estão indisponíveis.</p></main>
       </div>
+      <dialog id="admin-modal" aria-labelledby="admin-modal-titulo">
+        <div class="modal-body">
+          <h2 id="admin-modal-titulo"></h2>
+          <p id="admin-modal-texto"></p>
+          <div class="modal-actions">
+            <button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button>
+            <button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button>
+          </div>
+        </div>
+      </dialog>
     </div>
-
-    <dialog id="admin-modal" aria-labelledby="admin-modal-titulo"><div class="modal-body"><h2 id="admin-modal-titulo"></h2><p id="admin-modal-texto"></p><div class="modal-actions"><button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button><button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button></div></div></dialog>
-    </div><script src="../js/navigation.js"></script><script src="../js/api.js"></script><script src="../js/auth-session.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth-session.js"></script>
     <script src="../js/admin-common.js"></script>
     <script src="../js/admin-simulados.js"></script>
   </body>

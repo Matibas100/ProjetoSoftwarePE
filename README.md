@@ -111,7 +111,7 @@ Esse nível adicional apenas delimita o código da aplicação; `controllers`,
 
 A [matriz de entrega](docs/technical/entrega-academica.md) liga cada número à
 interface, API, camadas, persistência e evidência. O
-[diagrama de classes](docs/technical/diagrama-de-classes.md) cobre as vinte Models.
+[diagrama de classes](docs/technical/diagrama-de-classes.md) cobre as 21 Models.
 Os [fluxogramas de casos de uso](docs/technical/fluxogramas-casos-de-uso.md)
 detalham recuperação de dados (diagnóstico) e entrada (finalização de Simulado),
 ambas já implementadas.
@@ -124,7 +124,7 @@ e conclusão manual do plano básico, acessível nas oito páginas do Aluno.
 
 O acesso inicial é `/login`; o cadastro público cria somente Aluno.
 Administrador é criado pelo comando local, sem senha padrão. Antes de iniciar
-esta versão, aplique as migrations até `009` e configure `AUTH_SECRET_KEY`.
+esta versão, aplique as migrations até `010` e configure `AUTH_SECRET_KEY`.
 Veja [Operação da autenticação escolar](docs/technical/operacao-autenticacao-escolar.md)
 para preparação, comandos, contratos, cookies/origens e recuperação.
 
@@ -135,7 +135,9 @@ autorizado. `/index.html` continua disponível ao Administrador como MVP legado.
 ## Componentes implementados
 
 As Models concretas, seus principais atributos, FKs, cardinalidades e herança
-via `CrudMixin(db.Model)` estão no [diagrama](docs/technical/diagrama-de-classes.md).
+pelo caminho único `db.Model → ModeloBase → ModeloAtualizavel → CrudMixin`
+estão no [diagrama](docs/technical/diagrama-de-classes.md). Cada Model usa a base
+adequada às suas capacidades de persistência.
 Desempenho é projeção de respostas concluídas, sem tabela de resultado inventada.
 
 Services de negócio:
@@ -241,7 +243,7 @@ python backend/database/migrate.py status
 python backend/database/migrate.py up
 ```
 
-`up` aplica `000` a `009` em ordem. Chamá-lo novamente não reexecuta
+`up` aplica `000` a `010` em ordem. Chamá-lo novamente não reexecuta
 migrations aplicadas. `create_database.sql` permanece como snapshot consolidado
 para compatibilidade; uma instalação feita por ele deve adotar o histórico como
 um banco existente.
