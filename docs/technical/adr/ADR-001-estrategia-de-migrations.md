@@ -121,3 +121,35 @@ Cada ambiente deverá definir responsáveis por backup, revisão dos scripts e a
 ## 21. Decisão final
 
 **ACEITO — runner próprio com migrations MySQL em SQL puro, sem Alembic ou Flask-Migrate.**
+
+## 22. Adendo — assinatura estrutural portável (2026-11-07)
+
+O reconhecimento dos prefixos 008–010 passa do hash textual de `SHOW CREATE TABLE`
+para SHA-256 de metadados explícitos do `information_schema`, serializados em JSON
+UTF-8 com campos e linhas em ordem determinística. O recorte continua nas sete
+tabelas de Simulados, duas de Plano e `registros_privacidade`; os validadores
+000–007 e a composição conservadora dos detectores permanecem.
+
+Nos prefixos 008–010, corpo e parâmetros de `sp_questoes_por_assunto` também
+devem cumprir o contrato conhecido do MVP (mesma comparação de tokens e assinatura
+IN p_assunto_id INT). Isso complementa a checagem anterior de existência sem
+alterar o comportamento dos prefixos 000–007.
+
+São incluídos engine, collation, row format, opções persistentes e comentário;
+colunas com posição, tipo completo, nulabilidade, default tipado, EXTRA,
+charset/collation, expressão gerada e comentário; índices com nome, unicidade,
+posição, coluna/expressão, prefixo, direção, tipo, visibilidade e comentário;
+FKs com nome, ordem, destino, índice referenciado e regras; CHECKs com nome,
+expressão e ENFORCED. Campos ausentes ou leitura indisponível causam erro.
+
+O schema de destino de uma FK interna recebe marcador estável; destinos externos
+mantêm sua identidade e divergem. Contadores AUTO_INCREMENT e estatísticas ficam
+fora; o atributo AUTO_INCREMENT da coluna permanece. `None`, strings, caixa e
+expressões são preservados, sem normalização arbitrária de SQL.
+
+Referências são derivadas exclusivamente de migrations oficiais em schemas
+descartáveis. Isso aceita charset implícito/explícito quando os metadados são
+iguais, sem prometer compatibilidade universal entre versões MySQL, MySQL 5 ou
+MariaDB. Expressões distintas podem continuar divergindo. O checksum dos SQLs
+em `schema_migrations` e o hash dos HTMLs legais têm finalidades independentes
+e não mudam. Não há migration nova nem alteração dos SQLs existentes.

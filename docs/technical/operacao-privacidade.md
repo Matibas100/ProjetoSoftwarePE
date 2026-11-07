@@ -23,6 +23,20 @@ Snapshot e fingerprint 010 são equivalentes à sequência. O runner oficial
 permanece `backend/database/migrate.py`, sem DDL no startup. As migrations
 000–009 e a procedure permanecem intactas.
 
+O reconhecimento 008–010 usa assinatura de metadados estruturais conhecidos,
+derivada das migrations oficiais. Charset explícito/implícito na apresentação
+do DDL não diverge quando os metadados são iguais; alterações de collation,
+default, índices, FKs, CHECK/ENFORCED ou expressões geradas são recusadas.
+Nome físico e contadores não entram na assinatura; referências externas de FKs
+mantêm sua identidade. Ausência de metadado obrigatório causa erro e não há
+promessa de compatibilidade universal entre versões.
+Corpo e parâmetros da procedure conhecida também são conferidos em 008–010.
+
+Assinatura estrutural, checksum do SQL em `schema_migrations` e SHA-256 dos HTMLs
+legais têm finalidades diferentes: reconhecer estrutura, proteger arquivos
+aplicados e identificar documentos aceitos. Os dois últimos não mudam.
+Ver [adendo ao ADR-001](adr/ADR-001-estrategia-de-migrations.md#22-adendo--assinatura-estrutural-portável-2026-11-07).
+
 Ensaiar instalação vazia, upgrade de 009 com dados, segunda execução,
 equivalência com snapshot, baseline explícito 010 e rejeição de drift em MySQL
 descartável. Na implantação real futura: backup, ensaio em cópia, autorização

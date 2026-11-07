@@ -261,6 +261,19 @@ python backend/database/migrate.py up
 somente o prefixo comprovado e não altera dados funcionais. Schema divergente é
 recusado; não corrija o histórico manualmente para contornar essa proteção.
 
+Nos prefixos `008`–`010`, as dez tabelas de Simulados, Plano e Privacidade são
+reconhecidas por assinatura de metadados do MySQL, com referências derivadas das
+migrations oficiais. Charset implícito ou explícito no DDL é aceito quando os
+metadados são iguais. O nome físico do schema e contadores não interferem;
+diferenças reais de charset/collation, defaults, índices, FKs, CHECK/ENFORCED e
+expressões geradas continuam recusadas. Metadados obrigatórios indisponíveis
+causam erro. Isso não garante compatibilidade universal entre versões.
+Esses prefixos também conferem corpo e parâmetros da procedure conhecida.
+
+A assinatura estrutural reconhece o schema; o checksum SQL protege os arquivos
+aplicados em `schema_migrations`; o hash legal identifica o HTML aceito.
+São verificações independentes. Consulte o [adendo ao ADR-001](docs/technical/adr/ADR-001-estrategia-de-migrations.md#22-adendo--assinatura-estrutural-portável-2026-11-07).
+
 ### Falhas e recuperação
 
 DDL do MySQL pode confirmar mudanças antes do fim do arquivo. Por isso uma

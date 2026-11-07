@@ -1,5 +1,7 @@
 import hashlib
+import copy
 import io
+import json
 import os
 import subprocess
 import sys
@@ -11,6 +13,129 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from database import migrate
+from database import legacy_schema
+
+
+class StructuralFingerprintTest(unittest.TestCase):
+    def test_procedure_metadados_indisponiveis_falham_fechado(self):
+        connection = MagicMock()
+        cursor = connection.cursor.return_value.__enter__.return_value
+        for procedure in (None, {}, {"routine_definition": None}):
+            cursor.fetchone.return_value = procedure
+            cursor.fetchall.return_value = [{"parameter_mode": "IN", "parameter_name": "p_assunto_id", "dtd_identifier": "int"}]
+            with self.assertRaises(migrate.MigrationError):
+                legacy_schema._validate_procedure(connection)
+        cursor.execute.side_effect = migrate.pymysql.MySQLError(1142, "segredo-sentinela")
+        with self.assertRaises(migrate.MigrationError) as error:
+            legacy_schema._validate_procedure(connection)
+        self.assertNotIn("segredo-sentinela", str(error.exception))
+
+    def metadata(self):
+        return {
+            "table": [{"TABLE_NAME": "probe", "ENGINE": "InnoDB", "TABLE_COLLATION": "utf8mb4_unicode_ci",
+                       "ROW_FORMAT": "Dynamic", "CREATE_OPTIONS": "", "TABLE_COMMENT": "Teste Á"}],
+            "columns": [dict(ORDINAL_POSITION=position, COLUMN_NAME=name, COLUMN_TYPE="varchar(20)",
+                             IS_NULLABLE="YES", COLUMN_DEFAULT=default, EXTRA="", CHARACTER_SET_NAME="utf8mb4",
+                             COLLATION_NAME="utf8mb4_unicode_ci", GENERATION_EXPRESSION="", COLUMN_COMMENT="")
+                        for position, name, default in [(1, "valor", None), (2, "literal", "NULL")]],
+            "indexes": [dict(INDEX_NAME="PRIMARY", NON_UNIQUE=0, SEQ_IN_INDEX=1, COLUMN_NAME="valor",
+                             EXPRESSION=None, SUB_PART=None, COLLATION="A", INDEX_TYPE="BTREE",
+                             IS_VISIBLE="YES", INDEX_COMMENT="")],
+            "foreign_keys": [dict(CONSTRAINT_NAME="fk_probe", ORDINAL_POSITION=1, COLUMN_NAME="valor",
+                                  REFERENCED_TABLE_SCHEMA="origem", REFERENCED_TABLE_NAME="parent",
+                                  REFERENCED_COLUMN_NAME="id", POSITION_IN_UNIQUE_CONSTRAINT=1,
+                                  UNIQUE_CONSTRAINT_NAME="PRIMARY", UPDATE_RULE="RESTRICT",
+                                  DELETE_RULE="RESTRICT", MATCH_OPTION="NONE")],
+            "checks": [dict(CONSTRAINT_NAME="ck_probe", CHECK_CLAUSE="(`literal` <> _utf8mb4'Null')", ENFORCED="YES")],
+        }
+
+    def canonical(self, metadata, schema="origem"):
+        return legacy_schema._canonical_structure(metadata, schema)
+
+    def test_ordem_estatisticas_e_schema_fisico_nao_mudam_assinatura(self):
+        metadata = self.metadata()
+        other = copy.deepcopy(metadata)
+        for section, rows in other.items():
+            rows.reverse()
+            for row in rows:
+                row["CARDINALITY"] = 999
+                row["AUTO_INCREMENT"] = 777
+                row["TABLE_SCHEMA"] = "copia"
+        other["foreign_keys"][0]["REFERENCED_TABLE_SCHEMA"] = "copia"
+        self.assertEqual(self.canonical(metadata), self.canonical(other, "copia"))
+        decoded = json.loads(self.canonical(metadata))
+        self.assertEqual(decoded["foreign_keys"][0][3], ["internal"])
+        self.assertEqual([row[4] for row in decoded["columns"]], [None, "NULL"])
+        self.assertEqual(decoded["checks"][0][1], "(`literal` <> _utf8mb4'Null')")
+
+    def test_cada_campo_estrutural_e_sensivel_inclusive_fk_externa(self):
+        original = self.metadata()
+        expected = self.canonical(original)
+        for section, rows in original.items():
+            for field, value in rows[0].items():
+                with self.subTest(section=section, field=field):
+                    other = copy.deepcopy(original)
+                    other[section][0][field] = value + 1 if isinstance(value, int) else str(value) + "X"
+                    self.assertNotEqual(expected, self.canonical(other))
+        other = copy.deepcopy(original)
+        other["foreign_keys"][0]["REFERENCED_TABLE_SCHEMA"] = "internal"
+        self.assertEqual(json.loads(self.canonical(other))["foreign_keys"][0][3], ["external", "internal"])
+
+    def test_defaults_preservam_tipo_caixa_e_literal(self):
+        variants = []
+        for value in (None, "NULL", "null", 1, "1", True, "CURRENT_TIMESTAMP", "current_timestamp"):
+            metadata = self.metadata()
+            metadata["columns"][0]["COLUMN_DEFAULT"] = value
+            variants.append(self.canonical(metadata))
+        self.assertEqual(len(set(variants)), len(variants))
+
+    def test_coleta_parametrizada_e_hash_utf8(self):
+        connection = MagicMock()
+        cursor = connection.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = {"schema_name": "origem"}
+        metadata = self.metadata()
+        cursor.fetchall.side_effect = list(metadata.values())
+        expected = hashlib.sha256(self.canonical(metadata).encode("utf-8")).hexdigest()
+        self.assertEqual(legacy_schema._table_fingerprint(connection, "probe"), expected)
+        for call in cursor.execute.call_args_list[1:]:
+            self.assertEqual(call.args[1], ("probe",))
+            self.assertIn("DATABASE()", call.args[0])
+
+    def test_metadados_insuficientes_ou_erro_mysql_falham_sem_segredo(self):
+        variants = []
+        for section, rows in self.metadata().items():
+            for field in rows[0]:
+                other = self.metadata()
+                del other[section][0][field]
+                variants.append(other)
+        for section in ("table", "columns", "indexes"):
+            other = self.metadata()
+            other[section] = []
+            variants.append(other)
+        other = self.metadata()
+        other["checks"][0]["ENFORCED"] = None
+        variants.append(other)
+        other = self.metadata()
+        other["columns"][0]["COLUMN_DEFAULT"] = b"unsupported"
+        variants.append(other)
+        for metadata in variants:
+            connection = MagicMock()
+            cursor = connection.cursor.return_value.__enter__.return_value
+            cursor.fetchone.return_value = {"schema_name": "origem"}
+            cursor.fetchall.side_effect = list(metadata.values())
+            with self.assertRaisesRegex(migrate.MigrationError, "Metadados.*probe"):
+                legacy_schema._table_fingerprint(connection, "probe")
+        for result in (None, {}, {"schema_name": None}):
+            connection = MagicMock()
+            cursor = connection.cursor.return_value.__enter__.return_value
+            cursor.fetchone.return_value = result
+            cursor.fetchall.side_effect = list(self.metadata().values())
+            with self.assertRaises(migrate.MigrationError):
+                legacy_schema._table_fingerprint(connection, "probe")
+        cursor.execute.side_effect = migrate.pymysql.MySQLError(1142, "segredo-sentinela")
+        with self.assertRaises(migrate.MigrationError) as error:
+            legacy_schema._table_fingerprint(connection, "probe")
+        self.assertNotIn("segredo-sentinela", str(error.exception))
 
 
 class FakeCursor:

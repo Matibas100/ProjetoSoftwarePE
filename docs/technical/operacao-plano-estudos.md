@@ -54,7 +54,19 @@ SQL administrativas diretas não fazem parte do contrato da aplicação.
 Antes da implantação, fazer backup e ensaiar upgrade em cópia. Executar o runner
 oficial `python backend/database/migrate.py up`, sem DDL no startup. Conferir
 status/checksums, fingerprint 009, tabelas vazias na instalação e regressões.
-O runner verifica estrutura inteira, incluindo generated, índices, checks e FKs.
+No baseline, o runner compara metadados das tabelas de Plano, incluindo generated,
+índices, CHECK/ENFORCED, defaults e FKs, com referências oficiais. Charset
+redundante no DDL é aceito somente se os metadados forem iguais. Nome físico do
+schema e contadores são excluídos; FKs externas, collations e diferenças reais
+continuam divergindo. Metadados obrigatórios indisponíveis causam erro; não há
+garantia universal entre versões MySQL. Os validadores anteriores a 008 mantêm
+seu recorte histórico.
+Nos prefixos 008–010, corpo e parâmetros da procedure também são conferidos
+contra o contrato conhecido do MVP.
+
+Assinatura estrutural reconhece o schema; checksum SQL protege migrations
+aplicadas; hash legal identifica o documento aceito. Nenhum substitui os demais.
+Ver [adendo ao ADR-001](adr/ADR-001-estrategia-de-migrations.md#22-adendo--assinatura-estrutural-portável-2026-11-07).
 
 DDL MySQL não possui rollback transacional geral. Reversão usa restauração do
 backup ou migration compensatória revisada; suspender novas gravações antes.

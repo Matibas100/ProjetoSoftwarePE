@@ -50,20 +50,18 @@ class MySQLMigrationTestCase(unittest.TestCase):
             autocommit=True,
             cursorclass=DictCursor,
         )
+        self.addCleanup(self.admin_connection.close)
+        self.addCleanup(self._drop_schema)
         self._create_schema()
         self.settings = replace(self.base_settings, name=self.schema_name)
         self.connection = migrate.connect(self.settings)
+        self.addCleanup(self._close_connection, self.connection)
         self.migrations = migrate.discover_migrations()
 
-    def tearDown(self):
-        if hasattr(self, "connection"):
-            self.connection.close()
-        if hasattr(self, "admin_connection"):
-            try:
-                self._drop_schema()
-            finally:
-                self.admin_connection.close()
-        super().tearDown()
+    @staticmethod
+    def _close_connection(connection):
+        if connection.open:
+            connection.close()
 
     def _create_schema(self):
         name = validate_migration_test_schema(self.schema_name)
@@ -83,6 +81,7 @@ class MySQLMigrationTestCase(unittest.TestCase):
         self._drop_schema()
         self._create_schema()
         self.connection = migrate.connect(self.settings)
+        self.addCleanup(self._close_connection, self.connection)
 
     def apply_without_history(self, last_version: str):
         for item in self.migrations[: int(last_version) + 1]:

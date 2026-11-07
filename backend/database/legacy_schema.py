@@ -3,12 +3,98 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
+
+import pymysql
 
 from database.migration_types import MigrationError
 
 
 HISTORY_TABLE = "schema_migrations"
+
+
+# Ordem e campos fazem parte do formato da assinatura. Estatísticas e identidade
+# física ficam fora; nenhum literal ou expressão SQL é normalizado.
+_STRUCTURE_FIELDS = {
+    "table": ("TABLE_NAME", "ENGINE", "TABLE_COLLATION", "ROW_FORMAT", "CREATE_OPTIONS", "TABLE_COMMENT"),
+    "columns": ("ORDINAL_POSITION", "COLUMN_NAME", "COLUMN_TYPE", "IS_NULLABLE", "COLUMN_DEFAULT",
+                "EXTRA", "CHARACTER_SET_NAME", "COLLATION_NAME", "GENERATION_EXPRESSION", "COLUMN_COMMENT"),
+    "indexes": ("INDEX_NAME", "NON_UNIQUE", "SEQ_IN_INDEX", "COLUMN_NAME", "EXPRESSION",
+                "SUB_PART", "COLLATION", "INDEX_TYPE", "IS_VISIBLE", "INDEX_COMMENT"),
+    "foreign_keys": ("CONSTRAINT_NAME", "ORDINAL_POSITION", "COLUMN_NAME", "REFERENCED_TABLE_SCHEMA",
+                     "REFERENCED_TABLE_NAME", "REFERENCED_COLUMN_NAME", "POSITION_IN_UNIQUE_CONSTRAINT",
+                     "UNIQUE_CONSTRAINT_NAME", "UPDATE_RULE", "DELETE_RULE", "MATCH_OPTION"),
+    "checks": ("CONSTRAINT_NAME", "CHECK_CLAUSE", "ENFORCED"),
+}
+_NULLABLE_METADATA = {
+    "table": set(),
+    "columns": {"COLUMN_DEFAULT", "CHARACTER_SET_NAME", "COLLATION_NAME"},
+    "indexes": {"COLUMN_NAME", "EXPRESSION", "SUB_PART", "COLLATION"},
+    "foreign_keys": set(),
+    "checks": set(),
+}
+
+
+def _canonical_structure(metadata: dict, schema: str) -> str:
+    """Projeta campos explícitos e preserva tipos, None e conteúdo dos literais."""
+    if not schema or len(metadata["table"]) != 1 or not metadata["columns"] or not metadata["indexes"]:
+        raise ValueError("Metadados estruturais incompletos.")
+    canonical = {}
+    for section, fields in _STRUCTURE_FIELDS.items():
+        rows = []
+        for row in metadata[section]:
+            values = []
+            for field in fields:
+                value = row[field]
+                if value is None and field not in _NULLABLE_METADATA[section]:
+                    raise ValueError("Metadado estrutural obrigatório ausente.")
+                if section == "foreign_keys" and field == "REFERENCED_TABLE_SCHEMA":
+                    value = ["internal"] if value == schema else ["external", value]
+                values.append(value)
+            rows.append(values)
+        canonical[section] = sorted(rows, key=lambda row: json.dumps(row, ensure_ascii=False))
+    return json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
+def _table_fingerprint(connection, table: str) -> str:
+    """Lê somente a tabela selecionada; metadados indisponíveis falham fechado."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT DATABASE() AS schema_name")
+            schema = cursor.fetchone()["schema_name"]
+            metadata = {}
+            for section in ("table", "columns", "indexes"):
+                source = {"table": "TABLES", "columns": "COLUMNS", "indexes": "STATISTICS"}[section]
+                cursor.execute(
+                    f"SELECT {', '.join(_STRUCTURE_FIELDS[section])} FROM information_schema.{source} "
+                    "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s", (table,),
+                )
+                metadata[section] = cursor.fetchall()
+            cursor.execute(
+                "SELECT k.CONSTRAINT_NAME, k.ORDINAL_POSITION, k.COLUMN_NAME, k.REFERENCED_TABLE_SCHEMA, "
+                "k.REFERENCED_TABLE_NAME, k.REFERENCED_COLUMN_NAME, k.POSITION_IN_UNIQUE_CONSTRAINT, "
+                "rc.UNIQUE_CONSTRAINT_NAME, rc.UPDATE_RULE, rc.DELETE_RULE, rc.MATCH_OPTION "
+                "FROM information_schema.KEY_COLUMN_USAGE k "
+                "JOIN information_schema.REFERENTIAL_CONSTRAINTS rc "
+                "ON rc.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA AND rc.TABLE_NAME = k.TABLE_NAME "
+                "AND rc.CONSTRAINT_NAME = k.CONSTRAINT_NAME "
+                "WHERE k.TABLE_SCHEMA = DATABASE() AND k.TABLE_NAME = %s", (table,),
+            )
+            metadata["foreign_keys"] = cursor.fetchall()
+            cursor.execute(
+                "SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE, tc.ENFORCED "
+                "FROM information_schema.TABLE_CONSTRAINTS tc "
+                "JOIN information_schema.CHECK_CONSTRAINTS cc "
+                "ON cc.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA AND cc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME "
+                "WHERE tc.TABLE_SCHEMA = DATABASE() AND tc.TABLE_NAME = %s AND tc.CONSTRAINT_TYPE = 'CHECK'",
+                (table,),
+            )
+            metadata["checks"] = cursor.fetchall()
+        canonical = _canonical_structure(metadata, schema)
+    except (pymysql.MySQLError, KeyError, TypeError, ValueError):
+        raise MigrationError(f"Metadados estruturais indisponiveis para a tabela {table}.") from None
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _user_tables(connection) -> set[str]:
@@ -76,6 +162,40 @@ END
 
 def _sql_tokens(value: str) -> list[str]:
     return re.findall(r"[a-z_][a-z0-9_]*|\d+|'[^']*'|[<>!]=?|[,();=]", value.lower().replace("`", ""))
+
+
+def _check_procedure_contract(procedure, parameters):
+    if len(parameters) != 1 or (
+        parameters[0]["parameter_mode"],
+        parameters[0]["parameter_name"],
+        parameters[0]["dtd_identifier"].lower(),
+    ) != ("IN", "p_assunto_id", "int"):
+        raise MigrationError("Assinatura da Stored Procedure diverge do MVP conhecido.")
+    if _sql_tokens(procedure["routine_definition"]) != _sql_tokens(EXPECTED_PROCEDURE_BODY):
+        raise MigrationError("Corpo da Stored Procedure diverge do MVP conhecido.")
+
+
+def _validate_procedure(connection):
+    """Contrato conhecido também obrigatório no reconhecimento 008–010."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT ROUTINE_DEFINITION AS routine_definition FROM information_schema.ROUTINES "
+                "WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_TYPE='PROCEDURE' "
+                "AND ROUTINE_NAME='sp_questoes_por_assunto'"
+            )
+            procedure = cursor.fetchone()
+            if procedure is None:
+                raise MigrationError("Stored Procedure obrigatoria diverge do esperado.")
+            cursor.execute(
+                "SELECT PARAMETER_MODE AS parameter_mode, PARAMETER_NAME AS parameter_name, "
+                "DTD_IDENTIFIER AS dtd_identifier FROM information_schema.PARAMETERS "
+                "WHERE SPECIFIC_SCHEMA=DATABASE() AND SPECIFIC_NAME='sp_questoes_por_assunto' "
+                "ORDER BY ORDINAL_POSITION"
+            )
+            _check_procedure_contract(procedure, cursor.fetchall())
+    except (pymysql.MySQLError, KeyError, TypeError, AttributeError):
+        raise MigrationError("Metadados da Stored Procedure obrigatoria indisponiveis.") from None
 
 
 def _check_tokens(value: str) -> list[str]:
@@ -367,13 +487,13 @@ def _detect_praticas_prefix(connection, tables: set[str]) -> str:
 
 
 SIMULADOS_FINGERPRINTS = {
-    "simulados": "35b91f9a0f2b8d8cf7db2d27b5195d3b6c3dcc5b139fbed5f04fca7d69ba85ba",
-    "simulado_rascunho_itens": "fbeaff16680ca7c6ad2293fc76faaf85af4f0e9472f51b64f2185398769b4f93",
-    "simulado_versoes": "d46f8f7657f25b26e39c93ecb133e81981751547f962173f5f7ee8dbd01f746a",
-    "simulado_versao_itens": "36f689fa5279e4d08a5b79731a8710bd127a6dbd015d8026da410048ebab8070",
-    "simulado_eventos": "162c8b96a919ab7e60931323df54f59ca58df11e60181600d9c2fcec794143a7",
-    "simulado_tentativas": "bac3364ef64882d18f332a29e57f258cfdfb68c35afe0e332a80aed159c6881a",
-    "simulado_respostas": "f0ca66ebf310c61f8610ef13bb3f5ee0d40603621f482c948a7033c68c21343e",
+    "simulados": "1c9c6c1cc599d13db8607931c86747d02f5ff4faa475e574082be3753d99cac0",
+    "simulado_rascunho_itens": "89db7740776b97059799d404cb8e8d5153ccd2f2c01b84a96ed03a59a62f0182",
+    "simulado_versoes": "b5ff6a140da0d85ef1188eed770cd529a49f871ee036cd3211e2e67cb9280c07",
+    "simulado_versao_itens": "a82779747c285833b71c110d55f4bbc03e7c1429a0f3c14cf1aee460f2babee2",
+    "simulado_eventos": "13e72b2969786b4dd9bc9c8a5dee5e6a78e86907d1441e075a1ae95b881ecfd5",
+    "simulado_tentativas": "47186f84d68d4b6cf7d58dea8b9ed7bd4a734d4984b7ee2172824db2385fcbb5",
+    "simulado_respostas": "3e2ed942cb7dc25662475a4a4f128d7901068c77bb2505fa55df6dad8f330541",
 }
 
 
@@ -382,20 +502,16 @@ def _detect_simulados_prefix(connection, tables: set[str]) -> str:
     if not novas <= tables:
         raise MigrationError("Schema parcial de simulados.")
     _detect_praticas_prefix(connection, tables - novas)
-    with connection.cursor() as cursor:
-        for tabela, esperado in SIMULADOS_FINGERPRINTS.items():
-            cursor.execute(f"SHOW CREATE TABLE `{tabela}`")
-            # Somente o contador de identidades varia com os dados. O DDL inteiro
-            # (inclusive generated/checks/FKs/índices) precisa corresponder ao 008.
-            ddl = re.sub(r"AUTO_INCREMENT=\d+\s*", "", cursor.fetchone()["Create Table"])
-            if hashlib.sha256(ddl.encode("utf-8")).hexdigest() != esperado:
-                raise MigrationError("Fingerprint de simulados divergente.")
+    _validate_procedure(connection)
+    for tabela, esperado in SIMULADOS_FINGERPRINTS.items():
+        if _table_fingerprint(connection, tabela) != esperado:
+            raise MigrationError(f"Fingerprint de simulados divergente: {tabela}.")
     return "008"
 
 
 PLANOS_FINGERPRINTS = {
-    "planos_estudo": "00e76e77302334fc04d25c1514adc7ac98a8041a825c5885d601a3aeadd07ba7",
-    "plano_estudo_itens": "bb69309f58165b276bb5c2c7914b60c5295b8e7dfee418765be422abafcd1b1b",
+    "planos_estudo": "652f8ce81ef5b55d8eeec892cd9b0e8f7e58adf214c399f734d88f299f27f8ff",
+    "plano_estudo_itens": "432ca52b0d7eea3174e818db3047a50093858c7f33e243332301be366d8c31d1",
 }
 
 
@@ -404,25 +520,19 @@ def _detect_planos_prefix(connection, tables: set[str]) -> str:
     if not novas <= tables:
         raise MigrationError("Schema parcial de planos de estudo.")
     _detect_simulados_prefix(connection, tables - novas)
-    with connection.cursor() as cursor:
-        for tabela, esperado in PLANOS_FINGERPRINTS.items():
-            cursor.execute(f"SHOW CREATE TABLE `{tabela}`")
-            ddl = re.sub(r"AUTO_INCREMENT=\d+\s*", "", cursor.fetchone()["Create Table"])
-            if hashlib.sha256(ddl.encode("utf-8")).hexdigest() != esperado:
-                raise MigrationError("Fingerprint de planos de estudo divergente.")
+    for tabela, esperado in PLANOS_FINGERPRINTS.items():
+        if _table_fingerprint(connection, tabela) != esperado:
+            raise MigrationError(f"Fingerprint de planos de estudo divergente: {tabela}.")
     return "009"
 
 
-PRIVACIDADE_FINGERPRINT = "e7da6a5f88f3190a8b42f73fb534826898bdd9e56b18025508d830db77ae5698"
+PRIVACIDADE_FINGERPRINT = "f5c5422548c01b7860a17350f97ec340f439e303f535bd32988ef7a90af38174"
 
 
 def _detect_privacidade_prefix(connection, tables: set[str]) -> str:
     _detect_planos_prefix(connection, tables - {"registros_privacidade"})
-    with connection.cursor() as cursor:
-        cursor.execute("SHOW CREATE TABLE registros_privacidade")
-        ddl = re.sub(r"AUTO_INCREMENT=\d+\s*", "", cursor.fetchone()["Create Table"])
-        if hashlib.sha256(ddl.encode("utf-8")).hexdigest() != PRIVACIDADE_FINGERPRINT:
-            raise MigrationError("Fingerprint de privacidade divergente.")
+    if _table_fingerprint(connection, "registros_privacidade") != PRIVACIDADE_FINGERPRINT:
+        raise MigrationError("Fingerprint de privacidade divergente: registros_privacidade.")
     return "010"
 
 
@@ -602,16 +712,7 @@ def detect_legacy_prefix(connection) -> str:
                 "ORDER BY ORDINAL_POSITION"
             )
             parameters = cursor.fetchall()
-            if len(parameters) != 1 or (
-                parameters[0]["parameter_mode"],
-                parameters[0]["parameter_name"],
-                parameters[0]["dtd_identifier"].lower(),
-            ) != ("IN", "p_assunto_id", "int"):
-                raise MigrationError("Assinatura da Stored Procedure diverge do MVP conhecido.")
-            if _sql_tokens(procedure["routine_definition"]) != _sql_tokens(
-                EXPECTED_PROCEDURE_BODY
-            ):
-                raise MigrationError("Corpo da Stored Procedure diverge do MVP conhecido.")
+            _check_procedure_contract(procedure, parameters)
 
     delete_rule = questao_fk[3]
     if delete_rule == "CASCADE" and not procedure_exists:
