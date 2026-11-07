@@ -41,7 +41,19 @@ async function apiRequest(caminho, opcoes = {}) {
     return null;
   }
 
-  const dados = await resposta.json().catch(() => ({}));
+  let dados;
+  try {
+    dados = await resposta.json();
+  } catch {
+    throw new ApiError(
+      resposta.ok
+        ? "Resposta inválida do servidor. Confira os dados antes de tentar novamente."
+        : "Não foi possível concluir a operação.",
+      resposta.status,
+      null,
+      resposta.ok ? "resposta_invalida" : null,
+    );
+  }
   if (dados.csrf_token) csrfToken = dados.csrf_token;
   if (!resposta.ok) {
     if (["sessao_invalida", "csrf_invalido", "reautenticacao_necessaria"].includes(dados.codigo)) {

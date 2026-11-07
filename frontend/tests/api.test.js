@@ -38,8 +38,9 @@ describe("apiRequest", () => {
   });
 
   it("retorna null para 204 sem tentar interpretar JSON", async () => {
-    const json = vi.fn();
-    window.fetch.mockResolvedValue({ status: 204, ok: true, json });
+    const json = vi.fn(() => { throw new Error("204 não deve ler o corpo"); });
+    window.fetch.mockResolvedValueOnce(response({ csrf_token: "temporario" }))
+      .mockResolvedValueOnce({ status: 204, ok: true, json });
     await expect(request("/materias/1", { method: "DELETE" })).resolves.toBeNull();
     expect(json).not.toHaveBeenCalled();
   });
@@ -59,21 +60,54 @@ describe("apiRequest", () => {
     window.fetch.mockResolvedValue({
       status: 409,
       ok: false,
-      json: vi.fn().mockResolvedValue({ erro: "Conflito", detalhes: { previa: true } }),
+      json: vi.fn().mockResolvedValue({ erro: "Conflito", codigo: "conflito", detalhes: { previa: true } }),
     });
     await expect(request()).rejects.toMatchObject({
-      name: "ApiError", message: "Conflito", status: 409, details: { previa: true },
+      name: "ApiError", message: "Conflito", status: 409, details: { previa: true }, code: "conflito",
     });
   });
 
-  it("caracteriza JSON invalido em sucesso e erro", async () => {
-    window.fetch
-      .mockResolvedValueOnce({ status: 200, ok: true, json: vi.fn().mockRejectedValue(new SyntaxError()) })
-      .mockResolvedValueOnce({ status: 500, ok: false, json: vi.fn().mockRejectedValue(new SyntaxError()) });
-    await expect(request()).resolves.toEqual({});
+  it.each([{ data: {} }, { data: [{ id: 1 }, { id: 2 }] }])("preserva JSON valido: $data", async ({ data }) => {
+    window.fetch.mockResolvedValueOnce(response(data));
+    await expect(request()).resolves.toBe(data);
+  });
+
+  it.each([200, 201])("rejeita JSON ilegivel com status %i sem expor corpo ou parser", async (status) => {
+    window.fetch.mockResolvedValueOnce({
+      status, ok: true,
+      json: vi.fn().mockRejectedValue(new SyntaxError('<html>corpo-privado csrf_token sessao_invalida</html>')),
+    });
     const error = await request().catch((received) => received);
-    expect(error).toMatchObject({ name: "ApiError", status: 500 });
-    expect(error.message).toContain("concluir a opera");
+    expect(error).toBeInstanceOf(globalThis.ApiError);
+    expect(error).toMatchObject({
+      name: "ApiError", status, details: null, code: "resposta_invalida",
+      message: "Resposta inválida do servidor. Confira os dados antes de tentar novamente.",
+    });
+    expect(String(error)).not.toMatch(/html|corpo-privado|csrf_token|sessao_invalida|SyntaxError/);
+    expect(window.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([401, 500])("preserva erro HTTP %i com JSON ilegivel sem inferir sessao", async (status) => {
+    const listener = vi.fn();
+    const recover = vi.fn();
+    globalThis.AuthUI = { blocked: false, recover };
+    document.addEventListener("auth-required", listener);
+    try {
+      window.fetch.mockResolvedValueOnce({
+        status, ok: false,
+        json: vi.fn().mockRejectedValue(new SyntaxError('<html>sessao_invalida corpo-privado</html>')),
+      });
+      const error = await request().catch((received) => received);
+      expect(error).toBeInstanceOf(globalThis.ApiError);
+      expect(error).toMatchObject({
+        name: "ApiError", status, code: null, details: null,
+        message: "Não foi possível concluir a operação.",
+      });
+      expect(String(error)).not.toMatch(/html|corpo-privado|sessao_invalida|SyntaxError/);
+      expect(listener).not.toHaveBeenCalled();
+      expect(recover).not.toHaveBeenCalled();
+      expect(window.fetch).toHaveBeenCalledTimes(1);
+    } finally { document.removeEventListener("auth-required", listener); }
   });
 
   function response(data, status = 200) {
@@ -90,6 +124,88 @@ describe("apiRequest", () => {
       expect(options.credentials).toBe("include");
       expect(options.headers["X-CSRF-Token"]).toBe("temporario");
     }
+  });
+
+  it.each([200, 201])("nao repete POST ilegivel %i nem recupera sessao e permite consulta", async (status) => {
+    const listener = vi.fn();
+    const recover = vi.fn();
+    globalThis.AuthUI = { blocked: false, recover };
+    document.addEventListener("auth-required", listener);
+    try {
+      window.fetch.mockResolvedValueOnce(response({ csrf_token: "preservado" }))
+        .mockResolvedValueOnce({
+          status, ok: true,
+          json: vi.fn().mockRejectedValue(new SyntaxError('corpo-privado csrf_token="invalido" sessao_invalida')),
+        })
+        .mockResolvedValueOnce(response([{ id: 1 }]))
+        .mockResolvedValueOnce(response({ id: 2 }, 201));
+      await request("/auth/csrf");
+      const options = { method: "POST", body: JSON.stringify({ nome: "Matéria sintética" }) };
+      await expect(request("/materias", options)).rejects.toMatchObject({
+        name: "ApiError", status, details: null, code: "resposta_invalida",
+        message: "Resposta inválida do servidor. Confira os dados antes de tentar novamente.",
+      });
+      expect(window.fetch).toHaveBeenCalledTimes(2);
+      expect(listener).not.toHaveBeenCalled();
+      expect(recover).not.toHaveBeenCalled();
+      expect(window.fetch.mock.calls[1]).toEqual([
+        "http://localhost:5000/api/materias",
+        { ...options, credentials: "include", headers: {
+          "Content-Type": "application/json", "X-CSRF-Token": "preservado",
+        } },
+      ]);
+      await expect(request("/materias")).resolves.toEqual([{ id: 1 }]);
+      expect(window.fetch).toHaveBeenCalledTimes(3);
+      expect(window.fetch.mock.calls[2][1]).toMatchObject({ credentials: "include" });
+      expect(window.fetch.mock.calls[2][1].headers).not.toHaveProperty("X-CSRF-Token");
+      // Outra ação explícita conserva o token; o corpo ilegível não o limpa nem o substitui.
+      await expect(request("/assuntos", { method: "POST" })).resolves.toEqual({ id: 2 });
+      expect(window.fetch).toHaveBeenCalledTimes(4);
+      expect(window.fetch.mock.calls[3][1]).toMatchObject({
+        method: "POST", credentials: "include", headers: { "X-CSRF-Token": "preservado" },
+      });
+      expect(listener).not.toHaveBeenCalled();
+      expect(recover).not.toHaveBeenCalled();
+    } finally { document.removeEventListener("auth-required", listener); }
+  });
+
+  it("impede POSTs concorrentes apos bootstrap ilegivel e libera nova tentativa explicita", async () => {
+    const listener = vi.fn();
+    const recover = vi.fn();
+    globalThis.AuthUI = { blocked: false, recover };
+    document.addEventListener("auth-required", listener);
+    try {
+      window.fetch.mockResolvedValueOnce({
+        status: 200, ok: true,
+        json: vi.fn().mockRejectedValue(new SyntaxError("bootstrap ilegivel")),
+      }).mockResolvedValueOnce(response({ csrf_token: "novo" }))
+        .mockResolvedValueOnce(response({ id: 1 }, 201));
+      const results = await Promise.allSettled([
+        request("/materias", { method: "POST" }),
+        request("/assuntos", { method: "POST" }),
+      ]);
+      for (const result of results) {
+        expect(result.status).toBe("rejected");
+        expect(result.reason).toMatchObject({
+          name: "ApiError", status: 200, code: "resposta_invalida", details: null,
+        });
+      }
+      expect(window.fetch).toHaveBeenCalledExactlyOnceWith(
+        "http://localhost:5000/api/auth/csrf",
+        { credentials: "include", headers: { "Content-Type": "application/json" } },
+      );
+      expect(listener).not.toHaveBeenCalled();
+      expect(recover).not.toHaveBeenCalled();
+      await expect(request("/materias", { method: "POST" })).resolves.toEqual({ id: 1 });
+      expect(window.fetch).toHaveBeenCalledTimes(3);
+      expect(window.fetch.mock.calls[1][0]).toBe("http://localhost:5000/api/auth/csrf");
+      expect(window.fetch.mock.calls[2]).toEqual([
+        "http://localhost:5000/api/materias",
+        { method: "POST", credentials: "include", headers: {
+          "Content-Type": "application/json", "X-CSRF-Token": "novo",
+        } },
+      ]);
+    } finally { document.removeEventListener("auth-required", listener); }
   });
 
   it("usa o token rotacionado pelo login e permite reset explicito", async () => {
