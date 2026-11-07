@@ -5,9 +5,9 @@ from uuid import uuid4
 from sqlalchemy import event, select, text
 from app.extensions import db
 from app.exceptions import ConflitoError
-from app.models.plano_estudo import PlanoEstudo as Plano, PlanoEstudoItem as Item
+from app.modules.plano_estudos.models.plano_estudo import PlanoEstudo as Plano, PlanoEstudoItem as Item
 from app.http_composition import servicos
-from app.services.concluir_plano_item_service import ConcluirPlanoItemService
+from app.modules.plano_estudos.services.concluir_plano_item_service import ConcluirPlanoItemService
 from tests.integration_support import MySQLIntegrationTestCase
 from tests import test_praticas_integration as fixture
 

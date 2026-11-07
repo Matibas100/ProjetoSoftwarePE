@@ -8,10 +8,18 @@ A Plataforma ENEM é um projeto existente. Não recrie sua estrutura nem trate o
 frontend/                  HTML, CSS e JavaScript
 backend/
   app/
-    controllers/           adaptação HTTP
-    services/              casos de uso
-    models/                entidades e CRUD Active Record
-    repositories/          consultas especializadas e procedures
+    modules/               seis proprietários com rotas e camadas próprias
+      contas/              identidade, sessões e privacidade
+      conteudo/            catálogo e Questões versionadas
+      praticas/            catálogo do Aluno e tentativas
+      simulados/           composição e execução
+      desempenho/          projeções, diagnóstico e dashboards
+      plano_estudos/       gerações e itens do plano
+    core/                  bases e helpers neutros; health
+    contracts/             Protocols e DTOs públicos sem ORM
+    models/                registro explícito e compatibilidade estática
+    composition.py         ligações por aplicação
+    routes.py              agregador dos Blueprints e health
   database/                bootstrap e migrations SQL
   tests/                   testes unitários e integração com MySQL real
 docs/

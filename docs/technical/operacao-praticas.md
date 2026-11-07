@@ -1,5 +1,8 @@
 # Operação de práticas e histórico
 
+Código canônico: [`backend/app/modules/praticas/`](../../backend/app/modules/praticas/);
+interfaces e transações no [mapa modular](organizacao-modular.md).
+
 ## Persistência e implantação
 
 A migration 007 acrescenta somente `pratica_tentativas`, após a 006. Não gera

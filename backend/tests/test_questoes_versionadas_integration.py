@@ -5,10 +5,10 @@ from threading import Barrier
 from uuid import uuid4
 
 from sqlalchemy import text
-from app.domain.autenticacao import agora_utc
+from app.core.relogio import agora_utc
 from app.extensions import db
-from app.models.questao_versao import QuestaoVersao
-from app.services.gestao_questao_service import (
+from app.modules.conteudo.models.questao_versao import QuestaoVersao
+from app.modules.conteudo.services.gestao_questao_service import (
     ConsultarVersaoElegivelService, ConsultarVersaoHistoricaService,
     ConsultarVersoesElegiveisService, ConsultarVersoesHistoricasService,
     PublicarQuestaoService, EditarQuestaoService,
@@ -125,7 +125,7 @@ class QuestoesVersionadasIntegrationTest(MySQLIntegrationTestCase):
 
     def test_snapshot_e_evento_append_only_inclusive_flush_orm(self):
         versao_id=self.publicar().get_json()['versao_publicada_id']
-        from app.models.questao_evento import QuestaoEvento
+        from app.modules.conteudo.models.questao_evento import QuestaoEvento
         with self.app.app_context():
             versao=QuestaoVersao.buscar_por_id(versao_id)
             evento=db.session.execute(db.select(QuestaoEvento).where(QuestaoEvento.questao_id==self.questao['id'])).scalars().first()

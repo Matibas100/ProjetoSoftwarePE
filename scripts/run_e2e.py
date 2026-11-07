@@ -102,7 +102,7 @@ def executar_suite(base, environment, comando=None):
         seed = """import os
 from app import create_app
 from app.extensions import db
-from app.services.autenticacao_service import CriarUsuarioService
+from app.modules.contas.services.autenticacao_service import CriarUsuarioService
 app = create_app()
 with app.app_context():
     senha = os.environ['E2E_ADMIN_PASSWORD']

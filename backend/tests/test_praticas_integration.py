@@ -6,12 +6,12 @@ from uuid import uuid4
 
 from sqlalchemy import event, text
 from app.extensions import db
-from app.models.pratica_tentativa import PraticaTentativa
-from app.domain.autenticacao import agora_utc
+from app.modules.praticas.models.pratica_tentativa import PraticaTentativa
+from app.core.relogio import agora_utc
 from app.exceptions import ConflitoError
-from app.services.iniciar_pratica_service import IniciarPraticaService
-from app.services.responder_pratica_service import ResponderPraticaService
-from app.services.listar_praticas_service import ConsultarFatosPraticasService
+from app.modules.praticas.services.iniciar_pratica_service import IniciarPraticaService
+from app.modules.praticas.services.responder_pratica_service import ResponderPraticaService
+from app.modules.praticas.services.listar_praticas_service import ConsultarFatosPraticasService
 from tests.integration_support import MySQLIntegrationTestCase
 
 
@@ -37,7 +37,7 @@ class PraticasIntegrationTest(MySQLIntegrationTestCase):
         cliente = self.app.test_client()
         cliente.csrf = cliente.get('/api/auth/csrf').get_json()['csrf_token']
         email = uuid4().hex+'@teste.local'
-        from app.domain.privacidade import VIGENTES
+        from app.modules.contas.domain.privacidade import VIGENTES
         r = cliente.post('/api/auth/cadastro', json={'nome':'Estudante','email':email,'senha':self.senha,'senha_confirmacao':self.senha,
             'termos_uso':{'versao':VIGENTES['uso'],'aceito':True}})
         self.assertEqual(r.status_code,201)

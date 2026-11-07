@@ -3,18 +3,18 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from sqlalchemy import event, select, text
 from app.contexto_leitura import ContextoLeitura
-from app.domain.autenticacao import agora_utc
+from app.core.relogio import agora_utc
 from app.extensions import db
-from app.models.pratica_tentativa import PraticaTentativa
-from app.models.simulado import SimuladoTentativa
-from app.repositories.pratica_repository import PraticaRepository
-from app.repositories.simulado_repository import SimuladoRepository
-from app.repositories.desempenho_repository import DesempenhoRepository
+from app.modules.praticas.models.pratica_tentativa import PraticaTentativa
+from app.modules.simulados.models.simulado import SimuladoTentativa
+from app.modules.praticas.repositories.pratica_repository import PraticaRepository
+from app.modules.simulados.repositories.simulado_repository import SimuladoRepository
+from app.modules.desempenho.repositories.desempenho_repository import DesempenhoRepository
 from app.http_composition import servicos
-from app.services.listar_praticas_service import ConsultarFatosPraticasService
-from app.services.consultar_simulado_service import ConsultarFatosSimuladosService
-from app.services.iniciar_pratica_service import IniciarPraticaService
-from app.services.responder_pratica_service import ResponderPraticaService
+from app.modules.praticas.services.listar_praticas_service import ConsultarFatosPraticasService
+from app.modules.simulados.services.consultar_simulado_service import ConsultarFatosSimuladosService
+from app.modules.praticas.services.iniciar_pratica_service import IniciarPraticaService
+from app.modules.praticas.services.responder_pratica_service import ResponderPraticaService
 from tests.integration_support import MySQLIntegrationTestCase
 from tests import test_simulados_integration as sim_fixture
 
@@ -160,7 +160,7 @@ class DesempenhoIntegrationTest(MySQLIntegrationTestCase):
                     ResponderPraticaService.executar(self.usuario,t['id'],{'alternativa':'B'})
                 depois=servicos().desempenho.executar(self.usuario,contexto=leitura,instante=instante)
                 self.assertEqual(antes,depois)
-                _,inicio,fim=__import__('app.services.desempenho_validacao',fromlist=['periodo']).periodo({},instante)
+                _,inicio,fim=__import__('app.modules.desempenho.services.desempenho_validacao',fromlist=['periodo']).periodo({},instante)
                 self.assertEqual(len(DesempenhoRepository.atividades(leitura,self.usuario,inicio,fim)),1)
             self.assertEqual(servicos().desempenho.executar(self.usuario)['geral']['total_respostas'],2)
             with db.engine.connect().execution_options(isolation_level='REPEATABLE READ') as conexao:

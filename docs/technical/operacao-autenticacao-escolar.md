@@ -1,5 +1,8 @@
 # Operação da autenticação escolar
 
+Código canônico: [`backend/app/modules/contas/`](../../backend/app/modules/contas/);
+interfaces e transações no [mapa modular](organizacao-modular.md).
+
 ## Política de falhas HTTP
 
 Controllers reutilizam `app/http_response.py` para adaptar respostas e erros.

@@ -1,18 +1,19 @@
-from app.models.area_enem import AreaEnem
-from app.models.assunto import Assunto
-from app.models.assunto_transferencia import AssuntoTransferencia
-from app.models.materia import Materia
-from app.models.questao import Questao
-from app.models.questao_versao import QuestaoVersao
-from app.models.questao_evento import QuestaoEvento
-from app.models.usuario import Usuario
-from app.models.registro_privacidade import RegistroPrivacidade
-from app.models.sessao import Sessao
-from app.models.auth_limite import AuthLimite
-from app.models.pratica_tentativa import PraticaTentativa
-from app.models.plano_estudo import PlanoEstudo, PlanoEstudoItem
-from app.models.simulado import (Simulado, SimuladoRascunhoItem, SimuladoVersao,
+"""Registro explícito e reexportação das mesmas 21 classes canônicas."""
+from app.modules.conteudo.models.area_enem import AreaEnem
+from app.modules.conteudo.models.assunto import Assunto
+from app.modules.conteudo.models.assunto_transferencia import AssuntoTransferencia
+from app.modules.conteudo.models.materia import Materia
+from app.modules.conteudo.models.questao import Questao
+from app.modules.conteudo.models.questao_versao import QuestaoVersao
+from app.modules.conteudo.models.questao_evento import QuestaoEvento
+from app.modules.contas.models.usuario import Usuario
+from app.modules.contas.models.registro_privacidade import RegistroPrivacidade
+from app.modules.contas.models.sessao import Sessao
+from app.modules.contas.models.auth_limite import AuthLimite
+from app.modules.praticas.models.pratica_tentativa import PraticaTentativa
+from app.modules.plano_estudos.models.plano_estudo import PlanoEstudo, PlanoEstudoItem
+from app.modules.simulados.models.simulado import (Simulado, SimuladoRascunhoItem, SimuladoVersao,
     SimuladoVersaoItem, SimuladoEvento, SimuladoTentativa, SimuladoResposta)
 
 
-__all__ = ["AreaEnem", "Materia", "Assunto", "AssuntoTransferencia", "Questao", "QuestaoVersao", "QuestaoEvento", "Usuario", "Sessao", "AuthLimite"]
+__all__ = ['AreaEnem', 'Assunto', 'AssuntoTransferencia', 'Materia', 'Questao', 'QuestaoVersao', 'QuestaoEvento', 'Usuario', 'RegistroPrivacidade', 'Sessao', 'AuthLimite', 'PraticaTentativa', 'PlanoEstudo', 'PlanoEstudoItem', 'Simulado', 'SimuladoRascunhoItem', 'SimuladoVersao', 'SimuladoVersaoItem', 'SimuladoEvento', 'SimuladoTentativa', 'SimuladoResposta']

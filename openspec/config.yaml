@@ -15,6 +15,12 @@ context: |
   CRUD simples permanece nas Models Active Record. Repository é reservado
   para acesso especializado e todo CALL de Stored Procedure fica nele.
 
+  O recorte implementado usa seis módulos em backend/app/modules/: contas,
+  conteudo, praticas, simulados, desempenho e plano_estudos. Colaboração externa
+  usa api.py/contratos públicos; persistência privada não cruza fronteiras.
+  Bases/helpers neutros ficam em core; composição e registro ORM são exceções
+  estritas. Preserve as decisões do ADR-010 e os locks/transações anteriores.
+
   Preserve os contratos atuais, as 10 funcionalidades do MVP original e os
   20 casos atuais da entrega, os 29 testes de
   integração originais e a suíte automatizada ampliada, os dados existentes

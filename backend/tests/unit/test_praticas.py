@@ -2,9 +2,9 @@ import unittest
 from unittest.mock import patch
 from werkzeug.datastructures import MultiDict
 from app.exceptions import DadosInvalidosError
-from app.services.pratica_validacao import parametros, inicio
-from app.services.iniciar_pratica_service import IniciarPraticaService
-from app.controllers.pratica_controller import PraticaController
+from app.modules.praticas.services.pratica_validacao import parametros, inicio
+from app.modules.praticas.services.iniciar_pratica_service import IniciarPraticaService
+from app.modules.praticas.controllers.pratica_controller import PraticaController
 from app import create_app
 from tests.unit.test_config_and_app import TestConfig
 
@@ -30,7 +30,7 @@ class PraticasUnitTest(unittest.TestCase):
     def test_erro_integridade_nao_relacionado_a_replay_propaga(self):
         from sqlalchemy.exc import IntegrityError
         erro=IntegrityError('INSERT',{},Exception('FK'))
-        with patch('app.services.iniciar_pratica_service.PraticaRepository.por_chave',return_value=None), \
-             patch('app.services.iniciar_pratica_service.TransactionManager.executar',side_effect=[erro,erro]):
+        with patch('app.modules.praticas.services.iniciar_pratica_service.PraticaRepository.por_chave',return_value=None), \
+             patch('app.modules.praticas.services.iniciar_pratica_service.TransactionManager.executar',side_effect=[erro,erro]):
             with self.assertRaises(IntegrityError):
                 IniciarPraticaService.executar(1,{'questao_versao_id':1,'chave_envio':'00000000-0000-0000-0000-000000000000'})

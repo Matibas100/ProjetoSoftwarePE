@@ -6,11 +6,12 @@ from threading import Barrier
 
 from sqlalchemy import text
 
-from app.domain.autenticacao import agora_utc, hash_identificador
+from app.core.relogio import agora_utc
+from app.modules.contas.domain.autenticacao import hash_identificador
 from app.extensions import db
-from app.models.usuario import Usuario
-from app.repositories.autenticacao_repository import AutenticacaoRepository
-from app.services.autenticacao_service import CriarUsuarioService
+from app.modules.contas.models.usuario import Usuario
+from app.modules.contas.repositories.autenticacao_repository import AutenticacaoRepository
+from app.modules.contas.services.autenticacao_service import CriarUsuarioService
 from app.transaction_manager import TransactionManager
 from tests.integration_support import MySQLIntegrationTestCase
 

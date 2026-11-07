@@ -1,5 +1,8 @@
 # Operação de simulados fixos
 
+Código canônico: [`backend/app/modules/simulados/`](../../backend/app/modules/simulados/);
+interfaces e transações no [mapa modular](organizacao-modular.md).
+
 ## Fronteiras de leitura em lote
 
 Listagens obtêm composições por conjunto de IDs da página; a administrativa

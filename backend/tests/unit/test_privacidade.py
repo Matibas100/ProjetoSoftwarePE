@@ -5,11 +5,11 @@ import unittest
 from unittest.mock import patch, Mock
 from datetime import datetime
 
-from app.domain.privacidade import DOCUMENTOS, VIGENTES, documento_vigente, estado_privacidade
-from app.domain.autenticacao import AutenticacaoError
-from app.services.privacidade_validacao import validar_corpo, validar_revisao, validar_versao, resposta_reenvio
-from app.services.validar_permissao_plano_service import ValidarPermissaoPlanoService
-from app.repositories.privacidade_repository import PrivacidadeRepository
+from app.modules.contas.domain.privacidade import DOCUMENTOS, VIGENTES, documento_vigente, estado_privacidade
+from app.modules.contas.domain.autenticacao import AutenticacaoError
+from app.modules.contas.services.privacidade_validacao import validar_corpo, validar_revisao, validar_versao, resposta_reenvio
+from app.modules.contas.services.validar_permissao_plano_service import ValidarPermissaoPlanoService
+from app.modules.contas.repositories.privacidade_repository import PrivacidadeRepository
 
 
 class DocumentosPrivacidadeTest(unittest.TestCase):
@@ -74,9 +74,9 @@ class DecisoesPrivacidadeUnitTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):ValidarPermissaoPlanoService.executar(7)
 
     def test_guard_apos_lock_antes_de_replay_snapshot_ou_item(self):
-        from app.services import gerar_plano_service as gerar
-        from app.services import consultar_plano_service as consultar
-        from app.services import concluir_plano_item_service as concluir
+        from app.modules.plano_estudos.services import gerar_plano_service as gerar
+        from app.modules.plano_estudos.services import consultar_plano_service as consultar
+        from app.modules.plano_estudos.services import concluir_plano_item_service as concluir
         calls=[]
         def bloquear(_):calls.append('lock')
         def negar(_):calls.append('guard');raise AutenticacaoError('Pendente',403,'consentimento_plano_necessario')

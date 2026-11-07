@@ -3,26 +3,26 @@ from unittest.mock import MagicMock, patch
 
 from sqlalchemy.exc import IntegrityError
 
-from app.domain.catalogo import esta_disponivel, normalizar_nome_assunto, validar_status
+from app.modules.conteudo.domain.catalogo import esta_disponivel, normalizar_nome_assunto, validar_status
 from app.exceptions import ConflitoError, DadosInvalidosError, RecursoNaoEncontradoError
-from app.models.area_enem import AreaEnem
-from app.models.assunto import Assunto
-from app.models.assunto_transferencia import AssuntoTransferencia
-from app.models.materia import Materia
-from app.services.alterar_status_catalogo_service import (
+from app.modules.conteudo.models.area_enem import AreaEnem
+from app.modules.conteudo.models.assunto import Assunto
+from app.modules.conteudo.models.assunto_transferencia import AssuntoTransferencia
+from app.modules.conteudo.models.materia import Materia
+from app.modules.conteudo.services.alterar_status_catalogo_service import (
     AlterarStatusAssuntoService,
     AlterarStatusMateriaService,
 )
-from app.services.listar_catalogo_admin_service import (
+from app.modules.conteudo.services.listar_catalogo_admin_service import (
     ListarAssuntosAdminService,
     ListarMateriasAdminService,
 )
-from app.services.atualizar_materia_service import AtualizarMateriaService
-from app.services.impacto_catalogo_service import (
+from app.modules.conteudo.services.atualizar_materia_service import AtualizarMateriaService
+from app.modules.conteudo.services.impacto_catalogo_service import (
     ImpactoAssuntoService,
     ImpactoMateriaService,
 )
-from app.services.transferir_assunto_service import TransferirAssuntoService
+from app.modules.conteudo.services.transferir_assunto_service import TransferirAssuntoService
 from app.transaction_manager import TransactionManager
 
 
@@ -109,14 +109,14 @@ class AdminListingServiceTest(unittest.TestCase):
 
 
 class LifecycleServiceTest(unittest.TestCase):
-    @patch("app.services.alterar_status_catalogo_service.Materia")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.Materia")
     def test_materia_inexistente(self, matter_class):
         matter_class.buscar_por_id.return_value = None
         with self.assertRaises(RecursoNaoEncontradoError):
             AlterarStatusMateriaService.executar(1, "inativar")
 
-    @patch("app.services.alterar_status_catalogo_service.AreaEnem")
-    @patch("app.services.alterar_status_catalogo_service.Materia")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.AreaEnem")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.Materia")
     def test_materia_inativa_e_rejeita_reativacao_sem_area(self, matter_class, area_class):
         matter = MagicMock(status="ativa", area_enem_id=3)
         matter.to_dict.return_value = {"status": "inativa"}
@@ -129,8 +129,8 @@ class LifecycleServiceTest(unittest.TestCase):
         with self.assertRaises(ConflitoError):
             AlterarStatusMateriaService.executar(1, "reativar")
 
-    @patch("app.services.alterar_status_catalogo_service.CatalogoRepository")
-    @patch("app.services.alterar_status_catalogo_service.Materia")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.Materia")
     def test_materia_bloqueia_arquivamento_com_filhos(self, matter_class, repository):
         matter_class.buscar_por_id.return_value = MagicMock(status="ativa")
         repository.contar_assuntos_nao_arquivados.return_value = 2
@@ -138,9 +138,9 @@ class LifecycleServiceTest(unittest.TestCase):
             AlterarStatusMateriaService.executar(1, "arquivar")
         self.assertEqual(error.exception.detalhes["assuntos_nao_arquivados"], 2)
 
-    @patch("app.services.alterar_status_catalogo_service.CatalogoRepository")
-    @patch("app.services.alterar_status_catalogo_service.Materia")
-    @patch("app.services.alterar_status_catalogo_service.Assunto")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.Materia")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.Assunto")
     def test_assunto_reativa_em_materia_ativa(self, subject_class, matter_class, repository):
         subject = MagicMock(status="arquivada", materia_id=2, id=1, nome_normalizado="x")
         subject.to_dict.return_value = {"status": "ativa"}
@@ -152,15 +152,15 @@ class LifecycleServiceTest(unittest.TestCase):
         )
         subject.atualizar.assert_called_once_with(status="ativa")
 
-    @patch("app.services.alterar_status_catalogo_service.Assunto")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.Assunto")
     def test_rejeita_transicao_invalida(self, subject_class):
         subject_class.buscar_por_id.return_value = MagicMock(status="arquivada")
         with self.assertRaises(DadosInvalidosError):
             AlterarStatusAssuntoService.executar(1, "arquivar")
 
-    @patch("app.services.alterar_status_catalogo_service.CatalogoRepository")
-    @patch("app.services.alterar_status_catalogo_service.Materia")
-    @patch("app.services.alterar_status_catalogo_service.Assunto")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.Materia")
+    @patch("app.modules.conteudo.services.alterar_status_catalogo_service.Assunto")
     def test_assunto_inexistente_materia_inativa_e_duplicidade(
         self, subject_class, matter_class, repository
     ):
@@ -181,9 +181,9 @@ class LifecycleServiceTest(unittest.TestCase):
 
 
 class CatalogoValidationServiceTest(unittest.TestCase):
-    @patch("app.services.atualizar_materia_service.CatalogoRepository")
-    @patch("app.services.atualizar_materia_service.AreaEnem")
-    @patch("app.services.atualizar_materia_service.Materia")
+    @patch("app.modules.conteudo.services.atualizar_materia_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.atualizar_materia_service.AreaEnem")
+    @patch("app.modules.conteudo.services.atualizar_materia_service.Materia")
     def test_atualizacao_valida_area_arquivamento_e_integridade(
         self, matter_class, area_class, repository
     ):
@@ -208,8 +208,8 @@ class CatalogoValidationServiceTest(unittest.TestCase):
                 1, {"nome": "Fisica", "descricao": None, "status": "inativa"}
             )
 
-    @patch("app.services.impacto_catalogo_service.Materia")
-    @patch("app.services.impacto_catalogo_service.Assunto")
+    @patch("app.modules.conteudo.services.impacto_catalogo_service.Materia")
+    @patch("app.modules.conteudo.services.impacto_catalogo_service.Assunto")
     def test_impactos_rejeitam_recursos_inexistentes(self, subject_class, matter_class):
         matter_class.buscar_por_id.return_value = None
         subject_class.buscar_por_id.return_value = None
@@ -220,9 +220,9 @@ class CatalogoValidationServiceTest(unittest.TestCase):
 
 
 class TransferServiceTest(unittest.TestCase):
-    @patch("app.services.transferir_assunto_service.Materia")
-    @patch("app.services.transferir_assunto_service.Assunto")
-    @patch("app.services.transferir_assunto_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.Materia")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.Assunto")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.CatalogoRepository")
     def test_previa_rejeita_recursos_destino_e_conflito(
         self, repository, subject_class, matter_class
     ):
@@ -257,8 +257,8 @@ class TransferServiceTest(unittest.TestCase):
                     1, {"materia_destino_id": 3, "impacto_esperado": impact}
                 )
 
-    @patch("app.services.transferir_assunto_service.CatalogoRepository")
-    @patch("app.services.transferir_assunto_service.TransactionManager")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.TransactionManager")
     def test_transferencia_revalida_registros_sob_lock(self, manager, repository):
         manager.executar.side_effect = lambda operation: operation()
         data = {"materia_destino_id": 3, "impacto_esperado": {"questoes": 0}}
@@ -288,9 +288,9 @@ class TransferServiceTest(unittest.TestCase):
         with self.assertRaises(ConflitoError):
             TransferirAssuntoService.executar(1, data)
 
-    @patch("app.services.transferir_assunto_service.Materia")
-    @patch("app.services.transferir_assunto_service.Assunto")
-    @patch("app.services.transferir_assunto_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.Materia")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.Assunto")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.CatalogoRepository")
     def test_previa_valida_e_retorna_impacto(self, repository, subject_class, matter_class):
         subject = MagicMock(id=1, materia_id=2, nome_normalizado="mecanica")
         subject_class.buscar_por_id.return_value = subject
@@ -302,9 +302,9 @@ class TransferServiceTest(unittest.TestCase):
         result = TransferirAssuntoService.previa(1, 3)
         self.assertEqual(result["impacto"], {"questoes": 8})
 
-    @patch("app.services.transferir_assunto_service.AssuntoTransferencia")
-    @patch("app.services.transferir_assunto_service.CatalogoRepository")
-    @patch("app.services.transferir_assunto_service.TransactionManager")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.AssuntoTransferencia")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.TransactionManager")
     def test_transferencia_atualiza_e_registra(self, manager, repository, transfer_class):
         manager.executar.side_effect = lambda operation: operation()
         subject = MagicMock(id=1, materia_id=2, nome_normalizado="mecanica")
@@ -331,8 +331,8 @@ class TransferServiceTest(unittest.TestCase):
         )
         transfer_class.return_value.salvar.assert_called_once_with(confirmar=False)
 
-    @patch("app.services.transferir_assunto_service.CatalogoRepository")
-    @patch("app.services.transferir_assunto_service.TransactionManager")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.CatalogoRepository")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.TransactionManager")
     def test_transferencia_detecta_impacto_alterado(self, manager, repository):
         manager.executar.side_effect = lambda operation: operation()
         subject = MagicMock(id=1, materia_id=2, nome_normalizado="x")
@@ -348,7 +348,7 @@ class TransferServiceTest(unittest.TestCase):
             )
         self.assertEqual(error.exception.detalhes["previa"]["impacto"]["questoes"], 2)
 
-    @patch("app.services.transferir_assunto_service.TransactionManager")
+    @patch("app.modules.conteudo.services.transferir_assunto_service.TransactionManager")
     def test_transferencia_traduz_conflito_de_integridade(self, manager):
         manager.executar.side_effect = IntegrityError("transferir", {}, Exception("fk"))
         with self.assertRaises(ConflitoError):

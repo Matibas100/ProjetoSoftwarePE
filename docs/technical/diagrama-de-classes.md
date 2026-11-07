@@ -7,6 +7,36 @@ repetidas entre visões são referências à mesma entidade, sem duplicar tabela
 `PK` indica chave primária; `FK` indica referência; `?` indica campo opcional.
 Os atributos são os principais, não uma reprodução integral do schema.
 
+## Propriedade implementada
+
+As classes abaixo residem em `backend/app/modules/<proprietario>/models/`;
+`app.models` apenas registra/reexporta suas identidades canônicas.
+
+| Módulo | Models concretas |
+| --- | --- |
+| Contas (4) | Usuario, Sessao, AuthLimite, RegistroPrivacidade |
+| Conteúdo (7) | AreaEnem, Materia, Assunto, AssuntoTransferencia, Questao, QuestaoVersao, QuestaoEvento |
+| Práticas (1) | PraticaTentativa |
+| Simulados (7) | Simulado, SimuladoRascunhoItem, SimuladoVersao, SimuladoVersaoItem, SimuladoEvento, SimuladoTentativa, SimuladoResposta |
+| Desempenho (0) | Projeções, sem tabela própria |
+| Plano (2) | PlanoEstudo, PlanoEstudoItem |
+
+```mermaid
+classDiagram
+ContasAPI <.. PlanoEstudoRepository : lock
+ConteudoAPI <.. Praticas : versões
+ConteudoAPI <.. Simulados : versões e classificação
+PraticasAPI <.. DesempenhoRepository : projeções
+SimuladosAPI <.. DesempenhoRepository : projeções
+ConteudoAPI <.. DesempenhoRepository : contagens
+RecusarConsentimentoPlanoService --> EliminarPlanosPropriosService : Callable injetado
+RevogarConsentimentoPlanoService --> EliminarPlanosPropriosService : Callable injetado
+EliminarPlanosPropriosService --> PlanoEstudoRepository : participante sem commit
+```
+
+Interfaces e exceções estritas no [mapa modular](organizacao-modular.md).
+As bases permanecem únicas em `app.core.persistencia`.
+
 ## Privacidade — uma Model adicional
 
 ```mermaid

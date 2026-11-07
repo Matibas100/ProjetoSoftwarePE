@@ -1,0 +1,1628 @@
+{
+  "baseline_sha256": "03b8f6aa82ca0ac11341a1c22a47779ea975f4ed8dabfb35a5e92e89debb3d6d",
+  "comparacoes": {
+    "models": {
+      "identico": true,
+      "sha256_anterior": "767f39e8399ee2a1563fe22ae8094bec0c06557bad9989de8d275d76a0c42c73",
+      "sha256_atual": "767f39e8399ee2a1563fe22ae8094bec0c06557bad9989de8d275d76a0c42c73",
+      "quantidade": 21
+    },
+    "guards": {
+      "identico": true,
+      "sha256_anterior": "b417ea2ea7781ef5537fa08c99b7ddaa8c8e709b9348d61f83c695afac58b326",
+      "sha256_atual": "b417ea2ea7781ef5537fa08c99b7ddaa8c8e709b9348d61f83c695afac58b326",
+      "quantidade": 6
+    },
+    "cli": {
+      "identico": true,
+      "sha256_anterior": "e045d0598d12729d33d42defb29fa85894171e61fe408ab217b8493813bc9df8",
+      "sha256_atual": "e045d0598d12729d33d42defb29fa85894171e61fe408ab217b8493813bc9df8",
+      "quantidade": 2
+    },
+    "protected": {
+      "identico": true,
+      "sha256_anterior": "e9c5da7e95906538158b97649b88e482fafd1552f6fe8f2872396f4b9ef68bed",
+      "sha256_atual": "e9c5da7e95906538158b97649b88e482fafd1552f6fe8f2872396f4b9ef68bed",
+      "quantidade": 14
+    }
+  },
+  "rotas_atuais": [
+    {
+      "url": "/api/admin/assuntos",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.listar_assuntos_admin",
+      "function": "AssuntoController.listar_admin",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/admin/dashboard",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.desempenho.desempenho_admin",
+      "function": "DesempenhoController.admin",
+      "module": "app.modules.desempenho.controllers.desempenho_controller"
+    },
+    {
+      "url": "/api/admin/materias",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.listar_materias_admin",
+      "function": "MateriaController.listar_admin",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/admin/questoes",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.listar_questoes_admin",
+      "function": "QuestaoController.listar_admin",
+      "module": "app.modules.conteudo.controllers.questao_controller"
+    },
+    {
+      "url": "/api/admin/simulados",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_admin_lista",
+      "function": "SimuladoController.admin_lista",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_criar",
+      "function": "SimuladoController.criar",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados/<int:simulado_id>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "simulado_id"
+      ],
+      "converters": {
+        "simulado_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_admin_detalhe",
+      "function": "SimuladoController.admin_detalhe",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados/<int:simulado_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "simulado_id"
+      ],
+      "converters": {
+        "simulado_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_editar",
+      "function": "SimuladoController.editar",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados/<int:simulado_id>/arquivar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "simulado_id"
+      ],
+      "converters": {
+        "simulado_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_arquivar",
+      "function": "SimuladoController.arquivar",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados/<int:simulado_id>/publicar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "simulado_id"
+      ],
+      "converters": {
+        "simulado_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_publicar",
+      "function": "SimuladoController.publicar",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/dashboard",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.desempenho.desempenho_aluno",
+      "function": "DesempenhoController.aluno",
+      "module": "app.modules.desempenho.controllers.desempenho_controller"
+    },
+    {
+      "url": "/api/aluno/desempenho",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.desempenho.desempenho_diagnostico",
+      "function": "DesempenhoController.diagnostico",
+      "module": "app.modules.desempenho.controllers.desempenho_controller"
+    },
+    {
+      "url": "/api/aluno/plano",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.plano_estudos.plano_consultar",
+      "function": "PlanoEstudoController.consultar",
+      "module": "app.modules.plano_estudos.controllers.plano_estudo_controller"
+    },
+    {
+      "url": "/api/aluno/plano/gerar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.plano_estudos.plano_gerar",
+      "function": "PlanoEstudoController.gerar",
+      "module": "app.modules.plano_estudos.controllers.plano_estudo_controller"
+    },
+    {
+      "url": "/api/aluno/plano/itens/<int:item_id>/concluir",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "item_id"
+      ],
+      "converters": {
+        "item_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.plano_estudos.plano_concluir",
+      "function": "PlanoEstudoController.concluir",
+      "module": "app.modules.plano_estudos.controllers.plano_estudo_controller"
+    },
+    {
+      "url": "/api/aluno/plano/recalcular",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.plano_estudos.plano_recalcular",
+      "function": "PlanoEstudoController.recalcular",
+      "module": "app.modules.plano_estudos.controllers.plano_estudo_controller"
+    },
+    {
+      "url": "/api/aluno/praticas",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.praticas.pratica_historico",
+      "function": "PraticaController.historico",
+      "module": "app.modules.praticas.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/praticas",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.praticas.pratica_iniciar",
+      "function": "PraticaController.iniciar",
+      "module": "app.modules.praticas.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/praticas/<int:tentativa_id>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.praticas.pratica_detalhe",
+      "function": "PraticaController.detalhe",
+      "module": "app.modules.praticas.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/praticas/<int:tentativa_id>/resposta",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.praticas.pratica_responder",
+      "function": "PraticaController.responder",
+      "module": "app.modules.praticas.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.consultar",
+      "function": "PrivacidadeController.consultar",
+      "module": "app.modules.contas.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade/consentimento-plano/aceitar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.consentir",
+      "function": "PrivacidadeController.consentir",
+      "module": "app.modules.contas.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade/consentimento-plano/recusar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.recusar",
+      "function": "PrivacidadeController.recusar",
+      "module": "app.modules.contas.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade/consentimento-plano/revogar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.revogar",
+      "function": "PrivacidadeController.revogar",
+      "module": "app.modules.contas.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade/termos-uso",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.aceitar_uso",
+      "function": "PrivacidadeController.aceitar_uso",
+      "module": "app.modules.contas.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/questoes",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.praticas.pratica_questoes",
+      "function": "PraticaController.questoes",
+      "module": "app.modules.praticas.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/simulados",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_catalogo",
+      "function": "SimuladoController.catalogo",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_historico",
+      "function": "SimuladoController.historico",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_iniciar",
+      "function": "SimuladoController.iniciar",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_tentativa",
+      "function": "SimuladoController.tentativa",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/correcao",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {
+        "modo": "correcao"
+      },
+      "arguments": [
+        "modo",
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_correcao",
+      "function": "SimuladoController.tentativa",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/finalizar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_finalizar",
+      "function": "SimuladoController.finalizar",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/respostas/<int:item_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "item_id",
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter",
+        "item_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_responder",
+      "function": "SimuladoController.responder",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/resultado",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {
+        "modo": "resultado"
+      },
+      "arguments": [
+        "modo",
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulados.simulado_resultado",
+      "function": "SimuladoController.tentativa",
+      "module": "app.modules.simulados.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/areas-enem",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.listar_areas_enem",
+      "function": "AreaEnemController.listar",
+      "module": "app.modules.conteudo.controllers.area_enem_controller"
+    },
+    {
+      "url": "/api/assuntos",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.cadastrar_assunto",
+      "function": "AssuntoController.cadastrar",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.listar_assuntos",
+      "function": "AssuntoController.listar",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.atualizar_assunto",
+      "function": "AssuntoController.atualizar",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>",
+      "methods": [
+        "DELETE",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.deletar_assunto",
+      "function": "AssuntoController.deletar",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/arquivar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "arquivar"
+      },
+      "arguments": [
+        "acao",
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.arquivar_assunto",
+      "function": "AssuntoController.alterar_status",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/impacto-exclusao",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.impacto_assunto",
+      "function": "AssuntoController.impacto",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/impacto-transferencia",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.impacto_transferencia_assunto",
+      "function": "AssuntoController.previa_transferencia",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/inativar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "inativar"
+      },
+      "arguments": [
+        "acao",
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.inativar_assunto",
+      "function": "AssuntoController.alterar_status",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/reativar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "reativar"
+      },
+      "arguments": [
+        "acao",
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.reativar_assunto",
+      "function": "AssuntoController.alterar_status",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/transferir",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.transferir_assunto",
+      "function": "AssuntoController.transferir",
+      "module": "app.modules.conteudo.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/auth/cadastro",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.auth_cadastro",
+      "function": "AutenticacaoController.cadastro",
+      "module": "app.modules.contas.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/csrf",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.auth_csrf",
+      "function": "AutenticacaoController.csrf",
+      "module": "app.modules.contas.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/login",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.auth_login",
+      "function": "AutenticacaoController.login",
+      "module": "app.modules.contas.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/logout",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.auth_logout",
+      "function": "AutenticacaoController.logout",
+      "module": "app.modules.contas.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/reautenticar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.auth_reautenticar",
+      "function": "AutenticacaoController.reautenticar",
+      "module": "app.modules.contas.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/sessao",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.auth_sessao",
+      "function": "AutenticacaoController.sessao",
+      "module": "app.modules.contas.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/health",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.health",
+      "function": "HealthController.status",
+      "module": "app.core.controllers.health_controller"
+    },
+    {
+      "url": "/api/materias",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.cadastrar_materia",
+      "function": "MateriaController.cadastrar",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.listar_materias",
+      "function": "MateriaController.listar",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.atualizar_materia",
+      "function": "MateriaController.atualizar",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>",
+      "methods": [
+        "DELETE",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.deletar_materia",
+      "function": "MateriaController.deletar",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>/arquivar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "arquivar"
+      },
+      "arguments": [
+        "acao",
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.arquivar_materia",
+      "function": "MateriaController.alterar_status",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>/impacto-exclusao",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.impacto_materia",
+      "function": "MateriaController.impacto",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>/inativar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "inativar"
+      },
+      "arguments": [
+        "acao",
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.inativar_materia",
+      "function": "MateriaController.alterar_status",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>/reativar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "reativar"
+      },
+      "arguments": [
+        "acao",
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.reativar_materia",
+      "function": "MateriaController.alterar_status",
+      "module": "app.modules.conteudo.controllers.materia_controller"
+    },
+    {
+      "url": "/api/questoes",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.cadastrar_questao",
+      "function": "QuestaoController.cadastrar",
+      "module": "app.modules.conteudo.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/<int:questao_id>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "questao_id"
+      ],
+      "converters": {
+        "questao_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.questao_detalhe",
+      "function": "QuestaoController.detalhe",
+      "module": "app.modules.conteudo.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/<int:questao_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "questao_id"
+      ],
+      "converters": {
+        "questao_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.questao_editar",
+      "function": "QuestaoController.editar",
+      "module": "app.modules.conteudo.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/<int:questao_id>/arquivar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "questao_id"
+      ],
+      "converters": {
+        "questao_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.questao_arquivar",
+      "function": "QuestaoController.arquivar",
+      "module": "app.modules.conteudo.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/<int:questao_id>/publicar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "questao_id"
+      ],
+      "converters": {
+        "questao_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.questao_publicar",
+      "function": "QuestaoController.publicar",
+      "module": "app.modules.conteudo.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/por-assunto",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.conteudo.buscar_questoes_por_assunto",
+      "function": "QuestaoController.buscar_por_assunto",
+      "module": "app.modules.conteudo.controllers.questao_controller"
+    },
+    {
+      "url": "/api/termos",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.contas.termos",
+      "function": "PrivacidadeController.termos",
+      "module": "app.modules.contas.controllers.privacidade_controller"
+    },
+    {
+      "url": "/static/<path:filename>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": null,
+      "arguments": [
+        "filename"
+      ],
+      "converters": {
+        "filename": "PathConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "static",
+      "function": "Flask.__init__.<locals>.<lambda>",
+      "module": "flask.app"
+    }
+  ],
+  "correspondencia_endpoints": [
+    {
+      "anterior": "api.listar_assuntos_admin",
+      "atual": "api.conteudo.listar_assuntos_admin",
+      "url": "/api/admin/assuntos"
+    },
+    {
+      "anterior": "api.desempenho_admin",
+      "atual": "api.desempenho.desempenho_admin",
+      "url": "/api/admin/dashboard"
+    },
+    {
+      "anterior": "api.listar_materias_admin",
+      "atual": "api.conteudo.listar_materias_admin",
+      "url": "/api/admin/materias"
+    },
+    {
+      "anterior": "api.listar_questoes_admin",
+      "atual": "api.conteudo.listar_questoes_admin",
+      "url": "/api/admin/questoes"
+    },
+    {
+      "anterior": "api.simulado_admin_lista",
+      "atual": "api.simulados.simulado_admin_lista",
+      "url": "/api/admin/simulados"
+    },
+    {
+      "anterior": "api.simulado_criar",
+      "atual": "api.simulados.simulado_criar",
+      "url": "/api/admin/simulados"
+    },
+    {
+      "anterior": "api.simulado_admin_detalhe",
+      "atual": "api.simulados.simulado_admin_detalhe",
+      "url": "/api/admin/simulados/<int:simulado_id>"
+    },
+    {
+      "anterior": "api.simulado_editar",
+      "atual": "api.simulados.simulado_editar",
+      "url": "/api/admin/simulados/<int:simulado_id>"
+    },
+    {
+      "anterior": "api.simulado_arquivar",
+      "atual": "api.simulados.simulado_arquivar",
+      "url": "/api/admin/simulados/<int:simulado_id>/arquivar"
+    },
+    {
+      "anterior": "api.simulado_publicar",
+      "atual": "api.simulados.simulado_publicar",
+      "url": "/api/admin/simulados/<int:simulado_id>/publicar"
+    },
+    {
+      "anterior": "api.desempenho_aluno",
+      "atual": "api.desempenho.desempenho_aluno",
+      "url": "/api/aluno/dashboard"
+    },
+    {
+      "anterior": "api.desempenho_diagnostico",
+      "atual": "api.desempenho.desempenho_diagnostico",
+      "url": "/api/aluno/desempenho"
+    },
+    {
+      "anterior": "api.plano_consultar",
+      "atual": "api.plano_estudos.plano_consultar",
+      "url": "/api/aluno/plano"
+    },
+    {
+      "anterior": "api.plano_gerar",
+      "atual": "api.plano_estudos.plano_gerar",
+      "url": "/api/aluno/plano/gerar"
+    },
+    {
+      "anterior": "api.plano_concluir",
+      "atual": "api.plano_estudos.plano_concluir",
+      "url": "/api/aluno/plano/itens/<int:item_id>/concluir"
+    },
+    {
+      "anterior": "api.plano_recalcular",
+      "atual": "api.plano_estudos.plano_recalcular",
+      "url": "/api/aluno/plano/recalcular"
+    },
+    {
+      "anterior": "api.pratica_historico",
+      "atual": "api.praticas.pratica_historico",
+      "url": "/api/aluno/praticas"
+    },
+    {
+      "anterior": "api.pratica_iniciar",
+      "atual": "api.praticas.pratica_iniciar",
+      "url": "/api/aluno/praticas"
+    },
+    {
+      "anterior": "api.pratica_detalhe",
+      "atual": "api.praticas.pratica_detalhe",
+      "url": "/api/aluno/praticas/<int:tentativa_id>"
+    },
+    {
+      "anterior": "api.pratica_responder",
+      "atual": "api.praticas.pratica_responder",
+      "url": "/api/aluno/praticas/<int:tentativa_id>/resposta"
+    },
+    {
+      "anterior": "api.consultar",
+      "atual": "api.contas.consultar",
+      "url": "/api/aluno/privacidade"
+    },
+    {
+      "anterior": "api.consentir",
+      "atual": "api.contas.consentir",
+      "url": "/api/aluno/privacidade/consentimento-plano/aceitar"
+    },
+    {
+      "anterior": "api.recusar",
+      "atual": "api.contas.recusar",
+      "url": "/api/aluno/privacidade/consentimento-plano/recusar"
+    },
+    {
+      "anterior": "api.revogar",
+      "atual": "api.contas.revogar",
+      "url": "/api/aluno/privacidade/consentimento-plano/revogar"
+    },
+    {
+      "anterior": "api.aceitar_uso",
+      "atual": "api.contas.aceitar_uso",
+      "url": "/api/aluno/privacidade/termos-uso"
+    },
+    {
+      "anterior": "api.pratica_questoes",
+      "atual": "api.praticas.pratica_questoes",
+      "url": "/api/aluno/questoes"
+    },
+    {
+      "anterior": "api.simulado_catalogo",
+      "atual": "api.simulados.simulado_catalogo",
+      "url": "/api/aluno/simulados"
+    },
+    {
+      "anterior": "api.simulado_historico",
+      "atual": "api.simulados.simulado_historico",
+      "url": "/api/aluno/tentativas-simulado"
+    },
+    {
+      "anterior": "api.simulado_iniciar",
+      "atual": "api.simulados.simulado_iniciar",
+      "url": "/api/aluno/tentativas-simulado"
+    },
+    {
+      "anterior": "api.simulado_tentativa",
+      "atual": "api.simulados.simulado_tentativa",
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>"
+    },
+    {
+      "anterior": "api.simulado_correcao",
+      "atual": "api.simulados.simulado_correcao",
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/correcao"
+    },
+    {
+      "anterior": "api.simulado_finalizar",
+      "atual": "api.simulados.simulado_finalizar",
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/finalizar"
+    },
+    {
+      "anterior": "api.simulado_responder",
+      "atual": "api.simulados.simulado_responder",
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/respostas/<int:item_id>"
+    },
+    {
+      "anterior": "api.simulado_resultado",
+      "atual": "api.simulados.simulado_resultado",
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/resultado"
+    },
+    {
+      "anterior": "api.listar_areas_enem",
+      "atual": "api.conteudo.listar_areas_enem",
+      "url": "/api/areas-enem"
+    },
+    {
+      "anterior": "api.cadastrar_assunto",
+      "atual": "api.conteudo.cadastrar_assunto",
+      "url": "/api/assuntos"
+    },
+    {
+      "anterior": "api.listar_assuntos",
+      "atual": "api.conteudo.listar_assuntos",
+      "url": "/api/assuntos"
+    },
+    {
+      "anterior": "api.atualizar_assunto",
+      "atual": "api.conteudo.atualizar_assunto",
+      "url": "/api/assuntos/<int:assunto_id>"
+    },
+    {
+      "anterior": "api.deletar_assunto",
+      "atual": "api.conteudo.deletar_assunto",
+      "url": "/api/assuntos/<int:assunto_id>"
+    },
+    {
+      "anterior": "api.arquivar_assunto",
+      "atual": "api.conteudo.arquivar_assunto",
+      "url": "/api/assuntos/<int:assunto_id>/arquivar"
+    },
+    {
+      "anterior": "api.impacto_assunto",
+      "atual": "api.conteudo.impacto_assunto",
+      "url": "/api/assuntos/<int:assunto_id>/impacto-exclusao"
+    },
+    {
+      "anterior": "api.impacto_transferencia_assunto",
+      "atual": "api.conteudo.impacto_transferencia_assunto",
+      "url": "/api/assuntos/<int:assunto_id>/impacto-transferencia"
+    },
+    {
+      "anterior": "api.inativar_assunto",
+      "atual": "api.conteudo.inativar_assunto",
+      "url": "/api/assuntos/<int:assunto_id>/inativar"
+    },
+    {
+      "anterior": "api.reativar_assunto",
+      "atual": "api.conteudo.reativar_assunto",
+      "url": "/api/assuntos/<int:assunto_id>/reativar"
+    },
+    {
+      "anterior": "api.transferir_assunto",
+      "atual": "api.conteudo.transferir_assunto",
+      "url": "/api/assuntos/<int:assunto_id>/transferir"
+    },
+    {
+      "anterior": "api.auth_cadastro",
+      "atual": "api.contas.auth_cadastro",
+      "url": "/api/auth/cadastro"
+    },
+    {
+      "anterior": "api.auth_csrf",
+      "atual": "api.contas.auth_csrf",
+      "url": "/api/auth/csrf"
+    },
+    {
+      "anterior": "api.auth_login",
+      "atual": "api.contas.auth_login",
+      "url": "/api/auth/login"
+    },
+    {
+      "anterior": "api.auth_logout",
+      "atual": "api.contas.auth_logout",
+      "url": "/api/auth/logout"
+    },
+    {
+      "anterior": "api.auth_reautenticar",
+      "atual": "api.contas.auth_reautenticar",
+      "url": "/api/auth/reautenticar"
+    },
+    {
+      "anterior": "api.auth_sessao",
+      "atual": "api.contas.auth_sessao",
+      "url": "/api/auth/sessao"
+    },
+    {
+      "anterior": "api.cadastrar_materia",
+      "atual": "api.conteudo.cadastrar_materia",
+      "url": "/api/materias"
+    },
+    {
+      "anterior": "api.listar_materias",
+      "atual": "api.conteudo.listar_materias",
+      "url": "/api/materias"
+    },
+    {
+      "anterior": "api.atualizar_materia",
+      "atual": "api.conteudo.atualizar_materia",
+      "url": "/api/materias/<int:materia_id>"
+    },
+    {
+      "anterior": "api.deletar_materia",
+      "atual": "api.conteudo.deletar_materia",
+      "url": "/api/materias/<int:materia_id>"
+    },
+    {
+      "anterior": "api.arquivar_materia",
+      "atual": "api.conteudo.arquivar_materia",
+      "url": "/api/materias/<int:materia_id>/arquivar"
+    },
+    {
+      "anterior": "api.impacto_materia",
+      "atual": "api.conteudo.impacto_materia",
+      "url": "/api/materias/<int:materia_id>/impacto-exclusao"
+    },
+    {
+      "anterior": "api.inativar_materia",
+      "atual": "api.conteudo.inativar_materia",
+      "url": "/api/materias/<int:materia_id>/inativar"
+    },
+    {
+      "anterior": "api.reativar_materia",
+      "atual": "api.conteudo.reativar_materia",
+      "url": "/api/materias/<int:materia_id>/reativar"
+    },
+    {
+      "anterior": "api.cadastrar_questao",
+      "atual": "api.conteudo.cadastrar_questao",
+      "url": "/api/questoes"
+    },
+    {
+      "anterior": "api.questao_detalhe",
+      "atual": "api.conteudo.questao_detalhe",
+      "url": "/api/questoes/<int:questao_id>"
+    },
+    {
+      "anterior": "api.questao_editar",
+      "atual": "api.conteudo.questao_editar",
+      "url": "/api/questoes/<int:questao_id>"
+    },
+    {
+      "anterior": "api.questao_arquivar",
+      "atual": "api.conteudo.questao_arquivar",
+      "url": "/api/questoes/<int:questao_id>/arquivar"
+    },
+    {
+      "anterior": "api.questao_publicar",
+      "atual": "api.conteudo.questao_publicar",
+      "url": "/api/questoes/<int:questao_id>/publicar"
+    },
+    {
+      "anterior": "api.buscar_questoes_por_assunto",
+      "atual": "api.conteudo.buscar_questoes_por_assunto",
+      "url": "/api/questoes/por-assunto"
+    },
+    {
+      "anterior": "api.termos",
+      "atual": "api.contas.termos",
+      "url": "/api/termos"
+    }
+  ],
+  "cli_atual": {
+    "criar-administrador": {
+      "params": [
+        [
+          "nome",
+          [
+            "--nome"
+          ],
+          false,
+          "Sentinel.UNSET"
+        ],
+        [
+          "email",
+          [
+            "--email"
+          ],
+          false,
+          "Sentinel.UNSET"
+        ]
+      ]
+    },
+    "limpar-autenticacao": {
+      "params": []
+    }
+  },
+  "hashes_protegidos": {
+    "backend/database/migrations/000_create_mvp_schema.sql": "1e51d54b93a4d8125961a17e283e2933fa3fe1f0b8b385b6d50ede1bcdf868a8",
+    "backend/database/migrations/001_restrict_delete_assuntos.sql": "329594db44e2ee7f6a71b4c8a871cc5efb1dd849642ed4397b49a3ae7dca0b5d",
+    "backend/database/migrations/002_create_sp_questoes_por_assunto.sql": "7d19427eaed0f6e63ec4116aee0aa56cf07a2e12b6e559c2a09f5409414abd38",
+    "backend/database/migrations/003_prepare_catalogo_academico.sql": "dd27f63de40fd06585c4a3cbd33a9f164574ae983b3eeb3cffb8ff91a8decbd4",
+    "backend/database/migrations/004_restrict_catalogo_academico.sql": "de6bedc463391556498fe641cb61fe74a59717b421c59e0dfcb1d6ff71a804d8",
+    "backend/database/migrations/005_create_autenticacao_escolar.sql": "a650da20e8785b4de919e0324928844a282f63b76bacce0f752fdb55332fb8c2",
+    "backend/database/migrations/006_create_questoes_versionadas.sql": "97160b8fb019d8dc59e7f83452808b5fefd9a1944f20850d6336880822e2b36c",
+    "backend/database/migrations/007_create_pratica_tentativas.sql": "2ca7fc6c974dfa2e0011d72bc532a00a0e4cca8d9ab0055cdd9c4b93f58c3161",
+    "backend/database/migrations/008_create_simulados.sql": "b21286bbfcb77ba6bad04c1eda72d7fbc71b39dc825c847238cce1b73d71fe36",
+    "backend/database/migrations/009_create_planos_estudo.sql": "22763b2c463d65995f79a93aaa34a6ff3a760f591d94cfb19822be646126a624",
+    "backend/database/migrations/010_create_registros_privacidade.sql": "d91e31207a77afc6077c7dc7002b08fa7f2180f6df2dbe43a920d2107915d2dc",
+    "backend/database/create_database.sql": "cb0d46ef5afea63217a4f5e3ad872a4b680062a6aae13b89c1d9d8ab5d62358b",
+    "frontend/legal/termo-de-consentimento-plano-v1.html": "6233efccc924f73474e3c9b724f05d30729d55ae7fb177f6c47d3282d1d7b233",
+    "frontend/legal/termo-de-uso-v1.html": "e5bcdf3f002508592ee44a3e4cea2ec6dafcbe172a6e28996c2a105232cd9dd5"
+  },
+  "models_canonicas": {
+    "Simulado": "backend/app/modules/simulados/models/simulado.py",
+    "SimuladoRascunhoItem": "backend/app/modules/simulados/models/simulado.py",
+    "SimuladoVersao": "backend/app/modules/simulados/models/simulado.py",
+    "SimuladoVersaoItem": "backend/app/modules/simulados/models/simulado.py",
+    "SimuladoEvento": "backend/app/modules/simulados/models/simulado.py",
+    "SimuladoTentativa": "backend/app/modules/simulados/models/simulado.py",
+    "SimuladoResposta": "backend/app/modules/simulados/models/simulado.py",
+    "PraticaTentativa": "backend/app/modules/praticas/models/pratica_tentativa.py",
+    "PlanoEstudo": "backend/app/modules/plano_estudos/models/plano_estudo.py",
+    "PlanoEstudoItem": "backend/app/modules/plano_estudos/models/plano_estudo.py",
+    "AreaEnem": "backend/app/modules/conteudo/models/area_enem.py",
+    "Assunto": "backend/app/modules/conteudo/models/assunto.py",
+    "AssuntoTransferencia": "backend/app/modules/conteudo/models/assunto_transferencia.py",
+    "Materia": "backend/app/modules/conteudo/models/materia.py",
+    "Questao": "backend/app/modules/conteudo/models/questao.py",
+    "QuestaoEvento": "backend/app/modules/conteudo/models/questao_evento.py",
+    "QuestaoVersao": "backend/app/modules/conteudo/models/questao_versao.py",
+    "AuthLimite": "backend/app/modules/contas/models/auth_limite.py",
+    "RegistroPrivacidade": "backend/app/modules/contas/models/registro_privacidade.py",
+    "Sessao": "backend/app/modules/contas/models/sessao.py",
+    "Usuario": "backend/app/modules/contas/models/usuario.py"
+  }
+}

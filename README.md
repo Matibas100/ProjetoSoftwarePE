@@ -60,14 +60,15 @@ Plataforma ENEM/
 │   └── index.html
 └── backend/
     ├── app/                         pacote Python da aplicação Flask
-    │   ├── controllers/             camada Controller
+    │   ├── modules/                 contas, conteudo, praticas, simulados,
+    │   │                            desempenho e plano_estudos
+    │   │                            cada qual com rotas e camadas próprias
+    │   ├── core/                    bases, relógio, paginação, validação e health
     │   ├── contracts/               Protocols e registros de leitura
     │   ├── composition.py           ligações por aplicação
-    │   ├── models/                  camada Model e CRUD simples
-    │   ├── repositories/            consultas especializadas
-    │   ├── services/                casos de uso
+    │   ├── models/                  registro das 21 Models e ponte das bases
     │   ├── extensions.py            db compartilhado e CORS
-    │   └── routes.py                registro das rotas
+    │   └── routes.py                agregação dos seis Blueprints e health
     ├── database/
     │   ├── migrate.py                   runner oficial de migrations SQL
     │   ├── migration_types.py           tipos compartilhados de migration e erro
@@ -82,9 +83,13 @@ Plataforma ENEM/
 
 As quatro camadas exigidas pela disciplina estão dentro de `backend/app`
 porque `app` é o pacote importável usado pela application factory do Flask.
-Esse nível adicional apenas delimita o código da aplicação; `controllers`,
-`models`, `repositories` e `services` continuam separados e dentro de
-`backend`, enquanto `database/create_database.sql` permanece no local exigido.
+As camadas `controllers`, `models`, `repositories` e `services` ficam dentro
+do módulo proprietário em `backend/app/modules/`, conforme o
+[mapa modular](docs/technical/organizacao-modular.md) e o
+[ADR-010](docs/technical/adr/ADR-010-organizacao-modular-do-backend.md).
+As mesmas 21 Models, vinte funcionalidades e URLs permanecem; o bootstrap
+continua em `database/create_database.sql`. Módulos colaboram por APIs/contratos,
+com SQL especializado nos Repositories e CRUD simples nas Models.
 
 ## Funcionalidades Implementadas
 

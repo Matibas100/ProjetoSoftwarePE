@@ -1,5 +1,8 @@
 # Operação de Questões versionadas
 
+Código canônico: [`backend/app/modules/conteudo/`](../../backend/app/modules/conteudo/);
+interfaces e transações no [mapa modular](organizacao-modular.md).
+
 ## Fronteiras de leitura em lote
 
 `ListarQuestoesAlunoService` serializa diretamente as versões da consulta

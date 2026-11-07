@@ -2,9 +2,9 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch, Mock
 from app.exceptions import DadosInvalidosError
-from app.services.plano_validacao import operacao, confirmacao
-from app.services.selecionar_plano_service import SelecionarPlanoService
-from app.controllers.plano_estudo_controller import PlanoEstudoController
+from app.modules.plano_estudos.services.plano_validacao import operacao, confirmacao
+from app.modules.plano_estudos.services.selecionar_plano_service import SelecionarPlanoService
+from app.modules.plano_estudos.controllers.plano_estudo_controller import PlanoEstudoController
 from app import create_app
 from tests.unit.test_config_and_app import TestConfig
 
@@ -25,7 +25,7 @@ class PlanosUnitTest(unittest.TestCase):
         d={'limiar_amostra':5,'periodo':{'inicio':'2026-09-25','fim':'2026-10-24','timezone':'UTC'},'assuntos':linhas}
         diagnostico = Mock()
         diagnostico.executar.return_value = d
-        with patch('app.services.selecionar_plano_service.QuestaoRepository.pares_elegiveis_plano',return_value=pares if pares is not None else {(a['assunto_id'],1) for a in linhas}):
+        with patch('app.modules.plano_estudos.services.selecionar_plano_service.pares_elegiveis_plano',return_value=pares if pares is not None else {(a['assunto_id'],1) for a in linhas}):
             resultado=SelecionarPlanoService(diagnostico).executar(7,'contexto',datetime(2026,10,24))
             diagnostico.executar.assert_called_once_with(7,contexto='contexto',instante=datetime(2026,10,24))
             return resultado[1]

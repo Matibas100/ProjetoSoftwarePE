@@ -1,7 +1,7 @@
 """Snapshot MySQL próprio ou participação opaca em transação autorizada."""
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from app.domain.autenticacao import agora_utc
+from app.core.relogio import agora_utc
 from app.extensions import db
 
 

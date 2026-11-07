@@ -1,7 +1,7 @@
 import unittest
 from uuid import uuid4
 
-from app.models.questao import Questao
+from app.modules.conteudo.models.questao import Questao
 from app.extensions import db
 from sqlalchemy import text
 from tests.integration_support import MySQLIntegrationTestCase

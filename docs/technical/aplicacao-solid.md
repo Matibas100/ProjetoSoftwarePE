@@ -4,6 +4,22 @@ O recorte e suas limitações estão no
 [ADR-008](adr/ADR-008-contratos-e-capacidades-de-persistencia.md).
 Refatoração interna não acrescenta funcionalidades às vinte já entregues.
 
+## Propriedade e colaboração modular
+
+O [ADR-010](adr/ADR-010-organizacao-modular-do-backend.md) e o
+[mapa modular](organizacao-modular.md) delimitam seis proprietários.
+As bases canônicas ficam em `app.core.persistencia`, com ponte estática no
+import legado. Camadas ficam no módulo; APIs públicas não exportam ORM/Repository.
+Desempenho agrega projeções dos produtores; Práticas/Simulados consultam a API
+de Conteúdo. A composição conserva os contratos injetados anteriores.
+
+Recusar/Revogar recebem um `Callable[[int], None]` obrigatório, construído por
+aplicação, que delega ao participante de Plano sem commit. Contas conserva
+o lock exato; Plano consulta permissão pela API de Contas. Assim, a coordenação
+atômica continua no caso de uso e não exige import circular de persistência.
+[Fronteiras e factories](../../backend/tests/unit/test_arquitetura_modular.py)
+e integrações reais verificam esses limites.
+
 ## LSP e ISP: capacidades de persistência
 
 `ModeloBase` oferece `salvar`, `listar_todos` e `buscar_por_id`;

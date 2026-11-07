@@ -1,5 +1,8 @@
 # Operação de desempenho e dashboards
 
+Código canônico: [`backend/app/modules/desempenho/`](../../backend/app/modules/desempenho/);
+interfaces e transações no [mapa modular](organizacao-modular.md).
+
 ## Origem e denominadores
 
 Leitura derivada, sem tabelas de métricas, migration ou escrita nos resultados.

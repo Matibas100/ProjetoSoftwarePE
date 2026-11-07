@@ -12,8 +12,10 @@ Este índice consolida as decisões arquiteturais do projeto. A aceitação dos 
 | [ADR-006](ADR-006-fronteira-de-transacoes.md) | Fronteira de transações | **Aceito** | 2026-08-29 | O Service delimita o caso de uso por TransactionManager/UnitOfWork, preservando Active Record e isolando a sessão na infraestrutura. |
 | [ADR-007](ADR-007-armazenamento-de-midias.md) | Mídias e arquivos | **Aceito** | 2026-08-29 | StorageService abstrai armazenamento local e de objetos; o MySQL guarda metadados e `storage_key`, não os bytes por padrão. |
 | [ADR-008](ADR-008-contratos-e-capacidades-de-persistencia.md) | Contratos e capacidades de persistência | **Aceito** | 2026-11-06 | Nove consultas por contratos/composição e três bases abstratas por capacidade, preservando API, Active Record e transações. |
+| [ADR-009](ADR-009-consentimento-e-eliminacao-do-plano.md) | Consentimento e eliminação do plano | **Aceito** | 2026-11-06 | Aceites separados e eliminação atômica dos planos próprios. |
+| [ADR-010](ADR-010-organizacao-modular-do-backend.md) | Organização modular do backend | **Aceito** | 2026-11-07 | Seis proprietários/APIs, núcleo neutro, Blueprints e eliminação participante em Plano; adendo aos ADRs 008/009. |
 
-## Pendência condicionante
+## Decisões complementares
 
 [ADR-009 — Consentimento e eliminação do plano](ADR-009-consentimento-e-eliminacao-do-plano.md):
 aceites separados, evidência imutável e exceção confirmada e atômica de eliminação

@@ -1,0 +1,5068 @@
+{
+  "models": {
+    "AreaEnem": {
+      "table": "areas_enem",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "codigo",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "nome",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "ordem",
+          "type": "SMALLINT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "",
+          [
+            "codigo"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "",
+          [
+            "nome"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "",
+          [
+            "ordem"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [
+        [
+          "materias",
+          "Materia",
+          "areas_enem.id = materias.area_enem_id",
+          "CascadeOptions('merge,save-update')",
+          "all",
+          true
+        ]
+      ],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "Assunto": {
+      "table": "assuntos",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": true,
+          "foreign_keys": []
+        },
+        {
+          "name": "nome",
+          "type": "VARCHAR(150)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "nome_normalizado",
+          "type": "VARCHAR(150) COLLATE \"utf8mb4_0900_ai_ci\"",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "descricao",
+          "type": "TEXT",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "materia_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "materias.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": "ativa",
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": "CURRENT_TIMESTAMP(:current_timestamp_1)",
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "atualizado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": "CURRENT_TIMESTAMP(:current_timestamp_1)",
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_assuntos_status",
+          [],
+          "status IN ('ativa', 'inativa', 'arquivada')"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "materia_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_assuntos_materia_nome_normalizado",
+          [
+            "materia_id",
+            "nome_normalizado"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [
+        [
+          "ix_assuntos_materia_id",
+          false,
+          [
+            "materia_id"
+          ]
+        ],
+        [
+          "ix_assuntos_status",
+          false,
+          [
+            "status"
+          ]
+        ]
+      ],
+      "relationships": [
+        [
+          "materia",
+          "Materia",
+          "materias.id = assuntos.materia_id",
+          "CascadeOptions('merge,save-update')",
+          false,
+          false
+        ],
+        [
+          "questoes",
+          "Questao",
+          "assuntos.id = questoes.assunto_id",
+          "CascadeOptions('merge,save-update')",
+          "all",
+          true
+        ],
+        [
+          "transferencias",
+          "AssuntoTransferencia",
+          "assuntos.id = assunto_transferencias.assunto_id",
+          "CascadeOptions('merge,save-update')",
+          "all",
+          true
+        ]
+      ],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "AssuntoTransferencia": {
+      "table": "assunto_transferencias",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": true,
+          "foreign_keys": []
+        },
+        {
+          "name": "assunto_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "assuntos.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "materia_origem_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "materias.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "materia_destino_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "materias.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "questoes_impactadas",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": "CURRENT_TIMESTAMP(:current_timestamp_1)",
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_transferencias_materias",
+          [],
+          "materia_origem_id <> materia_destino_id"
+        ],
+        [
+          "CheckConstraint",
+          "ck_transferencias_questoes",
+          [],
+          "questoes_impactadas >= 0"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "assunto_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "materia_destino_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "materia_origem_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [
+        [
+          "ix_assunto_transferencias_assunto_id",
+          false,
+          [
+            "assunto_id"
+          ]
+        ],
+        [
+          "ix_assunto_transferencias_materia_destino_id",
+          false,
+          [
+            "materia_destino_id"
+          ]
+        ],
+        [
+          "ix_assunto_transferencias_materia_origem_id",
+          false,
+          [
+            "materia_origem_id"
+          ]
+        ]
+      ],
+      "relationships": [
+        [
+          "assunto",
+          "Assunto",
+          "assuntos.id = assunto_transferencias.assunto_id",
+          "CascadeOptions('merge,save-update')",
+          false,
+          false
+        ],
+        [
+          "materia_destino",
+          "Materia",
+          "materias.id = assunto_transferencias.materia_destino_id",
+          "CascadeOptions('merge,save-update')",
+          false,
+          false
+        ],
+        [
+          "materia_origem",
+          "Materia",
+          "materias.id = assunto_transferencias.materia_origem_id",
+          "CascadeOptions('merge,save-update')",
+          false,
+          false
+        ]
+      ],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "AuthLimite": {
+      "table": "auth_limites",
+      "columns": [
+        {
+          "name": "chave_hash",
+          "type": "CHAR(64) COLLATE \"ascii_bin\"",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "falhas",
+          "type": "SMALLINT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "janela_inicio",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "bloqueado_ate",
+          "type": "DATETIME",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "chave_hash"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "Materia": {
+      "table": "materias",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": true,
+          "foreign_keys": []
+        },
+        {
+          "name": "nome",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "descricao",
+          "type": "TEXT",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "area_enem_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "areas_enem.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": "ativa",
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": "CURRENT_TIMESTAMP(:current_timestamp_1)",
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "atualizado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": "CURRENT_TIMESTAMP(:current_timestamp_1)",
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_materias_status",
+          [],
+          "status IN ('ativa', 'inativa', 'arquivada')"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "area_enem_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "",
+          [
+            "nome"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [
+        [
+          "ix_materias_area_enem_id",
+          false,
+          [
+            "area_enem_id"
+          ]
+        ],
+        [
+          "ix_materias_status",
+          false,
+          [
+            "status"
+          ]
+        ]
+      ],
+      "relationships": [
+        [
+          "area_enem",
+          "AreaEnem",
+          "areas_enem.id = materias.area_enem_id",
+          "CascadeOptions('merge,save-update')",
+          false,
+          false
+        ],
+        [
+          "assuntos",
+          "Assunto",
+          "materias.id = assuntos.materia_id",
+          "CascadeOptions('merge,save-update')",
+          "all",
+          true
+        ]
+      ],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "PlanoEstudo": {
+      "table": "planos_estudo",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "usuario_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "geracao",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "atual",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "usuario_atual",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": "CASE WHEN atual = 1 THEN usuario_id ELSE NULL END",
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "periodo",
+          "type": "JSON",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "gerado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "chave_envio",
+          "type": "CHAR(36) COLLATE \"ascii_bin\"",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "operacao",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "plano_anterior_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "planos_estudo.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_plano_geracao",
+          [],
+          "geracao >= 1 AND atual IN (0,1)"
+        ],
+        [
+          "CheckConstraint",
+          "ck_plano_operacao",
+          [],
+          "(operacao = 'gerar' AND plano_anterior_id IS NULL) OR (operacao = 'recalcular' AND plano_anterior_id IS NOT NULL)"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "plano_anterior_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "usuario_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_plano_atual",
+          [
+            "usuario_atual"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_plano_chave",
+          [
+            "usuario_id",
+            "chave_envio"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_plano_geracao",
+          [
+            "usuario_id",
+            "geracao"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": false,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "PlanoEstudoItem": {
+      "table": "plano_estudo_itens",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "plano_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "planos_estudo.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "assunto_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "assuntos.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "materia_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "materias.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "posicao",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "snapshot",
+          "type": "JSON",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "estado",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "concluido_em",
+          "type": "DATETIME",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_plano_item_estado",
+          [],
+          "(estado = 'pendente' AND concluido_em IS NULL) OR (estado = 'concluido' AND concluido_em IS NOT NULL)"
+        ],
+        [
+          "CheckConstraint",
+          "ck_plano_item_posicao",
+          [],
+          "posicao BETWEEN 1 AND 3"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "assunto_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "materia_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "plano_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_plano_item_assunto",
+          [
+            "plano_id",
+            "assunto_id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_plano_item_posicao",
+          [
+            "plano_id",
+            "posicao"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": false,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "PraticaTentativa": {
+      "table": "pratica_tentativas",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "usuario_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "questao_versao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questao_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "chave_envio",
+          "type": "CHAR(36) COLLATE \"ascii_bin\"",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "estado",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "resposta_escolhida",
+          "type": "CHAR(1) COLLATE \"ascii_bin\"",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "correta",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "iniciada_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "respondida_em",
+          "type": "DATETIME",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "assunto_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "assuntos.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "assunto_nome",
+          "type": "VARCHAR(150)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "materia_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "materias.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "materia_nome",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_pratica_tentativas_estado",
+          [],
+          "(estado = 'em_andamento' AND resposta_escolhida IS NULL AND correta IS NULL AND respondida_em IS NULL) OR (estado = 'respondida' AND resposta_escolhida IS NOT NULL AND resposta_escolhida IN ('A','B','C','D','E') AND correta IS NOT NULL AND correta IN (0,1) AND respondida_em IS NOT NULL AND respondida_em >= iniciada_em)"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "assunto_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "materia_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "questao_versao_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "usuario_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_pratica_tentativas_chave",
+          [
+            "usuario_id",
+            "chave_envio"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [
+        [
+          "ix_pratica_tentativas_historico",
+          false,
+          [
+            "usuario_id",
+            "respondida_em",
+            "id"
+          ]
+        ]
+      ],
+      "relationships": [],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "Questao": {
+      "table": "questoes",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": true,
+          "foreign_keys": []
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": "rascunho",
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "revisao",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": 1,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "atualizado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": "CURRENT_TIMESTAMP(:current_timestamp_1)",
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "versao_publicada_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questao_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "enunciado",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_a",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_b",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_c",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_d",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_e",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "resposta_correta",
+          "type": "CHAR(1)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "explicacao",
+          "type": "TEXT",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "dificuldade",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "assunto_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "assuntos.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_questoes_dificuldade",
+          [],
+          "dificuldade IN ('facil', 'media', 'dificil')"
+        ],
+        [
+          "CheckConstraint",
+          "ck_questoes_resposta_correta",
+          [],
+          "resposta_correta IN ('A', 'B', 'C', 'D', 'E')"
+        ],
+        [
+          "CheckConstraint",
+          "ck_questoes_revisao",
+          [],
+          "revisao >= 1"
+        ],
+        [
+          "CheckConstraint",
+          "ck_questoes_status",
+          [],
+          "status IN ('rascunho','publicada','arquivada')"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "assunto_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "versao_publicada_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [
+        [
+          "ix_questoes_assunto_id",
+          false,
+          [
+            "assunto_id"
+          ]
+        ],
+        [
+          "ix_questoes_status",
+          false,
+          [
+            "status"
+          ]
+        ]
+      ],
+      "relationships": [
+        [
+          "assunto",
+          "Assunto",
+          "assuntos.id = questoes.assunto_id",
+          "CascadeOptions('merge,save-update')",
+          false,
+          false
+        ]
+      ],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "QuestaoEvento": {
+      "table": "questao_eventos",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "questao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "versao_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questao_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "ator_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "acao",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "motivo",
+          "type": "VARCHAR(500)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_questao_eventos_acao",
+          [],
+          "acao IN ('cadastro','edicao','revisao','aprovacao','publicacao','arquivamento')"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "ator_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "questao_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "versao_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [
+        [
+          "ix_questao_eventos_questao_id",
+          false,
+          [
+            "questao_id"
+          ]
+        ]
+      ],
+      "relationships": [],
+      "bases": [
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": false,
+        "deletar": false,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "QuestaoVersao": {
+      "table": "questao_versoes",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "questao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "numero",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "revisao_origem",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "estado",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "enunciado",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_a",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_b",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_c",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_d",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "alternativa_e",
+          "type": "TEXT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "resposta_correta",
+          "type": "CHAR(1)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "explicacao",
+          "type": "TEXT",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "dificuldade",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "assunto_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "assuntos.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "assunto_nome",
+          "type": "VARCHAR(150)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "materia_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "materias.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "materia_nome",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "area_enem_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "areas_enem.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "area_enem_nome",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "ator_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "origem",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_questao_versoes_dificuldade",
+          [],
+          "dificuldade IN ('facil','media','dificil')"
+        ],
+        [
+          "CheckConstraint",
+          "ck_questao_versoes_estado",
+          [],
+          "estado IN ('rascunho','publicada')"
+        ],
+        [
+          "CheckConstraint",
+          "ck_questao_versoes_numero",
+          [],
+          "numero >= 1 AND revisao_origem >= 1"
+        ],
+        [
+          "CheckConstraint",
+          "ck_questao_versoes_origem",
+          [],
+          "origem IN ('legado','manual')"
+        ],
+        [
+          "CheckConstraint",
+          "ck_questao_versoes_resposta",
+          [],
+          "resposta_correta IN ('A','B','C','D','E')"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "area_enem_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "assunto_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "ator_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "materia_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "questao_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_questao_versoes_numero",
+          [
+            "questao_id",
+            "numero"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": false,
+        "deletar": false,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "RegistroPrivacidade": {
+      "table": "registros_privacidade",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "usuario_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "tipo",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "acao",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "versao",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "documento_sha256",
+          "type": "CHAR(64) COLLATE \"ascii_bin\"",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "registrado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": "agora_utc",
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "chave_envio",
+          "type": "CHAR(36) COLLATE \"ascii_bin\"",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "revisao_base",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_privacidade_acao",
+          [],
+          "acao IN ('aceitar','recusar','revogar')"
+        ],
+        [
+          "CheckConstraint",
+          "ck_privacidade_combinacao",
+          [],
+          "tipo = 'plano' OR acao = 'aceitar'"
+        ],
+        [
+          "CheckConstraint",
+          "ck_privacidade_revisao",
+          [],
+          "revisao_base >= 0"
+        ],
+        [
+          "CheckConstraint",
+          "ck_privacidade_tipo",
+          [],
+          "tipo IN ('uso','plano')"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "usuario_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_privacidade_chave",
+          [
+            "usuario_id",
+            "chave_envio"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [
+        [
+          "ix_privacidade_ultima",
+          false,
+          [
+            "usuario_id",
+            "tipo",
+            "id"
+          ]
+        ]
+      ],
+      "relationships": [],
+      "bases": [
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": false,
+        "deletar": false,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "Sessao": {
+      "table": "sessoes",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "usuario_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "identificador_hash",
+          "type": "CHAR(64) COLLATE \"ascii_bin\"",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criada_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "ultimo_acesso_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "expira_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "reautenticada_em",
+          "type": "DATETIME",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "revogada_em",
+          "type": "DATETIME",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "usuario_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "",
+          [
+            "identificador_hash"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [
+        [
+          "usuario",
+          "Usuario",
+          "usuarios.id = sessoes.usuario_id",
+          "CascadeOptions('merge,save-update')",
+          false,
+          false
+        ]
+      ],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "Simulado": {
+      "table": "simulados",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "titulo",
+          "type": "VARCHAR(150)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "estado",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "revisao",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "autor_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "atualizado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "simulado_versao_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulado_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_simulados_estado",
+          [],
+          "estado IN ('rascunho','publicado','arquivado')"
+        ],
+        [
+          "CheckConstraint",
+          "ck_simulados_revisao",
+          [],
+          "revisao >= 1"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "autor_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "simulado_versao_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "SimuladoEvento": {
+      "table": "simulado_eventos",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "simulado_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulados.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "versao_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulado_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "ator_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "acao",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "motivo",
+          "type": "VARCHAR(500)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "ator_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "simulado_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "versao_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": false,
+        "deletar": false,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "SimuladoRascunhoItem": {
+      "table": "simulado_rascunho_itens",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "simulado_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulados.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "posicao",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "questao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "questao_versao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questao_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_sim_rascunho_posicao",
+          [],
+          "posicao BETWEEN 1 AND 180"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "questao_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "questao_versao_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "simulado_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_rascunho_posicao",
+          [
+            "simulado_id",
+            "posicao"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_rascunho_questao",
+          [
+            "simulado_id",
+            "questao_id"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "SimuladoResposta": {
+      "table": "simulado_respostas",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "tentativa_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulado_tentativas.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "item_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulado_versao_itens.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "alternativa",
+          "type": "CHAR(1) COLLATE \"ascii_bin\"",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "correta",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_sim_resposta_alternativa",
+          [],
+          "alternativa IS NULL OR alternativa IN ('A','B','C','D','E')"
+        ],
+        [
+          "CheckConstraint",
+          "ck_sim_resposta_correta",
+          [],
+          "correta IS NULL OR correta IN (0,1)"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "item_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "tentativa_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_resposta_item",
+          [
+            "tentativa_id",
+            "item_id"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "SimuladoTentativa": {
+      "table": "simulado_tentativas",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "usuario_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "simulado_versao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulado_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "estado",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "revisao",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "chave_envio",
+          "type": "CHAR(36) COLLATE \"ascii_bin\"",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "iniciada_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "finalizada_em",
+          "type": "DATETIME",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "total",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "respondidas",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "acertos",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "erros",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "em_branco",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "percentual_acerto",
+          "type": "NUMERIC(5, 2)",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "em_andamento_marcador",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary": false,
+          "default": null,
+          "server_default": "CASE WHEN estado = 'em_andamento' THEN 1 ELSE NULL END",
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_sim_tentativa_estado",
+          [],
+          "(estado = 'em_andamento' AND finalizada_em IS NULL AND total IS NULL AND respondidas IS NULL AND acertos IS NULL AND erros IS NULL AND em_branco IS NULL AND percentual_acerto IS NULL) OR (estado = 'finalizada' AND finalizada_em IS NOT NULL AND finalizada_em >= iniciada_em AND total IS NOT NULL AND total BETWEEN 1 AND 180 AND respondidas IS NOT NULL AND acertos IS NOT NULL AND erros IS NOT NULL AND em_branco IS NOT NULL AND percentual_acerto IS NOT NULL AND acertos >= 0 AND erros >= 0 AND em_branco >= 0 AND total = acertos + erros + em_branco AND respondidas = acertos + erros AND percentual_acerto = ROUND(100 * acertos / total, 2))"
+        ],
+        [
+          "CheckConstraint",
+          "ck_sim_tentativa_revisao",
+          [],
+          "revisao >= 1"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "simulado_versao_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "usuario_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_tentativa_andamento",
+          [
+            "usuario_id",
+            "simulado_versao_id",
+            "em_andamento_marcador"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_tentativa_chave",
+          [
+            "usuario_id",
+            "chave_envio"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [
+        [
+          "ix_sim_tentativa_historico",
+          false,
+          [
+            "usuario_id",
+            "finalizada_em",
+            "id"
+          ]
+        ]
+      ],
+      "relationships": [],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "SimuladoVersao": {
+      "table": "simulado_versoes",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "simulado_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulados.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "numero",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "revisao_origem",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "titulo",
+          "type": "VARCHAR(150)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "autor_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "usuarios.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_sim_versao_numero",
+          [],
+          "numero >= 1 AND revisao_origem >= 1"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "autor_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "simulado_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_versao_numero",
+          [
+            "simulado_id",
+            "numero"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_versao_revisao",
+          [
+            "simulado_id",
+            "revisao_origem"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": false,
+        "deletar": false,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "SimuladoVersaoItem": {
+      "table": "simulado_versao_itens",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "simulado_versao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "simulado_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "posicao",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "questao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        },
+        {
+          "name": "questao_versao_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": [
+            [
+              "questao_versoes.id",
+              "RESTRICT",
+              "RESTRICT"
+            ]
+          ]
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_sim_item_posicao",
+          [],
+          "posicao BETWEEN 1 AND 180"
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "questao_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "questao_versao_id"
+          ],
+          ""
+        ],
+        [
+          "ForeignKeyConstraint",
+          "",
+          [
+            "simulado_versao_id"
+          ],
+          ""
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_item_posicao",
+          [
+            "simulado_versao_id",
+            "posicao"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_sim_item_questao",
+          [
+            "simulado_versao_id",
+            "questao_id"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": false,
+        "deletar": false,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    },
+    "Usuario": {
+      "table": "usuarios",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary": true,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "nome",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(254) COLLATE \"utf8mb4_bin\"",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "senha_hash",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "perfil",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "ativo",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary": false,
+          "default": true,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        },
+        {
+          "name": "criado_em",
+          "type": "DATETIME",
+          "nullable": false,
+          "primary": false,
+          "default": null,
+          "server_default": null,
+          "onupdate": null,
+          "autoincrement": "auto",
+          "foreign_keys": []
+        }
+      ],
+      "constraints": [
+        [
+          "CheckConstraint",
+          "ck_usuarios_ativo",
+          [],
+          "ativo IN (0, 1)"
+        ],
+        [
+          "CheckConstraint",
+          "ck_usuarios_perfil",
+          [],
+          "perfil IN ('aluno', 'administrador')"
+        ],
+        [
+          "PrimaryKeyConstraint",
+          "",
+          [
+            "id"
+          ],
+          ""
+        ],
+        [
+          "UniqueConstraint",
+          "uq_usuarios_email",
+          [
+            "email"
+          ],
+          ""
+        ]
+      ],
+      "indexes": [],
+      "relationships": [],
+      "bases": [
+        "CrudMixin",
+        "ModeloAtualizavel",
+        "ModeloBase"
+      ],
+      "capabilities": {
+        "salvar": true,
+        "atualizar": true,
+        "deletar": true,
+        "buscar_por_id": true,
+        "listar_todos": true
+      }
+    }
+  },
+  "routes": [
+    {
+      "url": "/api/admin/assuntos",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.listar_assuntos_admin",
+      "function": "AssuntoController.listar_admin",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/admin/dashboard",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.desempenho_admin",
+      "function": "DesempenhoController.admin",
+      "module": "app.controllers.desempenho_controller"
+    },
+    {
+      "url": "/api/admin/materias",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.listar_materias_admin",
+      "function": "MateriaController.listar_admin",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/admin/questoes",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.listar_questoes_admin",
+      "function": "QuestaoController.listar_admin",
+      "module": "app.controllers.questao_controller"
+    },
+    {
+      "url": "/api/admin/simulados",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_admin_lista",
+      "function": "SimuladoController.admin_lista",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_criar",
+      "function": "SimuladoController.criar",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados/<int:simulado_id>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "simulado_id"
+      ],
+      "converters": {
+        "simulado_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_admin_detalhe",
+      "function": "SimuladoController.admin_detalhe",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados/<int:simulado_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "simulado_id"
+      ],
+      "converters": {
+        "simulado_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_editar",
+      "function": "SimuladoController.editar",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados/<int:simulado_id>/arquivar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "simulado_id"
+      ],
+      "converters": {
+        "simulado_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_arquivar",
+      "function": "SimuladoController.arquivar",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/admin/simulados/<int:simulado_id>/publicar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "simulado_id"
+      ],
+      "converters": {
+        "simulado_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_publicar",
+      "function": "SimuladoController.publicar",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/dashboard",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.desempenho_aluno",
+      "function": "DesempenhoController.aluno",
+      "module": "app.controllers.desempenho_controller"
+    },
+    {
+      "url": "/api/aluno/desempenho",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.desempenho_diagnostico",
+      "function": "DesempenhoController.diagnostico",
+      "module": "app.controllers.desempenho_controller"
+    },
+    {
+      "url": "/api/aluno/plano",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.plano_consultar",
+      "function": "PlanoEstudoController.consultar",
+      "module": "app.controllers.plano_estudo_controller"
+    },
+    {
+      "url": "/api/aluno/plano/gerar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.plano_gerar",
+      "function": "PlanoEstudoController.gerar",
+      "module": "app.controllers.plano_estudo_controller"
+    },
+    {
+      "url": "/api/aluno/plano/itens/<int:item_id>/concluir",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "item_id"
+      ],
+      "converters": {
+        "item_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.plano_concluir",
+      "function": "PlanoEstudoController.concluir",
+      "module": "app.controllers.plano_estudo_controller"
+    },
+    {
+      "url": "/api/aluno/plano/recalcular",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.plano_recalcular",
+      "function": "PlanoEstudoController.recalcular",
+      "module": "app.controllers.plano_estudo_controller"
+    },
+    {
+      "url": "/api/aluno/praticas",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.pratica_historico",
+      "function": "PraticaController.historico",
+      "module": "app.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/praticas",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.pratica_iniciar",
+      "function": "PraticaController.iniciar",
+      "module": "app.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/praticas/<int:tentativa_id>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.pratica_detalhe",
+      "function": "PraticaController.detalhe",
+      "module": "app.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/praticas/<int:tentativa_id>/resposta",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.pratica_responder",
+      "function": "PraticaController.responder",
+      "module": "app.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.consultar",
+      "function": "PrivacidadeController.consultar",
+      "module": "app.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade/consentimento-plano/aceitar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.consentir",
+      "function": "PrivacidadeController.consentir",
+      "module": "app.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade/consentimento-plano/recusar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.recusar",
+      "function": "PrivacidadeController.recusar",
+      "module": "app.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade/consentimento-plano/revogar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.revogar",
+      "function": "PrivacidadeController.revogar",
+      "module": "app.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/privacidade/termos-uso",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.aceitar_uso",
+      "function": "PrivacidadeController.aceitar_uso",
+      "module": "app.controllers.privacidade_controller"
+    },
+    {
+      "url": "/api/aluno/questoes",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.pratica_questoes",
+      "function": "PraticaController.questoes",
+      "module": "app.controllers.pratica_controller"
+    },
+    {
+      "url": "/api/aluno/simulados",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_catalogo",
+      "function": "SimuladoController.catalogo",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_historico",
+      "function": "SimuladoController.historico",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_iniciar",
+      "function": "SimuladoController.iniciar",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_tentativa",
+      "function": "SimuladoController.tentativa",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/correcao",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {
+        "modo": "correcao"
+      },
+      "arguments": [
+        "modo",
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_correcao",
+      "function": "SimuladoController.tentativa",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/finalizar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_finalizar",
+      "function": "SimuladoController.finalizar",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/respostas/<int:item_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "item_id",
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter",
+        "item_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_responder",
+      "function": "SimuladoController.responder",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/aluno/tentativas-simulado/<int:tentativa_id>/resultado",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {
+        "modo": "resultado"
+      },
+      "arguments": [
+        "modo",
+        "tentativa_id"
+      ],
+      "converters": {
+        "tentativa_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.simulado_resultado",
+      "function": "SimuladoController.tentativa",
+      "module": "app.controllers.simulado_controller"
+    },
+    {
+      "url": "/api/areas-enem",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.listar_areas_enem",
+      "function": "AreaEnemController.listar",
+      "module": "app.controllers.area_enem_controller"
+    },
+    {
+      "url": "/api/assuntos",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.cadastrar_assunto",
+      "function": "AssuntoController.cadastrar",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.listar_assuntos",
+      "function": "AssuntoController.listar",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.atualizar_assunto",
+      "function": "AssuntoController.atualizar",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>",
+      "methods": [
+        "DELETE",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.deletar_assunto",
+      "function": "AssuntoController.deletar",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/arquivar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "arquivar"
+      },
+      "arguments": [
+        "acao",
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.arquivar_assunto",
+      "function": "AssuntoController.alterar_status",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/impacto-exclusao",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.impacto_assunto",
+      "function": "AssuntoController.impacto",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/impacto-transferencia",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.impacto_transferencia_assunto",
+      "function": "AssuntoController.previa_transferencia",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/inativar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "inativar"
+      },
+      "arguments": [
+        "acao",
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.inativar_assunto",
+      "function": "AssuntoController.alterar_status",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/reativar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "reativar"
+      },
+      "arguments": [
+        "acao",
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.reativar_assunto",
+      "function": "AssuntoController.alterar_status",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/assuntos/<int:assunto_id>/transferir",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "assunto_id"
+      ],
+      "converters": {
+        "assunto_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.transferir_assunto",
+      "function": "AssuntoController.transferir",
+      "module": "app.controllers.assunto_controller"
+    },
+    {
+      "url": "/api/auth/cadastro",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.auth_cadastro",
+      "function": "AutenticacaoController.cadastro",
+      "module": "app.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/csrf",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.auth_csrf",
+      "function": "AutenticacaoController.csrf",
+      "module": "app.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/login",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.auth_login",
+      "function": "AutenticacaoController.login",
+      "module": "app.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/logout",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.auth_logout",
+      "function": "AutenticacaoController.logout",
+      "module": "app.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/reautenticar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.auth_reautenticar",
+      "function": "AutenticacaoController.reautenticar",
+      "module": "app.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/auth/sessao",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.auth_sessao",
+      "function": "AutenticacaoController.sessao",
+      "module": "app.controllers.autenticacao_controller"
+    },
+    {
+      "url": "/api/health",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.health",
+      "function": "HealthController.status",
+      "module": "app.controllers.health_controller"
+    },
+    {
+      "url": "/api/materias",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.cadastrar_materia",
+      "function": "MateriaController.cadastrar",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.listar_materias",
+      "function": "MateriaController.listar",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.atualizar_materia",
+      "function": "MateriaController.atualizar",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>",
+      "methods": [
+        "DELETE",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.deletar_materia",
+      "function": "MateriaController.deletar",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>/arquivar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "arquivar"
+      },
+      "arguments": [
+        "acao",
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.arquivar_materia",
+      "function": "MateriaController.alterar_status",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>/impacto-exclusao",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.impacto_materia",
+      "function": "MateriaController.impacto",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>/inativar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "inativar"
+      },
+      "arguments": [
+        "acao",
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.inativar_materia",
+      "function": "MateriaController.alterar_status",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/materias/<int:materia_id>/reativar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {
+        "acao": "reativar"
+      },
+      "arguments": [
+        "acao",
+        "materia_id"
+      ],
+      "converters": {
+        "materia_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.reativar_materia",
+      "function": "MateriaController.alterar_status",
+      "module": "app.controllers.materia_controller"
+    },
+    {
+      "url": "/api/questoes",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.cadastrar_questao",
+      "function": "QuestaoController.cadastrar",
+      "module": "app.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/<int:questao_id>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [
+        "questao_id"
+      ],
+      "converters": {
+        "questao_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.questao_detalhe",
+      "function": "QuestaoController.detalhe",
+      "module": "app.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/<int:questao_id>",
+      "methods": [
+        "OPTIONS",
+        "PUT"
+      ],
+      "defaults": {},
+      "arguments": [
+        "questao_id"
+      ],
+      "converters": {
+        "questao_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.questao_editar",
+      "function": "QuestaoController.editar",
+      "module": "app.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/<int:questao_id>/arquivar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "questao_id"
+      ],
+      "converters": {
+        "questao_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.questao_arquivar",
+      "function": "QuestaoController.arquivar",
+      "module": "app.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/<int:questao_id>/publicar",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "defaults": {},
+      "arguments": [
+        "questao_id"
+      ],
+      "converters": {
+        "questao_id": "IntegerConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.questao_publicar",
+      "function": "QuestaoController.publicar",
+      "module": "app.controllers.questao_controller"
+    },
+    {
+      "url": "/api/questoes/por-assunto",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.buscar_questoes_por_assunto",
+      "function": "QuestaoController.buscar_por_assunto",
+      "module": "app.controllers.questao_controller"
+    },
+    {
+      "url": "/api/termos",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": {},
+      "arguments": [],
+      "converters": {},
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "api.termos",
+      "function": "PrivacidadeController.termos",
+      "module": "app.controllers.privacidade_controller"
+    },
+    {
+      "url": "/static/<path:filename>",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "defaults": null,
+      "arguments": [
+        "filename"
+      ],
+      "converters": {
+        "filename": "PathConverter"
+      },
+      "strict_slashes": true,
+      "redirect_to": null,
+      "endpoint": "static",
+      "function": "Flask.__init__.<locals>.<lambda>",
+      "module": "flask.app"
+    }
+  ],
+  "cli": {
+    "criar-administrador": {
+      "params": [
+        [
+          "nome",
+          [
+            "--nome"
+          ],
+          false,
+          "Sentinel.UNSET"
+        ],
+        [
+          "email",
+          [
+            "--email"
+          ],
+          false,
+          "Sentinel.UNSET"
+        ]
+      ]
+    },
+    "limpar-autenticacao": {
+      "params": []
+    }
+  },
+  "protected": {
+    "backend/database/migrations/000_create_mvp_schema.sql": "1e51d54b93a4d8125961a17e283e2933fa3fe1f0b8b385b6d50ede1bcdf868a8",
+    "backend/database/migrations/001_restrict_delete_assuntos.sql": "329594db44e2ee7f6a71b4c8a871cc5efb1dd849642ed4397b49a3ae7dca0b5d",
+    "backend/database/migrations/002_create_sp_questoes_por_assunto.sql": "7d19427eaed0f6e63ec4116aee0aa56cf07a2e12b6e559c2a09f5409414abd38",
+    "backend/database/migrations/003_prepare_catalogo_academico.sql": "dd27f63de40fd06585c4a3cbd33a9f164574ae983b3eeb3cffb8ff91a8decbd4",
+    "backend/database/migrations/004_restrict_catalogo_academico.sql": "de6bedc463391556498fe641cb61fe74a59717b421c59e0dfcb1d6ff71a804d8",
+    "backend/database/migrations/005_create_autenticacao_escolar.sql": "a650da20e8785b4de919e0324928844a282f63b76bacce0f752fdb55332fb8c2",
+    "backend/database/migrations/006_create_questoes_versionadas.sql": "97160b8fb019d8dc59e7f83452808b5fefd9a1944f20850d6336880822e2b36c",
+    "backend/database/migrations/007_create_pratica_tentativas.sql": "2ca7fc6c974dfa2e0011d72bc532a00a0e4cca8d9ab0055cdd9c4b93f58c3161",
+    "backend/database/migrations/008_create_simulados.sql": "b21286bbfcb77ba6bad04c1eda72d7fbc71b39dc825c847238cce1b73d71fe36",
+    "backend/database/migrations/009_create_planos_estudo.sql": "22763b2c463d65995f79a93aaa34a6ff3a760f591d94cfb19822be646126a624",
+    "backend/database/migrations/010_create_registros_privacidade.sql": "d91e31207a77afc6077c7dc7002b08fa7f2180f6df2dbe43a920d2107915d2dc",
+    "backend/database/create_database.sql": "cb0d46ef5afea63217a4f5e3ad872a4b680062a6aae13b89c1d9d8ab5d62358b",
+    "frontend/legal/termo-de-consentimento-plano-v1.html": "6233efccc924f73474e3c9b724f05d30729d55ae7fb177f6c47d3282d1d7b233",
+    "frontend/legal/termo-de-uso-v1.html": "e5bcdf3f002508592ee44a3e4cea2ec6dafcbe172a6e28996c2a105232cd9dd5"
+  },
+  "guards": {
+    "preservar_plano": "FunctionDef(name='preservar_plano', args=arguments(args=[arg(arg='mapper'), arg(arg='connection'), arg(arg='target')]), body=[Expr(value=Call(func=Name(id='preservar', ctx=Load()), args=[Name(id='target', ctx=Load()), Set(elts=[Constant(value='atual')])])), If(test=BoolOp(op=And(), values=[Call(func=Attribute(value=Attribute(value=Attribute(value=Attribute(value=Call(func=Name(id='inspect', ctx=Load()), args=[Name(id='target', ctx=Load())]), attr='attrs', ctx=Load()), attr='atual', ctx=Load()), attr='history', ctx=Load()), attr='has_changes', ctx=Load())), Attribute(value=Name(id='target', ctx=Load()), attr='atual', ctx=Load())]), body=[Raise(exc=Call(func=Name(id='ConflitoError', ctx=Load()), args=[Constant(value='Um plano histórico não pode voltar a ser atual.')]))])], decorator_list=[Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='PlanoEstudo', ctx=Load()), Constant(value='before_update')])])",
+    "preservar_item": "FunctionDef(name='preservar_item', args=arguments(args=[arg(arg='mapper'), arg(arg='connection'), arg(arg='target')]), body=[Expr(value=Call(func=Name(id='preservar', ctx=Load()), args=[Name(id='target', ctx=Load()), Set(elts=[Constant(value='estado'), Constant(value='concluido_em')])])), Assign(targets=[Name(id='anterior', ctx=Store())], value=Attribute(value=Attribute(value=Attribute(value=Attribute(value=Call(func=Name(id='inspect', ctx=Load()), args=[Name(id='target', ctx=Load())]), attr='attrs', ctx=Load()), attr='estado', ctx=Load()), attr='history', ctx=Load()), attr='deleted', ctx=Load())), Assign(targets=[Name(id='data', ctx=Store())], value=Attribute(value=Attribute(value=Attribute(value=Call(func=Name(id='inspect', ctx=Load()), args=[Name(id='target', ctx=Load())]), attr='attrs', ctx=Load()), attr='concluido_em', ctx=Load()), attr='history', ctx=Load())), If(test=BoolOp(op=Or(), values=[BoolOp(op=And(), values=[Name(id='anterior', ctx=Load()), Compare(left=Subscript(value=Name(id='anterior', ctx=Load()), slice=Constant(value=0), ctx=Load()), ops=[Eq()], comparators=[Constant(value='concluido')])]), BoolOp(op=And(), values=[Call(func=Attribute(value=Name(id='data', ctx=Load()), attr='has_changes', ctx=Load())), Attribute(value=Name(id='data', ctx=Load()), attr='deleted', ctx=Load()), Compare(left=Subscript(value=Attribute(value=Name(id='data', ctx=Load()), attr='deleted', ctx=Load()), slice=Constant(value=0), ctx=Load()), ops=[IsNot()], comparators=[Constant(value=None)])])]), body=[Raise(exc=Call(func=Name(id='ConflitoError', ctx=Load()), args=[Constant(value='Uma conclusão salva não pode ser alterada.')]))])], decorator_list=[Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='PlanoEstudoItem', ctx=Load()), Constant(value='before_update')])])",
+    "impedir_exclusao": "FunctionDef(name='impedir_exclusao', args=arguments(args=[arg(arg='mapper'), arg(arg='connection'), arg(arg='target')]), body=[Raise(exc=Call(func=Name(id='ConflitoError', ctx=Load()), args=[Constant(value='O histórico do plano deve ser preservado.')]))], decorator_list=[Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='PlanoEstudo', ctx=Load()), Constant(value='before_delete')]), Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='PlanoEstudoItem', ctx=Load()), Constant(value='before_delete')])])",
+    "impedir_mutacao_evento": "FunctionDef(name='impedir_mutacao_evento', args=arguments(args=[arg(arg='mapper'), arg(arg='connection'), arg(arg='target')]), body=[Raise(exc=Call(func=Name(id='ConflitoError', ctx=Load()), args=[Constant(value='Eventos editoriais são append-only.')]))], decorator_list=[Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='QuestaoEvento', ctx=Load()), Constant(value='before_update')]), Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='QuestaoEvento', ctx=Load()), Constant(value='before_delete')])])",
+    "impedir_mutacao_snapshot": "FunctionDef(name='impedir_mutacao_snapshot', args=arguments(args=[arg(arg='mapper'), arg(arg='connection'), arg(arg='target')]), body=[Raise(exc=Call(func=Name(id='ConflitoError', ctx=Load()), args=[Constant(value='Snapshots editoriais são append-only.')]))], decorator_list=[Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='QuestaoVersao', ctx=Load()), Constant(value='before_update')]), Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='QuestaoVersao', ctx=Load()), Constant(value='before_delete')])])",
+    "preservar_registro": "FunctionDef(name='preservar_registro', args=arguments(args=[arg(arg='mapper'), arg(arg='connection'), arg(arg='target')]), body=[Raise(exc=Call(func=Name(id='ConflitoError', ctx=Load()), args=[Constant(value='O registro de privacidade é imutável.')]))], decorator_list=[Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='RegistroPrivacidade', ctx=Load()), Constant(value='before_update')]), Call(func=Attribute(value=Name(id='event', ctx=Load()), attr='listens_for', ctx=Load()), args=[Name(id='RegistroPrivacidade', ctx=Load()), Constant(value='before_delete')])])"
+  }
+}

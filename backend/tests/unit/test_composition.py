@@ -16,6 +16,14 @@ class CompositionTest(unittest.TestCase):
         a, b = create_app(TestConfig), create_app(TestConfig)
         self.assertIsNot(a.extensions['servicos'], b.extensions['servicos'])
         self.assertIsNot(a.extensions['servicos'].materias_admin, b.extensions['servicos'].materias_admin)
+        ca, cb = a.extensions['servicos'], b.extensions['servicos']
+        for nome in ('recusar_consentimento_plano', 'revogar_consentimento_plano'):
+            self.assertIsNot(getattr(ca, nome), getattr(cb, nome))
+            self.assertIsNot(getattr(ca, nome)._eliminar_planos.__self__,
+                             getattr(cb, nome)._eliminar_planos.__self__)
+        self.assertIs(ca.recusar_consentimento_plano._eliminar_planos.__self__,
+                      ca.revogar_consentimento_plano._eliminar_planos.__self__)
+        self.assertEqual(vars(ca.recusar_consentimento_plano._eliminar_planos.__self__), {})
         with a.app_context():
             self.assertIs(servicos(), a.extensions['servicos'])
         connect.assert_not_called()

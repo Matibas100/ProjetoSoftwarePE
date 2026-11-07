@@ -206,8 +206,8 @@ class CatalogoAdminIntegrationTest(MySQLIntegrationTestCase):
         self.assertFalse({inactive["id"], archived["id"], hidden["id"]} & {row["id"] for row in all_active})
         self.assertEqual(self.client.get("/api/assuntos", query_string={"materia_id": other["id"]}).get_json(), [])
 
-        from app.models.assunto import Assunto
-        from app.repositories.catalogo_repository import CatalogoRepository
+        from app.modules.conteudo.models.assunto import Assunto
+        from app.modules.conteudo.repositories.catalogo_repository import CatalogoRepository
         with self.app.app_context():
             self.assertEqual([row.id for row in Assunto.listar_ativos(matter["id"])],
                 [row.id for row in CatalogoRepository.listar_assuntos_ativos(matter["id"])])

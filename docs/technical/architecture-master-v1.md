@@ -16,6 +16,16 @@ Princípios:
 - contratos do MVP permanecem compatíveis durante a transição;
 - menor privilégio, versionamento editorial e auditoria são requisitos transversais.
 
+## Situação implementada — 07/11/2026
+
+O [ADR-010](adr/ADR-010-organizacao-modular-do-backend.md) organiza o recorte
+entregue em seis módulos: Contas, Conteúdo, Práticas, Simulados, Desempenho e
+Plano de Estudos. As mesmas 21 Models e vinte funcionalidades permanecem.
+Blueprints próprios preservam HTTP; APIs/contratos delimitam colaboração.
+Ver [propriedades e interfaces](organizacao-modular.md).
+As seções seguintes preservam a visão futura mais granular como roadmap;
+seus módulos e entidades futuros não são declarados implementados.
+
 ## 2. Forma do Monólito Modular
 
 A organização futura poderá adotar `backend/app/modules/<modulo>/`, mantendo dentro de cada módulo as separações exigidas pela disciplina. A estrutura exata ainda depende de aprovação; nenhuma pasta de módulo foi criada nesta etapa.

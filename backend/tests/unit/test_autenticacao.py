@@ -4,12 +4,10 @@ import unittest
 from unittest.mock import patch
 
 from app import create_app
-from app.domain.autenticacao import (
-    AutenticacaoError, agora_utc, configurar_autenticacao, validar_cadastro,
-    validar_dados, validar_email, validar_senha, token_assinado,
-)
-from app.services import autenticacao_service as service
-from app.controllers.autenticacao_controller import AutenticacaoController
+from app.core.relogio import agora_utc
+from app.modules.contas.domain.autenticacao import AutenticacaoError, configurar_autenticacao, validar_cadastro, validar_dados, validar_email, validar_senha, token_assinado
+from app.modules.contas.services import autenticacao_service as service
+from app.modules.contas.controllers.autenticacao_controller import AutenticacaoController
 from database import migrate
 
 

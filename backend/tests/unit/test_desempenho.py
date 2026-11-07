@@ -4,10 +4,10 @@ from unittest.mock import Mock
 from werkzeug.datastructures import MultiDict
 from app.contexto_leitura import ContextoLeitura, utc
 from app.exceptions import DadosInvalidosError
-from app.services.desempenho_validacao import periodo
-from app.services.consultar_desempenho_service import metrica, ConsultarDesempenhoService
-from app.repositories.pratica_repository import PraticaRepository
-from app.repositories.simulado_repository import SimuladoRepository
+from app.modules.desempenho.services.desempenho_validacao import periodo
+from app.modules.desempenho.services.consultar_desempenho_service import metrica, ConsultarDesempenhoService
+from app.modules.praticas.repositories.pratica_repository import PraticaRepository
+from app.modules.simulados.repositories.simulado_repository import SimuladoRepository
 
 
 class DesempenhoUnitTest(unittest.TestCase):

@@ -1,5 +1,8 @@
 # Operação do catálogo acadêmico administrativo
 
+Código canônico: [`backend/app/modules/conteudo/`](../../backend/app/modules/conteudo/);
+interfaces e transações no [mapa modular](organizacao-modular.md).
+
 ## Execução local
 
 Com o MySQL 8 configurado no `.env`, execute em terminais separados:

@@ -102,7 +102,7 @@ class MySQLIntegrationTestCase(unittest.TestCase):
                 if cls.required_tables - tables:
                     raise RuntimeError("Infraestrutura MySQL incompleta.")
                 if cls.autenticar_administrador:
-                    from app.services.autenticacao_service import CriarUsuarioService
+                    from app.modules.contas.services.autenticacao_service import CriarUsuarioService
                     senha = secrets.token_urlsafe(18)
                     email = f"admin-{uuid4().hex[:8]}@teste.local"
                     CriarUsuarioService.executar({"nome": "Administrador teste", "email": email,

@@ -3,14 +3,14 @@ from unittest.mock import MagicMock, patch
 
 from flask import Flask
 
-from app.controllers.assunto_controller import AssuntoController
-from app.controllers.materia_controller import MateriaController
-from app.controllers.questao_controller import QuestaoController
+from app.modules.conteudo.controllers.assunto_controller import AssuntoController
+from app.modules.conteudo.controllers.materia_controller import MateriaController
+from app.modules.conteudo.controllers.questao_controller import QuestaoController
 from app.exceptions import DadosInvalidosError
-from app.models.assunto import Assunto
-from app.models.materia import Materia
-from app.models.questao import Questao
-from app.repositories.questao_repository import QuestaoRepository
+from app.modules.conteudo.models.assunto import Assunto
+from app.modules.conteudo.models.materia import Materia
+from app.modules.conteudo.models.questao import Questao
+from app.modules.conteudo.repositories.questao_repository import QuestaoRepository
 
 
 class ModelSerializationTest(unittest.TestCase):
@@ -49,7 +49,7 @@ class ModelSerializationTest(unittest.TestCase):
 
 
 class CrudMixinTest(unittest.TestCase):
-    @patch("app.models.crud_mixin.db.session")
+    @patch("app.core.persistencia.db.session")
     def test_salvar_commit_e_rollback(self, session):
         materia = Materia(nome="Fisica")
         self.assertIs(materia.salvar(), materia)
@@ -61,7 +61,7 @@ class CrudMixinTest(unittest.TestCase):
             materia.salvar()
         session.rollback.assert_called_once_with()
 
-    @patch("app.models.crud_mixin.db.session")
+    @patch("app.core.persistencia.db.session")
     def test_operacoes_sem_commit_usam_flush(self, session):
         materia = Materia(nome="Fisica")
         self.assertIs(materia.salvar(confirmar=False), materia)
@@ -70,7 +70,7 @@ class CrudMixinTest(unittest.TestCase):
         self.assertEqual(session.flush.call_count, 3)
         session.commit.assert_not_called()
 
-    @patch("app.models.crud_mixin.db.session")
+    @patch("app.core.persistencia.db.session")
     def test_atualizar_filtra_campos_commit_e_rollback(self, session):
         materia = Materia(nome="Antiga", descricao=None)
         self.assertIs(
@@ -85,7 +85,7 @@ class CrudMixinTest(unittest.TestCase):
             materia.atualizar(nome="Outra")
         session.rollback.assert_called_once_with()
 
-    @patch("app.models.crud_mixin.db.session")
+    @patch("app.core.persistencia.db.session")
     def test_deletar_commit_e_rollback(self, session):
         materia = Materia(nome="Fisica")
         self.assertIsNone(materia.deletar())
@@ -97,8 +97,8 @@ class CrudMixinTest(unittest.TestCase):
             materia.deletar()
         session.rollback.assert_called_once_with()
 
-    @patch("app.models.crud_mixin.db.session")
-    @patch("app.models.crud_mixin.db.select")
+    @patch("app.core.persistencia.db.session")
+    @patch("app.core.persistencia.db.select")
     def test_listar_e_buscar(self, select, session):
         statement = select.return_value
         session.execute.return_value.scalars.return_value.all.return_value = ["item"]
@@ -111,14 +111,14 @@ class CrudMixinTest(unittest.TestCase):
 
 
 class QuestaoRepositoryTest(unittest.TestCase):
-    @patch("app.repositories.questao_repository.db.session.execute")
+    @patch("app.modules.conteudo.repositories.questao_repository.db.session.execute")
     def test_fecha_resultado_no_sucesso(self, execute):
         result = execute.return_value
         result.mappings.return_value.all.return_value = [{"id": 1}]
         self.assertEqual(QuestaoRepository.buscar_por_assunto(2), [{"id": 1}])
         result.close.assert_called_once_with()
 
-    @patch("app.repositories.questao_repository.db.session.execute")
+    @patch("app.modules.conteudo.repositories.questao_repository.db.session.execute")
     def test_fecha_resultado_quando_mapeamento_falha(self, execute):
         result = execute.return_value
         result.mappings.return_value.all.side_effect = ValueError("linha invalida")

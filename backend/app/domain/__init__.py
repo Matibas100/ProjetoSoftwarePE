@@ -1,1 +1,0 @@
-"""Regras puras do dominio."""

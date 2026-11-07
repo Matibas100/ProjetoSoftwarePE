@@ -1,5 +1,8 @@
 # Operação do plano de estudos básico
 
+Código canônico: [`backend/app/modules/plano_estudos/`](../../backend/app/modules/plano_estudos/);
+interfaces e transações no [mapa modular](organizacao-modular.md).
+
 ## Escopo e seleção
 
 O plano exige aceite de uso e consentimento específico vigentes, conferidos no

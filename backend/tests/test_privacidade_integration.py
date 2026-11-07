@@ -4,16 +4,15 @@ from threading import Barrier, Event
 from uuid import uuid4
 
 from sqlalchemy import select, text
-from app.domain.autenticacao import AutenticacaoError
-from app.domain.privacidade import documento_vigente
+from app.modules.contas.domain.autenticacao import AutenticacaoError
+from app.modules.contas.domain.privacidade import documento_vigente
 from app.exceptions import ConflitoError
 from app.extensions import db
-from app.models.usuario import Usuario
-from app.models.registro_privacidade import RegistroPrivacidade
-from app.models.plano_estudo import PlanoEstudo, PlanoEstudoItem
-from app.services.consentir_plano_service import ConsentirPlanoService
-from app.services.revogar_consentimento_plano_service import RevogarConsentimentoPlanoService
-from app.services.consultar_privacidade_service import ConsultarPrivacidadeService
+from app.modules.contas.models.usuario import Usuario
+from app.modules.contas.models.registro_privacidade import RegistroPrivacidade
+from app.modules.plano_estudos.models.plano_estudo import PlanoEstudo, PlanoEstudoItem
+from app.modules.contas.services.consentir_plano_service import ConsentirPlanoService
+from app.modules.contas.services.consultar_privacidade_service import ConsultarPrivacidadeService
 from app.http_composition import servicos
 from tests.integration_support import MySQLIntegrationTestCase
 from tests import test_praticas_integration as praticas
@@ -86,7 +85,7 @@ class PrivacidadeIntegrationTest(MySQLIntegrationTestCase):
 
     def test_conta_legada_aceite_uso_replay_e_versao_antiga_revogavel(self):
         # Simula uma conta anterior sem inventar aceite via cadastro administrativo.
-        from app.services.autenticacao_service import CriarUsuarioService
+        from app.modules.contas.services.autenticacao_service import CriarUsuarioService
         cliente=self.app.test_client();cliente.csrf=cliente.get('/api/auth/csrf').json['csrf_token']
         email=uuid4().hex+'@teste.local'
         with self.app.app_context():
@@ -112,7 +111,7 @@ class PrivacidadeIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             registro=db.session.execute(select(RegistroPrivacidade).where(RegistroPrivacidade.usuario_id==self.usuario)).scalars().first()
             self.assertIsNone(registro.registrado_em.tzinfo)
-            from app.domain.autenticacao import agora_utc
+            from app.core.relogio import agora_utc
             self.assertLess(abs((registro.registrado_em-agora_utc()).total_seconds()),30)
             self.assertFalse(hasattr(registro,'atualizar'));self.assertFalse(hasattr(registro,'deletar'))
             registro.acao='recusar'
@@ -181,6 +180,35 @@ class PrivacidadeIntegrationTest(MySQLIntegrationTestCase):
         finally:
             with self.app.app_context():db.session.execute(text('DROP TRIGGER falhar_privacidade_insert'));db.session.commit()
 
+    def test_recusa_reverte_evidencia_quando_eliminacao_participante_falha(self):
+        from app.core.relogio import agora_utc
+        with self.app.app_context():
+            plano = PlanoEstudo(usuario_id=self.usuario, geracao=1, atual=True,
+                periodo={}, gerado_em=agora_utc(), chave_envio=str(uuid4()), operacao='gerar').salvar()
+            plano_id = plano.id
+            db.session.execute(text("CREATE TRIGGER falhar_recusa_delete BEFORE DELETE ON planos_estudo "
+                "FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='falha real do participante'"))
+            db.session.commit()
+        try:
+            resposta, corpo = self.decidir('recusar')
+            self.assertEqual(resposta.status_code, 500)
+            estado = self.aluno.get(self.privacy).json
+            self.assertIsNone(estado['consentimento_plano']['registro'])
+            with self.app.app_context():
+                self.assertIsNotNone(db.session.get(PlanoEstudo, plano_id))
+                registros = db.session.execute(select(RegistroPrivacidade).where(
+                    RegistroPrivacidade.usuario_id == self.usuario,
+                    RegistroPrivacidade.chave_envio == corpo['chave_envio'])).scalars().all()
+                self.assertEqual(registros, [])
+        finally:
+            with self.app.app_context():
+                db.session.execute(text('DROP TRIGGER falhar_recusa_delete'))
+                db.session.commit()
+        resposta = self.aluno.post(self.privacy + '/consentimento-plano/recusar', json=corpo)
+        self.assertEqual(resposta.status_code, 201)
+        with self.app.app_context():
+            self.assertIsNone(db.session.get(PlanoEstudo, plano_id))
+
     def test_cadastro_sem_aceite_ou_invalido_nao_cria_conta(self):
         cliente=self.app.test_client();cliente.csrf=cliente.get('/api/auth/csrf').json['csrf_token']
         base={'nome':'Sem aceite','email':uuid4().hex+'@teste.local','senha':self.senha,'senha_confirmacao':self.senha}
@@ -191,7 +219,7 @@ class PrivacidadeIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():self.assertIsNone(Usuario.buscar_por_email(base['email']))
 
     def test_recusa_elimina_legado_e_falha_de_leitura_fecha_acesso(self):
-        from app.domain.autenticacao import agora_utc
+        from app.core.relogio import agora_utc
         with self.app.app_context():
             plano=PlanoEstudo(usuario_id=self.usuario,geracao=1,atual=True,periodo={},gerado_em=agora_utc(),
                 chave_envio=str(uuid4()),operacao='gerar').salvar()
@@ -251,7 +279,7 @@ class PrivacidadeIntegrationTest(MySQLIntegrationTestCase):
             def revogar():
                 with self.app.app_context():
                     db.session.get(Usuario,self.usuario);barreira.wait(timeout=10)
-                    return RevogarConsentimentoPlanoService.executar(self.usuario,{'versao':'1.0','revisao':revisao,'chave_envio':str(uuid4()),'confirmar':True})[1]
+                    return servicos().revogar_consentimento_plano.executar(self.usuario,{'versao':'1.0','revisao':revisao,'chave_envio':str(uuid4()),'confirmar':True})[1]
             with ThreadPoolExecutor(2) as pool:
                 geracao=pool.submit(gerar);negativa=pool.submit(revogar)
                 self.assertIn(geracao.result(timeout=20),(201,403));self.assertEqual(negativa.result(timeout=20),201)

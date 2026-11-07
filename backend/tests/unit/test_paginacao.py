@@ -1,7 +1,7 @@
 import unittest
 
 from app.exceptions import DadosInvalidosError
-from app.services.paginacao import envelope_paginado, inteiro_filtro
+from app.core.paginacao import envelope_paginado, inteiro_filtro
 
 
 class InteiroFiltroTest(unittest.TestCase):

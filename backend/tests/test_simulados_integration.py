@@ -5,13 +5,13 @@ from threading import Barrier
 from uuid import uuid4
 from sqlalchemy import event, text
 from app.extensions import db
-from app.domain.autenticacao import agora_utc
+from app.core.relogio import agora_utc
 from app.exceptions import ConflitoError
-from app.models.simulado import SimuladoEvento, SimuladoTentativa, SimuladoVersao, SimuladoVersaoItem
-from app.services.iniciar_simulado_service import IniciarSimuladoService
-from app.services.responder_simulado_service import ResponderSimuladoService
-from app.services.finalizar_simulado_service import FinalizarSimuladoService
-from app.services.consultar_simulado_service import ConsultarFatosSimuladosService
+from app.modules.simulados.models.simulado import SimuladoEvento, SimuladoTentativa, SimuladoVersao, SimuladoVersaoItem
+from app.modules.simulados.services.iniciar_simulado_service import IniciarSimuladoService
+from app.modules.simulados.services.responder_simulado_service import ResponderSimuladoService
+from app.modules.simulados.services.finalizar_simulado_service import FinalizarSimuladoService
+from app.modules.simulados.services.consultar_simulado_service import ConsultarFatosSimuladosService
 from tests.integration_support import MySQLIntegrationTestCase
 from tests import test_praticas_integration as pratica_fixture
 
@@ -42,8 +42,8 @@ class SimuladosIntegrationTest(MySQLIntegrationTestCase):
         return {'revisao':revisao,'confirmar':True,'motivo':'Revisão explícita de teste'}
 
     def test_selects_constantes_por_composicao_pagina_e_propriedade(self):
-        from app.services.gestao_simulado_service import ListarSimuladosAdminService
-        from app.services.consultar_simulado_service import (
+        from app.modules.simulados.services.gestao_simulado_service import ListarSimuladosAdminService
+        from app.modules.simulados.services.consultar_simulado_service import (
             ListarSimuladosAlunoService, ConsultarTentativaSimuladoService,
             ListarHistoricoSimuladosService,
         )
@@ -267,7 +267,7 @@ class SimuladosIntegrationTest(MySQLIntegrationTestCase):
         d=self.aluno.get(f"/api/aluno/tentativas-simulado/{t['id']}").json
         self.assertEqual(d['estado'],'em_andamento');self.assertEqual(d['revisao'],2)
         with self.app.app_context():
-            self.assertTrue(all(r.correta is None for r,i in __import__('app.repositories.simulado_repository',fromlist=['SimuladoRepository']).SimuladoRepository.respostas(t['id'])))
+            self.assertTrue(all(r.correta is None for r,i in __import__('app.modules.simulados.repositories.simulado_repository',fromlist=['SimuladoRepository']).SimuladoRepository.respostas(t['id'])))
         self.assertEqual(self.finalizar(t,revisao=2).status_code,200)
 
     def test_snapshots_e_eventos_sem_mutacoes_ou_exclusao(self):
@@ -316,7 +316,7 @@ class SimuladosIntegrationTest(MySQLIntegrationTestCase):
 
     def test_constraints_composicao_e_item_unico_no_mysql(self):
         from sqlalchemy.exc import DBAPIError
-        from app.models.simulado import SimuladoRascunhoItem, SimuladoResposta
+        from app.modules.simulados.models.simulado import SimuladoRascunhoItem, SimuladoResposta
         t=self.iniciar().json
         with self.app.app_context():
             item=db.session.execute(db.select(SimuladoRascunhoItem).where(SimuladoRascunhoItem.simulado_id==self.s['id'])).scalars().first()

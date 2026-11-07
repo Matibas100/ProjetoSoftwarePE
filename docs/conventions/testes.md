@@ -67,6 +67,12 @@ cobertas.
 - Mudança somente documental ou de configuração não exige executar a suíte da aplicação.
 - Registre no fechamento comandos, resultados e limitações reais.
 
+O gate `backend/tests/unit/test_arquitetura_modular.py` protege os seis
+proprietários, imports locais/dinâmicos, APIs explícitas, camadas, duas factories
+independentes e metadata única. A composição não abre conexão nem lê `.env`.
+Regressões de privacidade verificam falha real do participante de eliminação,
+incluindo recusa e revogação, no MySQL descartável.
+
 ## Navegador real
 
 Instale as dependências com `npm ci` e o browser com

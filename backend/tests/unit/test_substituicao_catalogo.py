@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from app import create_app
-from app.services.listar_catalogo_admin_service import ListarMateriasAdminService, ListarAssuntosAdminService
+from app.modules.conteudo.services.listar_catalogo_admin_service import ListarMateriasAdminService, ListarAssuntosAdminService
 from tests.unit.test_config_and_app import TestConfig
 
 
@@ -68,7 +68,7 @@ class SubstituicaoCatalogoTest(unittest.TestCase):
         a, b = create_app(TestConfig), create_app(TestConfig)
         anterior = b.extensions['servicos'].materias_admin
         a.extensions['servicos'].materias_admin = ListarMateriasAdminService(CatalogoIndexado(registros()))
-        with patch('app.auth_http.AutorizarService.executar'):
+        with patch('app.modules.contas.auth_http.AutorizarService.executar'):
             r = a.test_client().get('/api/admin/materias?busca=Inexistente')
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json['itens'], [])

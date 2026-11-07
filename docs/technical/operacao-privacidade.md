@@ -1,10 +1,13 @@
 # Operação de termos e consentimento
 
+Código canônico: [`backend/app/modules/contas/`](../../backend/app/modules/contas/);
+interfaces e transações no [mapa modular](organizacao-modular.md).
+
 ## Documentos e limites
 
 Fontes e modelos: [minutas](../legal/README.md). Os dois HTML são públicos,
 sem JavaScript, legíveis por teclado e imprimíveis. O módulo
-`app/domain/privacidade.py` guarda versões, URLs locais e SHA-256 dos bytes.
+`app/modules/contas/domain/privacidade.py` guarda versões, URLs locais e SHA-256 dos bytes.
 Qualquer alteração em texto publicado exige novo arquivo/versão/hash; o arquivo
 anterior permanece. API e frontend não leem arquivos um do outro em runtime.
 
@@ -129,3 +132,7 @@ Planos duram enquanto autorizados; negativas confirmadas eliminam derivados
 imediatamente. Evidências mínimas ficam vinculadas à conta. Retenção geral de
 respostas, destino de comprovantes após encerramento, backups e direitos gerais
 continuam pendentes. Revogação do plano não equivale a exclusão de conta.
+
+A eliminação especializada pertence agora ao Repository de Plano, chamada pelo
+Service participante injetado em Recusar/Revogar. Não há commit interno nem endpoint
+novo; Contas mantém o lock e a única fronteira transacional (ADR-010).

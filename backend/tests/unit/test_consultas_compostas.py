@@ -6,11 +6,11 @@ from unittest.mock import Mock
 from contextlib import contextmanager
 from copy import deepcopy
 
-from app.services.listar_questoes_aluno_service import ListarQuestoesAlunoService
-from app.services.listar_simulados_aluno_service import ListarSimuladosAlunoService
-from app.services.listar_historico_simulados_service import ListarHistoricoSimuladosService
-from app.services.consultar_desempenho_service import ConsultarDesempenhoService
-from app.services.dashboard_service import ConsultarDashboardAlunoService, ConsultarDashboardAdminService
+from app.modules.praticas.services.listar_questoes_aluno_service import ListarQuestoesAlunoService
+from app.modules.simulados.services.listar_simulados_aluno_service import ListarSimuladosAlunoService
+from app.modules.simulados.services.listar_historico_simulados_service import ListarHistoricoSimuladosService
+from app.modules.desempenho.services.consultar_desempenho_service import ConsultarDesempenhoService
+from app.modules.desempenho.services.dashboard_service import ConsultarDashboardAlunoService, ConsultarDashboardAdminService
 from app.exceptions import DadosInvalidosError
 
 
