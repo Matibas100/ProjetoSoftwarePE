@@ -1,5 +1,10 @@
 import hashlib
 import io
+import os
+import subprocess
+import sys
+import tempfile
+import textwrap
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -289,6 +294,61 @@ class HistoryAndExecutionTest(unittest.TestCase):
             migrate.reconcile_failure(
                 FakeConnection(), settings, [migration()], "000", False
             )
+
+
+class ImportAndEntrypointTest(unittest.TestCase):
+    def run_isolated(self, *arguments):
+        environment = os.environ.copy()
+        environment.update(
+            PYTHONPATH=str(migrate.PROJECT_ROOT / "backend"),
+            PYTHON_DOTENV_DISABLED="1",
+            DATABASE_URL="configuracao-invalida-para-importacao",
+            DB_PORT="invalida",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run(
+                [sys.executable, *arguments],
+                cwd=directory,
+                env=environment,
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def test_importacao_sem_configuracao_conexao_ou_cli(self):
+        self.run_isolated("-c", textwrap.dedent('''
+            from unittest.mock import patch
+
+            with patch("dotenv.load_dotenv", side_effect=AssertionError("configuracao")), \
+                 patch("pymysql.connect", side_effect=AssertionError("conexao")), \
+                 patch("argparse.ArgumentParser.parse_args", side_effect=AssertionError("cli")):
+                from database import migration_types, sql_scripts, legacy_schema, migrate
+
+                for operation in (
+                    lambda: sql_scripts.split_sql("SELECT 'aberto"),
+                    lambda: migrate.load_database_settings({}),
+                ):
+                    try:
+                        operation()
+                    except migration_types.MigrationError:
+                        pass
+                    else:
+                        raise AssertionError("Entrada invalida aceita")
+        '''))
+
+    def test_help_por_caminho_fora_do_projeto(self):
+        output = self.run_isolated(
+            str(migrate.PROJECT_ROOT / "backend" / "database" / "migrate.py"), "--help"
+        )
+        for command in ("status", "up", "baseline", "reconcile"):
+            self.assertIn(command, output)
+
+    def test_help_em_pacote_fora_do_projeto(self):
+        output = self.run_isolated("-m", "database.migrate", "--help")
+        for command in ("status", "up", "baseline", "reconcile"):
+            self.assertIn(command, output)
 
 
 class CliTest(unittest.TestCase):
