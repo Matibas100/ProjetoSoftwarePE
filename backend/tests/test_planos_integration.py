@@ -2,7 +2,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 from uuid import uuid4
-from sqlalchemy import event, select, text
+from sqlalchemy import select, text
+from tests import sql_observer as event
 from app.extensions import db
 from app.exceptions import ConflitoError
 from app.modules.plano_estudos.models.plano_estudo import PlanoEstudo as Plano, PlanoEstudoItem as Item
@@ -144,7 +145,7 @@ class PlanosIntegrationTest(MySQLIntegrationTestCase):
             finally:event.remove(engine,'before_cursor_execute',falhar)
         self.assertEqual(self.aluno.get(self.url).json['estado'],'sem_plano')
         p=self.gerar().json['plano'];self.concluir(p['itens'][0]['id']);antes=self.aluno.get(self.url).json
-        for gatilho in ['INSERT INTO plano_estudo_itens','fatos AS']:
+        for gatilho in ['INSERT INTO plano_estudo_itens','CALL sp_desempenho_resumo']:
             with self.app.app_context():
                 def falhar(conexao,cursor,statement,parameters,context,executemany):
                     if gatilho in statement:raise RuntimeError('Falha controlada')
@@ -184,7 +185,7 @@ class PlanosIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             engine=db.engine;inseriu=[]
             def responder(conexao,cursor,statement,parameters,context,executemany):
-                if 'fatos AS' in statement and not inseriu:
+                if 'CALL sp_desempenho_resumo' in statement and not inseriu:
                     inseriu.append(True)
                     with engine.begin() as outra:
                         outra.execute(text("UPDATE pratica_tentativas SET estado='respondida',resposta_escolhida='B',correta=0,respondida_em=UTC_TIMESTAMP(6) WHERE id=:i"),{'i':t['id']})

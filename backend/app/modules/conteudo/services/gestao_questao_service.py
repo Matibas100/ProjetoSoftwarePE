@@ -68,14 +68,7 @@ class ListarQuestoesAdminService:
             raise DadosInvalidosError("Busca deve ter até 100 caracteres.")
         filtros["busca"] = busca
         linhas, total = QuestaoRepository.listar_admin(filtros, pagina, limite)
-        itens = []
-        for questao, assunto, materia, area in linhas:
-            item = questao.to_dict()
-            item.update(status=questao.status, revisao=questao.revisao,
-                versao_publicada_id=questao.versao_publicada_id,
-                assunto=assunto.to_dict(), materia=materia.to_dict(), area_enem=area.to_dict())
-            itens.append(item)
-        return envelope_paginado(itens, pagina, limite, total)
+        return envelope_paginado(linhas, pagina, limite, total)
 
 
 class EditarQuestaoService:

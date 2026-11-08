@@ -1,5 +1,9 @@
 """Consultas especializadas, composição e locks; sem commit próprio."""
-from sqlalchemy import select, func, literal
+import json
+from app.core.procedures_mysql import executar_resultados
+from app.modules.simulados.repositories.registros_simulados import (SIMULADO, TENTATIVA, SimuladoRegistro, TentativaHistoricoRegistro)
+from app.core.procedures_mysql import conferir_resultados
+from sqlalchemy import select, func, literal, text
 from app.extensions import db
 from app.modules.simulados.models.simulado import (Simulado, SimuladoVersao, SimuladoRascunhoItem,
     SimuladoVersaoItem, SimuladoTentativa, SimuladoResposta)
@@ -32,22 +36,34 @@ class SimuladoRepository:
 
     @staticmethod
     def contagens_dashboard(contexto):
-        estados = dict(contexto.executar(select(Simulado.estado, func.count()).group_by(Simulado.estado)).all())
-        finalizadas = contexto.executar(select(func.count()).select_from(SimuladoTentativa)
-            .where(SimuladoTentativa.estado == "finalizada")).scalar_one()
-        return {"rascunhos": estados.get("rascunho", 0), "publicados": estados.get("publicado", 0),
-            "arquivados": estados.get("arquivado", 0)}, finalizadas
+        resultados = contexto.executar_resultados("CALL sp_simulados_contagens_dashboard()")
+        linhas, = conferir_resultados(resultados, [('rascunhos', 'publicados', 'arquivados', 'finalizadas')])
+        linha, = linhas
+        return {estado: int(linha[estado]) for estado in ('rascunhos', 'publicados', 'arquivados')}, int(linha['finalizadas'])
 
     @staticmethod
     def bloquear(simulado_id):
-        return db.session.execute(select(Simulado).where(Simulado.id == simulado_id)
-            .with_for_update().execution_options(populate_existing=True)).scalar_one_or_none()
+        db.session.flush()
+        resultado = db.session.execute(select(Simulado).from_statement(
+            text("CALL sp_bloquear_simulado(:id)").columns(*Simulado.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'id': simulado_id})
+        try:
+            return resultado.scalar_one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def itens(simulado_id=None, versao_id=None):
         entidade = SimuladoRascunhoItem if versao_id is None else SimuladoVersaoItem
-        condicao = entidade.simulado_id == simulado_id if versao_id is None else entidade.simulado_versao_id == versao_id
-        return db.session.execute(select(entidade).where(condicao).order_by(entidade.posicao)).scalars().all()
+        db.session.flush()
+        resultado = db.session.execute(select(entidade).from_statement(
+            text("CALL sp_simulado_itens(:simulado_id,:versao_id)").columns(*entidade.__table__.columns)),
+            {'simulado_id': simulado_id, 'versao_id': versao_id})
+        try:
+            return resultado.scalars().all()
+        finally:
+            resultado.close()
 
     @staticmethod
     def itens_em_lote(simulado_ids=None, versao_ids=None):
@@ -55,83 +71,118 @@ class SimuladoRepository:
         ids = simulado_ids if versao_ids is None else versao_ids
         if not ids:
             return {}
-        chave = entidade.simulado_id if versao_ids is None else entidade.simulado_versao_id
-        grupos = {}
-        for item in db.session.execute(select(entidade).where(chave.in_(ids))
-                .order_by(chave, entidade.posicao)).scalars():
-            id_ = item.simulado_id if versao_ids is None else item.simulado_versao_id
-            grupos.setdefault(id_, []).append(item)
-        return grupos
+        db.session.flush()
+        resultado = db.session.execute(select(entidade).from_statement(
+            text("CALL sp_simulados_itens_lote(:simulados,:versoes)").columns(*entidade.__table__.columns)),
+            {'simulados': json.dumps(sorted(set(ids))) if versao_ids is None else None,
+             'versoes': json.dumps(sorted(set(ids))) if versao_ids is not None else None})
+        try:
+            grupos = {}
+            for item in resultado.scalars():
+                id_ = item.simulado_id if versao_ids is None else item.simulado_versao_id
+                grupos.setdefault(id_, []).append(item)
+            return grupos
+        finally:
+            resultado.close()
 
     @staticmethod
     def andamentos_em_lote(usuario_id, versao_ids):
         if not versao_ids:
             return {}
-        consulta = select(SimuladoTentativa).where(SimuladoTentativa.usuario_id == usuario_id,
-            SimuladoTentativa.simulado_versao_id.in_(versao_ids), SimuladoTentativa.estado == "em_andamento")
-        return {t.simulado_versao_id: t for t in db.session.execute(consulta).scalars()}
+        db.session.flush()
+        resultado = db.session.execute(select(SimuladoTentativa).from_statement(
+            text("CALL sp_simulados_andamentos_lote(:usuario_id,:ids)").columns(*SimuladoTentativa.__table__.columns)),
+            {'usuario_id': usuario_id, 'ids': json.dumps(sorted(set(versao_ids)))})
+        try:
+            return {t.simulado_versao_id: t for t in resultado.scalars()}
+        finally:
+            resultado.close()
 
     @staticmethod
     def titulos_em_lote(versao_ids):
         if not versao_ids:
             return {}
-        return dict(db.session.execute(select(SimuladoVersao.id, SimuladoVersao.titulo)
-            .where(SimuladoVersao.id.in_(versao_ids))).all())
+        db.session.flush()
+        resultados = executar_resultados(db.session.connection(), "CALL sp_simulados_titulos_lote(%s)",
+            (json.dumps(sorted(set(versao_ids))),))
+        linhas, = conferir_resultados(resultados, [('id', 'titulo')])
+        return {r['id']: r['titulo'] for r in linhas}
 
     @staticmethod
     def listar(pagina, limite, estado=None):
-        consulta = select(Simulado)
-        if estado:
-            consulta = consulta.where(Simulado.estado == estado)
-        total = db.session.execute(select(func.count()).select_from(consulta.subquery())).scalar_one()
-        linhas = db.session.execute(consulta.order_by(Simulado.id.desc()).offset((pagina - 1) * limite).limit(limite)).scalars().all()
-        return linhas, total
+        db.session.flush()
+        resultados = executar_resultados(db.session.connection(), "CALL sp_simulados_listar(%s,%s,%s)",
+            (pagina, limite, estado or None))
+        linhas, totais = conferir_resultados(resultados, [SIMULADO, ('total',)])
+        total, = totais
+        return [SimuladoRegistro(**r) for r in linhas], int(total['total'])
 
     @staticmethod
     def propria(usuario_id, tentativa_id, bloquear=False):
-        consulta = select(SimuladoTentativa).where(SimuladoTentativa.usuario_id == usuario_id,
-            SimuladoTentativa.id == tentativa_id)
+        db.session.flush()
+        consulta = select(SimuladoTentativa).from_statement(
+            text("CALL sp_simulado_tentativa_propria(:usuario_id,:id,:bloquear)").columns(*SimuladoTentativa.__table__.columns))
         if bloquear:
-            consulta = consulta.with_for_update().execution_options(populate_existing=True)
-        return db.session.execute(consulta).scalar_one_or_none()
+            consulta = consulta.execution_options(populate_existing=True)
+        resultado = db.session.execute(consulta,
+            {'usuario_id': usuario_id, 'id': tentativa_id, 'bloquear': int(bloquear)})
+        try:
+            return resultado.scalar_one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def por_chave(usuario_id, chave):
-        return db.session.execute(select(SimuladoTentativa).where(SimuladoTentativa.usuario_id == usuario_id,
-            SimuladoTentativa.chave_envio == chave).with_for_update()
-            .execution_options(populate_existing=True)).scalar_one_or_none()
+        db.session.flush()
+        resultado = db.session.execute(select(SimuladoTentativa).from_statement(
+            text("CALL sp_simulado_tentativa_por_chave(:usuario_id,:chave)").columns(*SimuladoTentativa.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'usuario_id': usuario_id, 'chave': chave})
+        try:
+            return resultado.scalar_one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def andamento(usuario_id, versao_id):
-        return db.session.execute(select(SimuladoTentativa).where(SimuladoTentativa.usuario_id == usuario_id,
-            SimuladoTentativa.simulado_versao_id == versao_id, SimuladoTentativa.estado == "em_andamento")
-            .with_for_update().execution_options(populate_existing=True)).scalar_one_or_none()
+        db.session.flush()
+        resultado = db.session.execute(select(SimuladoTentativa).from_statement(
+            text("CALL sp_simulado_em_andamento(:usuario_id,:versao_id)").columns(*SimuladoTentativa.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'usuario_id': usuario_id, 'versao_id': versao_id})
+        try:
+            return resultado.scalar_one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def respostas(tentativa_id, bloquear=False):
-        consulta = (select(SimuladoResposta, SimuladoVersaoItem)
-            .join(SimuladoVersaoItem, SimuladoVersaoItem.id == SimuladoResposta.item_id)
-            .where(SimuladoResposta.tentativa_id == tentativa_id).order_by(SimuladoVersaoItem.posicao)
-            .execution_options(populate_existing=True))
-        if bloquear:
-            consulta = consulta.with_for_update()
-        return db.session.execute(consulta).all()
+        db.session.flush()
+        resultado = db.session.execute(select(SimuladoResposta, SimuladoVersaoItem).from_statement(
+            text("CALL sp_simulado_respostas(:tentativa_id,:bloquear)").columns(*SimuladoResposta.__table__.columns, *SimuladoVersaoItem.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'tentativa_id': tentativa_id, 'bloquear': int(bloquear)})
+        try:
+            return resultado.all()
+        finally:
+            resultado.close()
 
     @staticmethod
     def historico(usuario_id, pagina, limite):
-        consulta = select(SimuladoTentativa).where(SimuladoTentativa.usuario_id == usuario_id,
-            SimuladoTentativa.estado == "finalizada")
-        total = db.session.execute(select(func.count()).select_from(consulta.subquery())).scalar_one()
-        linhas = db.session.execute(consulta.order_by(SimuladoTentativa.finalizada_em.desc(),
-            SimuladoTentativa.id.desc()).offset((pagina - 1) * limite).limit(limite)).scalars().all()
-        return linhas, total
+        db.session.flush()
+        resultados = executar_resultados(db.session.connection(), "CALL sp_simulados_historico(%s,%s,%s)",
+            (usuario_id, pagina, limite))
+        linhas, totais = conferir_resultados(resultados, [TENTATIVA, ('total',)])
+        total, = totais
+        return [TentativaHistoricoRegistro(**r) for r in linhas], int(total['total'])
 
     @staticmethod
     def fatos(usuario_id, inicio, fim):
-        return db.session.execute(select(SimuladoResposta, SimuladoVersaoItem, SimuladoTentativa)
-            .join(SimuladoVersaoItem, SimuladoResposta.item_id == SimuladoVersaoItem.id)
-            .join(SimuladoTentativa, SimuladoResposta.tentativa_id == SimuladoTentativa.id)
-            .where(SimuladoTentativa.usuario_id == usuario_id, SimuladoTentativa.estado == "finalizada",
-                SimuladoResposta.alternativa.is_not(None), SimuladoTentativa.finalizada_em >= inicio,
-                SimuladoTentativa.finalizada_em < fim)
-            .order_by(SimuladoTentativa.finalizada_em, SimuladoResposta.id)).all()
+        db.session.flush()
+        resultado = db.session.execute(select(SimuladoResposta, SimuladoVersaoItem, SimuladoTentativa).from_statement(
+            text("CALL sp_simulados_fatos(:usuario_id,:inicio,:fim)").columns(*SimuladoResposta.__table__.columns, *SimuladoVersaoItem.__table__.columns, *SimuladoTentativa.__table__.columns)),
+            {'usuario_id': usuario_id, 'inicio': inicio, 'fim': fim})
+        try:
+            return resultado.all()
+        finally:
+            resultado.close()

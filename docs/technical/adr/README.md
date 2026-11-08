@@ -15,6 +15,8 @@ Este índice consolida as decisões arquiteturais do projeto. A aceitação dos 
 | [ADR-009](ADR-009-consentimento-e-eliminacao-do-plano.md) | Consentimento e eliminação do plano | **Aceito** | 2026-11-06 | Aceites separados e eliminação atômica dos planos próprios. |
 | [ADR-010](ADR-010-organizacao-modular-do-backend.md) | Organização modular do backend | **Aceito** | 2026-11-07 | Seis proprietários/APIs, núcleo neutro, Blueprints e eliminação participante em Plano; adendo aos ADRs 008/009. |
 
+| [ADR-011](ADR-011-interfaces-sql-de-leitura.md) | Interfaces SQL de leitura | **Aceito** | 2026-11-07 | Procedures específicas e views públicas históricas, mesma conexão/snapshot e reconhecimento conservador. |
+
 ## Decisões complementares
 
 [ADR-009 — Consentimento e eliminação do plano](ADR-009-consentimento-e-eliminacao-do-plano.md):

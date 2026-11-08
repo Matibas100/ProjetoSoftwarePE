@@ -77,6 +77,9 @@ class MySQLIntegrationTestCase(unittest.TestCase):
         connection = migrate.connect(settings)
         try:
             migrate.run_up(connection, settings, migrate.discover_migrations())
+            from database.sql_resources import detectar_prefixo
+            if detectar_prefixo(connection) != '016':
+                raise RuntimeError('Preflight exige contratos SQL íntegros até 016.')
         finally:
             connection.close()
 

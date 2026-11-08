@@ -1,0 +1,1238 @@
+{
+  "data": "2026-11-07",
+  "models": [
+    {
+      "model": "AreaEnem",
+      "base": "CrudMixin",
+      "modulo": "conteudo",
+      "fonte": "backend/app/modules/conteudo/models/area_enem.py",
+      "tabela": "areas_enem",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": [],
+      "colunas": [
+        "id",
+        "codigo",
+        "nome",
+        "ordem"
+      ],
+      "fks": []
+    },
+    {
+      "model": "Assunto",
+      "base": "CrudMixin",
+      "modulo": "conteudo",
+      "fonte": "backend/app/modules/conteudo/models/assunto.py",
+      "tabela": "assuntos",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": [
+        "descricao",
+        "materia_id",
+        "nome",
+        "nome_normalizado",
+        "status"
+      ],
+      "colunas": [
+        "id",
+        "nome",
+        "nome_normalizado",
+        "descricao",
+        "materia_id",
+        "status",
+        "criado_em",
+        "atualizado_em"
+      ],
+      "fks": [
+        {
+          "coluna": "materia_id",
+          "destino": "materias.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "AssuntoTransferencia",
+      "base": "CrudMixin",
+      "modulo": "conteudo",
+      "fonte": "backend/app/modules/conteudo/models/assunto_transferencia.py",
+      "tabela": "assunto_transferencias",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": [],
+      "colunas": [
+        "id",
+        "assunto_id",
+        "materia_origem_id",
+        "materia_destino_id",
+        "questoes_impactadas",
+        "criado_em"
+      ],
+      "fks": [
+        {
+          "coluna": "assunto_id",
+          "destino": "assuntos.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "materia_destino_id",
+          "destino": "materias.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "materia_origem_id",
+          "destino": "materias.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "AuthLimite",
+      "base": "CrudMixin",
+      "modulo": "contas",
+      "fonte": "backend/app/modules/contas/models/auth_limite.py",
+      "tabela": "auth_limites",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": [
+        "bloqueado_ate",
+        "falhas",
+        "janela_inicio"
+      ],
+      "colunas": [
+        "chave_hash",
+        "falhas",
+        "janela_inicio",
+        "bloqueado_ate"
+      ],
+      "fks": []
+    },
+    {
+      "model": "Materia",
+      "base": "CrudMixin",
+      "modulo": "conteudo",
+      "fonte": "backend/app/modules/conteudo/models/materia.py",
+      "tabela": "materias",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": [
+        "area_enem_id",
+        "descricao",
+        "nome",
+        "status"
+      ],
+      "colunas": [
+        "id",
+        "nome",
+        "descricao",
+        "area_enem_id",
+        "status",
+        "criado_em",
+        "atualizado_em"
+      ],
+      "fks": [
+        {
+          "coluna": "area_enem_id",
+          "destino": "areas_enem.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "PlanoEstudo",
+      "base": "ModeloAtualizavel",
+      "modulo": "plano_estudos",
+      "fonte": "backend/app/modules/plano_estudos/models/plano_estudo.py",
+      "tabela": "planos_estudo",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar"
+      ],
+      "campos_atualizaveis": [
+        "atual"
+      ],
+      "colunas": [
+        "id",
+        "usuario_id",
+        "geracao",
+        "atual",
+        "usuario_atual",
+        "periodo",
+        "gerado_em",
+        "chave_envio",
+        "operacao",
+        "plano_anterior_id"
+      ],
+      "fks": [
+        {
+          "coluna": "plano_anterior_id",
+          "destino": "planos_estudo.id",
+          "opcional": true,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "usuario_id",
+          "destino": "usuarios.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "PlanoEstudoItem",
+      "base": "ModeloAtualizavel",
+      "modulo": "plano_estudos",
+      "fonte": "backend/app/modules/plano_estudos/models/plano_estudo.py",
+      "tabela": "plano_estudo_itens",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar"
+      ],
+      "campos_atualizaveis": [
+        "concluido_em",
+        "estado"
+      ],
+      "colunas": [
+        "id",
+        "plano_id",
+        "assunto_id",
+        "materia_id",
+        "posicao",
+        "snapshot",
+        "estado",
+        "concluido_em"
+      ],
+      "fks": [
+        {
+          "coluna": "assunto_id",
+          "destino": "assuntos.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "materia_id",
+          "destino": "materias.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "plano_id",
+          "destino": "planos_estudo.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "PraticaTentativa",
+      "base": "CrudMixin",
+      "modulo": "praticas",
+      "fonte": "backend/app/modules/praticas/models/pratica_tentativa.py",
+      "tabela": "pratica_tentativas",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "usuario_id",
+        "questao_versao_id",
+        "chave_envio",
+        "estado",
+        "resposta_escolhida",
+        "correta",
+        "iniciada_em",
+        "respondida_em",
+        "assunto_id",
+        "assunto_nome",
+        "materia_id",
+        "materia_nome"
+      ],
+      "fks": [
+        {
+          "coluna": "assunto_id",
+          "destino": "assuntos.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "materia_id",
+          "destino": "materias.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "questao_versao_id",
+          "destino": "questao_versoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "usuario_id",
+          "destino": "usuarios.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "Questao",
+      "base": "CrudMixin",
+      "modulo": "conteudo",
+      "fonte": "backend/app/modules/conteudo/models/questao.py",
+      "tabela": "questoes",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": [
+        "alternativa_a",
+        "alternativa_b",
+        "alternativa_c",
+        "alternativa_d",
+        "alternativa_e",
+        "assunto_id",
+        "dificuldade",
+        "enunciado",
+        "explicacao",
+        "resposta_correta"
+      ],
+      "colunas": [
+        "id",
+        "status",
+        "revisao",
+        "criado_em",
+        "atualizado_em",
+        "versao_publicada_id",
+        "enunciado",
+        "alternativa_a",
+        "alternativa_b",
+        "alternativa_c",
+        "alternativa_d",
+        "alternativa_e",
+        "resposta_correta",
+        "explicacao",
+        "dificuldade",
+        "assunto_id"
+      ],
+      "fks": [
+        {
+          "coluna": "assunto_id",
+          "destino": "assuntos.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "versao_publicada_id",
+          "destino": "questao_versoes.id",
+          "opcional": true,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "QuestaoEvento",
+      "base": "ModeloBase",
+      "modulo": "conteudo",
+      "fonte": "backend/app/modules/conteudo/models/questao_evento.py",
+      "tabela": "questao_eventos",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "questao_id",
+        "versao_id",
+        "ator_id",
+        "acao",
+        "motivo",
+        "criado_em"
+      ],
+      "fks": [
+        {
+          "coluna": "ator_id",
+          "destino": "usuarios.id",
+          "opcional": true,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "questao_id",
+          "destino": "questoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "versao_id",
+          "destino": "questao_versoes.id",
+          "opcional": true,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "QuestaoVersao",
+      "base": "ModeloBase",
+      "modulo": "conteudo",
+      "fonte": "backend/app/modules/conteudo/models/questao_versao.py",
+      "tabela": "questao_versoes",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "questao_id",
+        "numero",
+        "revisao_origem",
+        "estado",
+        "enunciado",
+        "alternativa_a",
+        "alternativa_b",
+        "alternativa_c",
+        "alternativa_d",
+        "alternativa_e",
+        "resposta_correta",
+        "explicacao",
+        "dificuldade",
+        "assunto_id",
+        "assunto_nome",
+        "materia_id",
+        "materia_nome",
+        "area_enem_id",
+        "area_enem_nome",
+        "ator_id",
+        "origem",
+        "criado_em"
+      ],
+      "fks": [
+        {
+          "coluna": "area_enem_id",
+          "destino": "areas_enem.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "assunto_id",
+          "destino": "assuntos.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "ator_id",
+          "destino": "usuarios.id",
+          "opcional": true,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "materia_id",
+          "destino": "materias.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "questao_id",
+          "destino": "questoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "RegistroPrivacidade",
+      "base": "ModeloBase",
+      "modulo": "contas",
+      "fonte": "backend/app/modules/contas/models/registro_privacidade.py",
+      "tabela": "registros_privacidade",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "usuario_id",
+        "tipo",
+        "acao",
+        "versao",
+        "documento_sha256",
+        "registrado_em",
+        "chave_envio",
+        "revisao_base"
+      ],
+      "fks": [
+        {
+          "coluna": "usuario_id",
+          "destino": "usuarios.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "Sessao",
+      "base": "CrudMixin",
+      "modulo": "contas",
+      "fonte": "backend/app/modules/contas/models/sessao.py",
+      "tabela": "sessoes",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": [
+        "reautenticada_em",
+        "revogada_em",
+        "ultimo_acesso_em"
+      ],
+      "colunas": [
+        "id",
+        "usuario_id",
+        "identificador_hash",
+        "criada_em",
+        "ultimo_acesso_em",
+        "expira_em",
+        "reautenticada_em",
+        "revogada_em"
+      ],
+      "fks": [
+        {
+          "coluna": "usuario_id",
+          "destino": "usuarios.id",
+          "opcional": true,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "Simulado",
+      "base": "CrudMixin",
+      "modulo": "simulados",
+      "fonte": "backend/app/modules/simulados/models/simulado.py",
+      "tabela": "simulados",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "titulo",
+        "estado",
+        "revisao",
+        "autor_id",
+        "criado_em",
+        "atualizado_em",
+        "simulado_versao_id"
+      ],
+      "fks": [
+        {
+          "coluna": "autor_id",
+          "destino": "usuarios.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "simulado_versao_id",
+          "destino": "simulado_versoes.id",
+          "opcional": true,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "SimuladoEvento",
+      "base": "ModeloBase",
+      "modulo": "simulados",
+      "fonte": "backend/app/modules/simulados/models/simulado.py",
+      "tabela": "simulado_eventos",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "simulado_id",
+        "versao_id",
+        "ator_id",
+        "acao",
+        "motivo",
+        "criado_em"
+      ],
+      "fks": [
+        {
+          "coluna": "ator_id",
+          "destino": "usuarios.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "simulado_id",
+          "destino": "simulados.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "versao_id",
+          "destino": "simulado_versoes.id",
+          "opcional": true,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "SimuladoRascunhoItem",
+      "base": "CrudMixin",
+      "modulo": "simulados",
+      "fonte": "backend/app/modules/simulados/models/simulado.py",
+      "tabela": "simulado_rascunho_itens",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "simulado_id",
+        "posicao",
+        "questao_id",
+        "questao_versao_id"
+      ],
+      "fks": [
+        {
+          "coluna": "questao_id",
+          "destino": "questoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "questao_versao_id",
+          "destino": "questao_versoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "simulado_id",
+          "destino": "simulados.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "SimuladoResposta",
+      "base": "CrudMixin",
+      "modulo": "simulados",
+      "fonte": "backend/app/modules/simulados/models/simulado.py",
+      "tabela": "simulado_respostas",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "tentativa_id",
+        "item_id",
+        "alternativa",
+        "correta"
+      ],
+      "fks": [
+        {
+          "coluna": "item_id",
+          "destino": "simulado_versao_itens.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "tentativa_id",
+          "destino": "simulado_tentativas.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "SimuladoTentativa",
+      "base": "CrudMixin",
+      "modulo": "simulados",
+      "fonte": "backend/app/modules/simulados/models/simulado.py",
+      "tabela": "simulado_tentativas",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "usuario_id",
+        "simulado_versao_id",
+        "estado",
+        "revisao",
+        "chave_envio",
+        "iniciada_em",
+        "finalizada_em",
+        "total",
+        "respondidas",
+        "acertos",
+        "erros",
+        "em_branco",
+        "percentual_acerto",
+        "em_andamento_marcador"
+      ],
+      "fks": [
+        {
+          "coluna": "simulado_versao_id",
+          "destino": "simulado_versoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "usuario_id",
+          "destino": "usuarios.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "SimuladoVersao",
+      "base": "ModeloBase",
+      "modulo": "simulados",
+      "fonte": "backend/app/modules/simulados/models/simulado.py",
+      "tabela": "simulado_versoes",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "simulado_id",
+        "numero",
+        "revisao_origem",
+        "titulo",
+        "autor_id",
+        "criado_em"
+      ],
+      "fks": [
+        {
+          "coluna": "autor_id",
+          "destino": "usuarios.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "simulado_id",
+          "destino": "simulados.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "SimuladoVersaoItem",
+      "base": "ModeloBase",
+      "modulo": "simulados",
+      "fonte": "backend/app/modules/simulados/models/simulado.py",
+      "tabela": "simulado_versao_itens",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id"
+      ],
+      "campos_atualizaveis": null,
+      "colunas": [
+        "id",
+        "simulado_versao_id",
+        "posicao",
+        "questao_id",
+        "questao_versao_id"
+      ],
+      "fks": [
+        {
+          "coluna": "questao_id",
+          "destino": "questoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "questao_versao_id",
+          "destino": "questao_versoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        },
+        {
+          "coluna": "simulado_versao_id",
+          "destino": "simulado_versoes.id",
+          "opcional": false,
+          "ondelete": "RESTRICT"
+        }
+      ]
+    },
+    {
+      "model": "Usuario",
+      "base": "CrudMixin",
+      "modulo": "contas",
+      "fonte": "backend/app/modules/contas/models/usuario.py",
+      "tabela": "usuarios",
+      "metodos": [
+        "salvar",
+        "listar_todos",
+        "buscar_por_id",
+        "atualizar",
+        "deletar"
+      ],
+      "campos_atualizaveis": [
+        "ativo",
+        "senha_hash"
+      ],
+      "colunas": [
+        "id",
+        "nome",
+        "email",
+        "senha_hash",
+        "perfil",
+        "ativo",
+        "criado_em"
+      ],
+      "fks": []
+    }
+  ],
+  "rotas": [
+    {
+      "metodo": "GET",
+      "rota": "/api/admin/assuntos",
+      "controller": "AssuntoController.listar_admin"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/admin/dashboard",
+      "controller": "DesempenhoController.admin"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/admin/materias",
+      "controller": "MateriaController.listar_admin"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/admin/questoes",
+      "controller": "QuestaoController.listar_admin"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/admin/simulados",
+      "controller": "SimuladoController.admin_lista"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/admin/simulados",
+      "controller": "SimuladoController.criar"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/admin/simulados/<int:simulado_id>",
+      "controller": "SimuladoController.admin_detalhe"
+    },
+    {
+      "metodo": "PUT",
+      "rota": "/api/admin/simulados/<int:simulado_id>",
+      "controller": "SimuladoController.editar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/admin/simulados/<int:simulado_id>/arquivar",
+      "controller": "SimuladoController.arquivar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/admin/simulados/<int:simulado_id>/publicar",
+      "controller": "SimuladoController.publicar"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/dashboard",
+      "controller": "DesempenhoController.aluno"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/desempenho",
+      "controller": "DesempenhoController.diagnostico"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/plano",
+      "controller": "PlanoEstudoController.consultar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/plano/gerar",
+      "controller": "PlanoEstudoController.gerar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/plano/itens/<int:item_id>/concluir",
+      "controller": "PlanoEstudoController.concluir"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/plano/recalcular",
+      "controller": "PlanoEstudoController.recalcular"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/praticas",
+      "controller": "PraticaController.historico"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/praticas",
+      "controller": "PraticaController.iniciar"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/praticas/<int:tentativa_id>",
+      "controller": "PraticaController.detalhe"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/praticas/<int:tentativa_id>/resposta",
+      "controller": "PraticaController.responder"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/privacidade",
+      "controller": "PrivacidadeController.consultar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/privacidade/consentimento-plano/aceitar",
+      "controller": "PrivacidadeController.consentir"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/privacidade/consentimento-plano/recusar",
+      "controller": "PrivacidadeController.recusar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/privacidade/consentimento-plano/revogar",
+      "controller": "PrivacidadeController.revogar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/privacidade/termos-uso",
+      "controller": "PrivacidadeController.aceitar_uso"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/questoes",
+      "controller": "PraticaController.questoes"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/simulados",
+      "controller": "SimuladoController.catalogo"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/tentativas-simulado",
+      "controller": "SimuladoController.historico"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/tentativas-simulado",
+      "controller": "SimuladoController.iniciar"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/tentativas-simulado/<int:tentativa_id>",
+      "controller": "SimuladoController.tentativa"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/tentativas-simulado/<int:tentativa_id>/correcao",
+      "controller": "SimuladoController.tentativa"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/aluno/tentativas-simulado/<int:tentativa_id>/finalizar",
+      "controller": "SimuladoController.finalizar"
+    },
+    {
+      "metodo": "PUT",
+      "rota": "/api/aluno/tentativas-simulado/<int:tentativa_id>/respostas/<int:item_id>",
+      "controller": "SimuladoController.responder"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/aluno/tentativas-simulado/<int:tentativa_id>/resultado",
+      "controller": "SimuladoController.tentativa"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/areas-enem",
+      "controller": "AreaEnemController.listar"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/assuntos",
+      "controller": "AssuntoController.listar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/assuntos",
+      "controller": "AssuntoController.cadastrar"
+    },
+    {
+      "metodo": "DELETE",
+      "rota": "/api/assuntos/<int:assunto_id>",
+      "controller": "AssuntoController.deletar"
+    },
+    {
+      "metodo": "PUT",
+      "rota": "/api/assuntos/<int:assunto_id>",
+      "controller": "AssuntoController.atualizar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/assuntos/<int:assunto_id>/arquivar",
+      "controller": "AssuntoController.alterar_status"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/assuntos/<int:assunto_id>/impacto-exclusao",
+      "controller": "AssuntoController.impacto"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/assuntos/<int:assunto_id>/impacto-transferencia",
+      "controller": "AssuntoController.previa_transferencia"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/assuntos/<int:assunto_id>/inativar",
+      "controller": "AssuntoController.alterar_status"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/assuntos/<int:assunto_id>/reativar",
+      "controller": "AssuntoController.alterar_status"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/assuntos/<int:assunto_id>/transferir",
+      "controller": "AssuntoController.transferir"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/auth/cadastro",
+      "controller": "AutenticacaoController.cadastro"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/auth/csrf",
+      "controller": "AutenticacaoController.csrf"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/auth/login",
+      "controller": "AutenticacaoController.login"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/auth/logout",
+      "controller": "AutenticacaoController.logout"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/auth/reautenticar",
+      "controller": "AutenticacaoController.reautenticar"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/auth/sessao",
+      "controller": "AutenticacaoController.sessao"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/health",
+      "controller": "HealthController.status"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/materias",
+      "controller": "MateriaController.listar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/materias",
+      "controller": "MateriaController.cadastrar"
+    },
+    {
+      "metodo": "DELETE",
+      "rota": "/api/materias/<int:materia_id>",
+      "controller": "MateriaController.deletar"
+    },
+    {
+      "metodo": "PUT",
+      "rota": "/api/materias/<int:materia_id>",
+      "controller": "MateriaController.atualizar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/materias/<int:materia_id>/arquivar",
+      "controller": "MateriaController.alterar_status"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/materias/<int:materia_id>/impacto-exclusao",
+      "controller": "MateriaController.impacto"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/materias/<int:materia_id>/inativar",
+      "controller": "MateriaController.alterar_status"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/materias/<int:materia_id>/reativar",
+      "controller": "MateriaController.alterar_status"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/questoes",
+      "controller": "QuestaoController.cadastrar"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/questoes/<int:questao_id>",
+      "controller": "QuestaoController.detalhe"
+    },
+    {
+      "metodo": "PUT",
+      "rota": "/api/questoes/<int:questao_id>",
+      "controller": "QuestaoController.editar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/questoes/<int:questao_id>/arquivar",
+      "controller": "QuestaoController.arquivar"
+    },
+    {
+      "metodo": "POST",
+      "rota": "/api/questoes/<int:questao_id>/publicar",
+      "controller": "QuestaoController.publicar"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/questoes/por-assunto",
+      "controller": "QuestaoController.buscar_por_assunto"
+    },
+    {
+      "metodo": "GET",
+      "rota": "/api/termos",
+      "controller": "PrivacidadeController.termos"
+    }
+  ],
+  "conexoes_tentadas": 0,
+  "atributos_diagrama_conferidos": 152,
+  "fks_diagrama_conferidas": 43,
+  "blocos_mermaid_antes": 12,
+  "blocos_mermaid_depois": 13,
+  "declaracoes_mermaid_preservadas": true,
+  "mermaid_alcance": "Conferencia estrutural de blocos/chaves/aspas e comparacao integral de declaracoes. Sem parser/renderizador Mermaid instalado; renderizacao nao executada.",
+  "links_locais": 252,
+  "funcionalidades_preservadas": 20,
+  "linhas_matriz_academica_preservadas": 20,
+  "hashes_finais": {
+    "docs/technical/modelagem-de-dominio.md": "cc60004f4cc9bf1ea8cdf00e475a10f1462bb2fe6983872e944aba2bc565828a",
+    "docs/technical/matriz-crud.md": "2ca885a4fa3b53c01525b7bc97d0608bbad4602b1575e0ac2df5c869a028ca17",
+    "docs/technical/diagrama-de-classes.md": "c94966b7ed9685c915d401c2f8e377330e276fc248798c658048da8a3d8282d9",
+    "docs/technical/entrega-academica.md": "3febb4435408ca7014a25f64def5149910ad073626ef72065c56bba780d7798f",
+    "README.md": "8bbf9ff3540c82b70b82f14606df988f3fa038b7de08e883e05e4c10e508ead5"
+  },
+  "git_diff_rastreado": [
+    "README.md",
+    "docs/technical/diagrama-de-classes.md",
+    "docs/technical/entrega-academica.md"
+  ],
+  "git_status": " M README.md\n M docs/technical/diagrama-de-classes.md\n M docs/technical/entrega-academica.md\n?? docs/technical/matriz-crud.md\n?? docs/technical/modelagem-de-dominio.md\n?? openspec/changes/formalizar-modelagem-e-cobertura-crud/\n?? tmp/\n",
+  "hashes_antes_arquivamento": {
+    "docs/technical/modelagem-de-dominio.md": "cc60004f4cc9bf1ea8cdf00e475a10f1462bb2fe6983872e944aba2bc565828a",
+    "docs/technical/matriz-crud.md": "f43a7bcfc306f77985d1d559b09973d1c9ec50b6d41802f094bf684837711985",
+    "docs/technical/diagrama-de-classes.md": "c94966b7ed9685c915d401c2f8e377330e276fc248798c658048da8a3d8282d9",
+    "docs/technical/entrega-academica.md": "3febb4435408ca7014a25f64def5149910ad073626ef72065c56bba780d7798f",
+    "README.md": "8bbf9ff3540c82b70b82f14606df988f3fa038b7de08e883e05e4c10e508ead5"
+  },
+  "arquivamento": {
+    "data": "2026-11-07",
+    "destino": "openspec/changes/archive/2026-11-07-formalizar-modelagem-e-cobertura-crud",
+    "specs_atualizadas": false,
+    "ajuste": "Link da matriz CRUD atualizado para o relatorio arquivado."
+  }
+}

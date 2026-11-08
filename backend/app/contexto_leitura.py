@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from app.core.relogio import agora_utc
 from app.extensions import db
+from app.core.procedures_mysql import executar_resultados
 
 
 def utc(instante):
@@ -45,6 +46,10 @@ class ContextoLeitura:
     def executar(self, consulta):
         self.validar()
         return self._conexao.execute(consulta)
+
+    def executar_resultados(self, comando, parametros=()):
+        self.validar()
+        return executar_resultados(self._conexao, comando, parametros)
 
     def __exit__(self, *erro):
         self._ativo = False

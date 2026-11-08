@@ -187,3 +187,137 @@ O sistema SHALL rejeitar diferenças reais nas tabelas reconhecidas dos prefixos
 - **WHEN** o operador solicita baseline
 - **THEN** a operação é recusada sem registrar versões presumidas nem modificar dados funcionais
 - **AND** o comportamento dos validadores anteriores a 008 permanece preservado
+
+### Requirement: Reconhecimento dos recursos SQL acadêmicos
+O sistema SHALL reconhecer os prefixos 011/012 somente quando as tabelas e os recursos SQL oficiais correspondentes estiverem íntegros. Assinaturas de procedures, contratos de views e corpos SQL SHALL ser conferidos contra referências oficiais independentes do banco encontrado, preservando os validadores dos prefixos anteriores e a procedure legada.
+
+#### Scenario: Instalação e upgrade preservam registros
+- **GIVEN** schema vazio ou cópia válida do prefixo 010 com dados sintéticos
+- **WHEN** o runner aplica a sequência oficial até 012
+- **THEN** as sete procedures e quatro views ficam disponíveis, as tabelas e registros anteriores permanecem intactos e a segunda atualização executa zero migrations
+- **AND** os arquivos e checksums das migrations 000–010 permanecem inalterados
+
+#### Scenario: Bootstrap equivalente
+- **GIVEN** schemas independentes instalados pelo bootstrap consolidado e pela sequência até 012
+- **WHEN** os objetos oficiais são comparados
+- **THEN** tabelas, constraints, procedure legada, sete procedures novas e quatro views apresentam os mesmos contratos e comportamento
+
+#### Scenario: Adoção de novos prefixos completos
+- **GIVEN** cópia sem histórico correspondente exatamente a 011 ou 012
+- **WHEN** o operador confirma baseline
+- **THEN** somente o prefixo comprovado é registrado com os checksums oficiais, sem recriar recursos ou alterar dados funcionais
+- **AND** a atualização aplica somente as migrations posteriores ao prefixo reconhecido
+
+#### Scenario: Recurso parcial ou divergente
+- **GIVEN** recursos identificáveis de 011/012 com procedure ou view ausente, corpo alterado, assinatura divergente, dependência externa ao schema ou privilégio incompatível
+- **WHEN** o reconhecimento para baseline é solicitado
+- **THEN** a operação falha sem registrar prefixo presumido e sem recuar silenciosamente para 010/011 para esconder a divergência
+
+#### Scenario: Portabilidade restrita e metadados insuficientes
+- **GIVEN** restauração equivalente em outro schema MySQL 8, com identidade física do instalador diferente
+- **WHEN** todos os metadados obrigatórios podem ser conferidos
+- **THEN** nomes físicos locais e identidade do instalador não causam divergência, mas segurança do invocador, assinatura, colunas e dependências dos recursos continuam verificadas
+- **AND** ausência de metadado obrigatório causa erro, sem aprovação por mera existência dos objetos
+
+#### Scenario: Prefixos históricos e falhas continuam protegidos
+- **GIVEN** prefixo válido entre 000 e 010 sem recursos das novas versões, ou histórico com drift/RUNNING/FAILED
+- **WHEN** ocorre reconhecimento ou atualização
+- **THEN** os estados antigos válidos continuam reconhecíveis e as proteções de checksum, lock, falha e procedure legada continuam bloqueantes quando aplicáveis
+
+### Requirement: Reconhecimento e instalação do prefixo 013
+O sistema SHALL instalar e reconhecer o prefixo 013 somente com o prefixo 012 íntegro e todas as procedures inventariadas com assinaturas, corpos e segurança oficiais. Bootstrap e sequência SHALL ser equivalentes. Baseline/instalação SHALL NOT executar os casos funcionais das routines ou alterar dados existentes.
+
+#### Scenario: Instalação limpa e upgrade
+- **GIVEN** schema vazio ou cópia válida de 012 com dados sintéticos
+- **WHEN** a sequência oficial é aplicada até 013 e repetida
+- **THEN** o banco contém as routines previstas, dados e objetos anteriores intactos, e a segunda atualização executa zero migrations
+
+#### Scenario: Bootstrap e baseline do prefixo completo
+- **GIVEN** schemas criados pelo bootstrap e pela sequência até 013, sem histórico em uma das cópias restauradas
+- **WHEN** são comparados os objetos e confirmado baseline da cópia completa
+- **THEN** os contratos SQL são equivalentes e somente o prefixo comprovado é registrado, sem recriar tabelas, criar decisões/contas ou eliminar dados
+
+#### Scenario: Procedure parcial ou incompatível
+- **GIVEN** indícios de 013 com recurso ausente, corpo/assinatura/segurança alterados ou metadados insuficientes
+- **WHEN** o reconhecimento é solicitado
+- **THEN** a operação falha sem presumir versão, usar o banco encontrado como referência ou recuar a prefixo inferior para ocultar a divergência
+
+#### Scenario: Histórico e recursos anteriores preservados
+- **GIVEN** prefixo anterior válido, ou histórico com checksum divergente/RUNNING/FAILED
+- **WHEN** o runner executa reconhecimento ou atualização
+- **THEN** prefixos anteriores válidos continuam reconhecíveis e os bloqueios existentes de falha, lock, checksum e procedure legada permanecem
+
+### Requirement: Reconhecimento e instalação do prefixo 014
+O sistema SHALL instalar e reconhecer o prefixo 014 somente com o prefixo 013 íntegro e todas as procedures inventariadas com assinaturas, corpos e segurança oficiais. Bootstrap e sequência SHALL ser equivalentes. Baseline/instalação SHALL NOT executar os casos funcionais das routines ou alterar dados existentes.
+
+#### Scenario: Instalação limpa e upgrade
+- **GIVEN** schema vazio ou cópia válida de 013 com dados sintéticos
+- **WHEN** a sequência oficial é aplicada até 014 e repetida
+- **THEN** o banco contém as routines previstas, dados e objetos anteriores intactos, e a segunda atualização executa zero migrations
+
+#### Scenario: Bootstrap e baseline do prefixo completo
+- **GIVEN** schemas criados pelo bootstrap e pela sequência até 014, sem histórico em uma das cópias restauradas
+- **WHEN** são comparados os objetos e confirmado baseline da cópia completa
+- **THEN** os contratos SQL são equivalentes e somente o prefixo comprovado é registrado, sem recriar tabelas, criar decisões/contas ou eliminar dados
+
+#### Scenario: Upgrade bloqueado por dependência física divergente
+- **GIVEN** histórico íntegro até 013 e tabela, procedure legada ou recurso SQL anterior ausente/divergente
+- **WHEN** o runner tenta aplicar 014
+- **THEN** valida o prefixo físico sob seu lock e recusa o upgrade antes de registrar ou executar 014, preservando dados, objetos e histórico encontrados
+
+#### Scenario: Procedure parcial ou incompatível
+- **GIVEN** indícios de 014 com recurso ausente, corpo/assinatura/segurança alterados ou metadados insuficientes
+- **WHEN** o reconhecimento é solicitado
+- **THEN** a operação falha sem presumir versão, usar o banco encontrado como referência ou recuar a prefixo inferior para ocultar a divergência
+
+#### Scenario: Histórico e recursos anteriores preservados
+- **GIVEN** prefixo anterior válido, ou histórico com checksum divergente/RUNNING/FAILED
+- **WHEN** o runner executa reconhecimento ou atualização
+- **THEN** prefixos anteriores válidos continuam reconhecíveis e os bloqueios existentes de falha, lock, checksum e procedure legada permanecem
+
+### Requirement: Reconhecimento e instalação do prefixo 015
+O sistema SHALL instalar e reconhecer o prefixo 015 somente com o prefixo 014 íntegro e todas as procedures inventariadas com assinaturas, corpos e segurança oficiais. Bootstrap e sequência SHALL ser equivalentes. Baseline/instalação SHALL NOT executar os casos funcionais das routines ou alterar dados existentes.
+
+#### Scenario: Instalação limpa e upgrade
+- **GIVEN** schema vazio ou cópia válida de 014 com dados sintéticos
+- **WHEN** a sequência oficial é aplicada até 015 e repetida
+- **THEN** o banco contém as routines previstas, dados e objetos anteriores intactos, e a segunda atualização executa zero migrations
+
+#### Scenario: Bootstrap e baseline do prefixo completo
+- **GIVEN** schemas criados pelo bootstrap e pela sequência até 015, sem histórico em uma das cópias restauradas
+- **WHEN** são comparados os objetos e confirmado baseline da cópia completa
+- **THEN** os contratos SQL são equivalentes e somente o prefixo comprovado é registrado, sem recriar tabelas, criar decisões/contas ou eliminar dados
+
+#### Scenario: Procedure parcial ou incompatível
+- **GIVEN** indícios de 015 com recurso ausente, corpo/assinatura/segurança alterados ou metadados insuficientes
+- **WHEN** o reconhecimento é solicitado
+- **THEN** a operação falha sem presumir versão, usar o banco encontrado como referência ou recuar a prefixo inferior para ocultar a divergência
+
+#### Scenario: Histórico e recursos anteriores preservados
+- **GIVEN** prefixo anterior válido, ou histórico com checksum divergente/RUNNING/FAILED
+- **WHEN** o runner executa reconhecimento ou atualização
+- **THEN** prefixos anteriores válidos continuam reconhecíveis e os bloqueios existentes de falha, lock, checksum e procedure legada permanecem
+
+
+### Requirement: Reconhecimento e instalação do prefixo 016
+O sistema SHALL instalar e reconhecer o prefixo 016 somente com o prefixo 015 íntegro e todas as procedures inventariadas com assinaturas, corpos e segurança oficiais. Bootstrap e sequência SHALL ser equivalentes. Baseline/instalação SHALL NOT executar os casos funcionais das routines ou alterar dados existentes.
+
+#### Scenario: Instalação limpa e upgrade
+- **GIVEN** schema vazio ou cópia válida de 015 com dados sintéticos
+- **WHEN** a sequência oficial é aplicada até 016 e repetida
+- **THEN** o banco contém as routines previstas, dados e objetos anteriores intactos, e a segunda atualização executa zero migrations
+
+#### Scenario: Bootstrap e baseline do prefixo completo
+- **GIVEN** schemas criados pelo bootstrap e pela sequência até 016, sem histórico em uma das cópias restauradas
+- **WHEN** são comparados os objetos e confirmado baseline da cópia completa
+- **THEN** os contratos SQL são equivalentes e somente o prefixo comprovado é registrado, sem recriar tabelas, criar decisões/contas ou eliminar dados
+
+#### Scenario: Procedure parcial ou incompatível
+- **GIVEN** indícios de 016 com recurso ausente, corpo/assinatura/segurança alterados ou metadados insuficientes
+- **WHEN** o reconhecimento é solicitado
+- **THEN** a operação falha sem presumir versão, usar o banco encontrado como referência ou recuar a prefixo inferior para ocultar a divergência
+
+#### Scenario: Histórico e recursos anteriores preservados
+- **GIVEN** prefixo anterior válido, ou histórico com checksum divergente/RUNNING/FAILED
+- **WHEN** o runner executa reconhecimento ou atualização
+- **THEN** prefixos anteriores válidos continuam reconhecíveis e os bloqueios existentes de falha, lock, checksum e procedure legada permanecem

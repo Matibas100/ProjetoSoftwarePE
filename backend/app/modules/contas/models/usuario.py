@@ -20,7 +20,8 @@ class Usuario(CrudMixin):
 
     @classmethod
     def buscar_por_email(cls, email):
-        return db.session.execute(db.select(cls).filter_by(email=email)).scalar_one_or_none()
+        from app.modules.contas.repositories.autenticacao_repository import AutenticacaoRepository
+        return AutenticacaoRepository.buscar_por_email(email)
 
     def to_dict(self):
         return {"id": self.id, "nome": self.nome, "email": self.email, "perfil": self.perfil}

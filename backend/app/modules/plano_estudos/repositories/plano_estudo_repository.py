@@ -1,5 +1,6 @@
 """Locks de geração/propriedade e consulta ordenada, sem CRUD duplicado."""
-from sqlalchemy import delete, select
+from sqlalchemy import select, text
+from app.core.procedures_mysql import executar_resultados, conferir_resultados
 from app.contexto_leitura import ContextoLeitura
 from app.extensions import db
 from app.modules.contas.api import bloquear_usuario
@@ -15,36 +16,70 @@ class PlanoEstudoRepository:
 
     @staticmethod
     def atual(usuario_id, bloquear=False):
-        consulta = select(Plano).where(Plano.usuario_id == usuario_id, Plano.atual.is_(True))
+        db.session.flush()
+        consulta = select(Plano).from_statement(text('CALL sp_plano_atual(:usuario_id,:bloquear)')
+            .columns(*Plano.__table__.columns))
         if bloquear:
-            consulta = consulta.with_for_update().execution_options(populate_existing=True)
-        return db.session.execute(consulta).scalar_one_or_none()
+            consulta = consulta.execution_options(populate_existing=True)
+        resultado = db.session.execute(consulta, {'usuario_id': usuario_id, 'bloquear': int(bloquear)})
+        try:
+            return resultado.scalar_one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def por_chave(usuario_id, chave):
-        return db.session.execute(select(Plano).where(Plano.usuario_id == usuario_id, Plano.chave_envio == chave)
-            .with_for_update().execution_options(populate_existing=True)).scalar_one_or_none()
+        db.session.flush()
+        resultado = db.session.execute(select(Plano).from_statement(
+            text('CALL sp_plano_por_chave(:usuario_id,:chave)').columns(*Plano.__table__.columns))
+            .execution_options(populate_existing=True), {'usuario_id': usuario_id, 'chave': chave})
+        try:
+            return resultado.scalar_one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def itens(plano_id):
-        return db.session.execute(select(Item).where(Item.plano_id == plano_id).order_by(Item.posicao)
-            .with_for_update().execution_options(populate_existing=True)).scalars().all()
+        db.session.flush()
+        resultado = db.session.execute(select(Item).from_statement(
+            text('CALL sp_plano_itens(:plano_id)').columns(*Item.__table__.columns))
+            .execution_options(populate_existing=True), {'plano_id': plano_id})
+        try:
+            return resultado.scalars().all()
+        finally:
+            resultado.close()
 
     @staticmethod
     def item_proprio(usuario_id, item_id):
-        return db.session.execute(select(Item, Plano).join(Plano, Item.plano_id == Plano.id)
-            .where(Plano.usuario_id == usuario_id, Item.id == item_id)
-            .with_for_update().execution_options(populate_existing=True)).one_or_none()
+        db.session.flush()
+        resultado = db.session.execute(select(Item, Plano).from_statement(
+            text('CALL sp_plano_item_proprio(:usuario_id,:item_id)')
+            .columns(*Item.__table__.columns, *Plano.__table__.columns))
+            .execution_options(populate_existing=True), {'usuario_id': usuario_id, 'item_id': item_id})
+        try:
+            return resultado.one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def eliminar_planos_proprios(usuario_id):
         # O chamador mantém o lock do usuário até o único commit da negativa.
-        ids = db.session.execute(select(Plano.id).where(Plano.usuario_id == usuario_id)
-            .order_by(Plano.id.desc()).with_for_update()).scalars().all()
-        for plano_id in ids:
-            propria = select(Plano.id).where(Plano.usuario_id == usuario_id,
-                Plano.id == plano_id)
-            db.session.execute(delete(Item).where(Item.plano_id == plano_id,
-                Item.plano_id.in_(propria)), execution_options={"synchronize_session": False})
-            db.session.execute(delete(Plano).where(Plano.id == plano_id,
-                Plano.usuario_id == usuario_id), execution_options={"synchronize_session": False})
+        db.session.flush()
+        afetadas = []
+        for entidade in list(db.session.identity_map.values()):
+            if isinstance(entidade, Plano):
+                plano = entidade
+            elif isinstance(entidade, Item):
+                # Busca básica por PK somente para identificar o dono de item já carregado.
+                plano = Plano.buscar_por_id(entidade.plano_id)
+            else:
+                continue
+            if plano is not None and plano.usuario_id == usuario_id:
+                afetadas.append(entidade)
+        resultados = executar_resultados(db.session.connection(),
+            'CALL sp_eliminar_planos_proprios(%s)', (usuario_id,))
+        contagens, = conferir_resultados(resultados, [('planos_eliminados', 'itens_eliminados')])
+        linha, = contagens
+        # Expiração seletiva conserva a negativa pendente e permite rollback externo.
+        for entidade in afetadas:
+            db.session.expire(entidade)

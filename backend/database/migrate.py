@@ -348,6 +348,14 @@ def run_up(
         applied = 0
         for index in range(next_index, len(migrations)):
             migration = migrations[index]
+            # O histórico não comprova a integridade física da dependência.
+            # Conferir sob o mesmo lock, antes de registrar RUNNING ou criar 014.
+            if migration.version == "014" and detect_legacy_prefix(connection) != "013":
+                raise MigrationError("A migration 014 exige o prefixo 013 íntegro.")
+            if migration.version == "015" and detect_legacy_prefix(connection) != "014":
+                raise MigrationError("A migration 015 exige o prefixo 014 íntegro.")
+            if migration.version == "016" and detect_legacy_prefix(connection) != "015":
+                raise MigrationError("A migration 016 exige o prefixo 015 íntegro.")
             apply_migration(connection, migration, existing if index == next_index else None)
             existing = None
             applied += 1

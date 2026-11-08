@@ -21,8 +21,8 @@ class PrivacidadeMigrationIntegrationTest(MySQLMigrationTestCase):
                 plano=c.lastrowid
                 c.execute("INSERT INTO plano_estudo_itens(plano_id,assunto_id,materia_id,posicao,snapshot,estado) VALUES(%s,%s,%s,1,JSON_OBJECT(),'pendente')",(plano,assunto,materia))
                 c.execute("INSERT INTO pratica_tentativas(usuario_id,questao_versao_id,chave_envio,estado,resposta_escolhida,correta,iniciada_em,respondida_em,assunto_id,assunto_nome,materia_id,materia_nome) VALUES(%s,%s,%s,'respondida','A',1,'2026-11-06 12:00:00','2026-11-06 12:01:00',%s,'Upgrade',%s,'Upgrade privacidade')",(u,versao,str(uuid4()),assunto,materia))
-        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 1)
-        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations[:11]), 1)
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations[:11]), 0)
         self.assertEqual(migrate.detect_legacy_prefix(self.connection), "010")
         with self.connection.cursor() as c:
             for table, expected in (("usuarios",2),("planos_estudo",2),("plano_estudo_itens",2),("pratica_tentativas",2),("registros_privacidade",0)):
@@ -51,14 +51,14 @@ class PrivacidadeMigrationIntegrationTest(MySQLMigrationTestCase):
 
     def test_snapshot_baseline_equivalencia_drift_e_instalacao_vazia(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
-        self.assertEqual(migrate.detect_legacy_prefix(self.connection),'010')
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection),'016')
         with self.connection.cursor() as c:
             c.execute('SHOW CREATE TABLE registros_privacidade'); ddl=c.fetchone()['Create Table']
         self.recreate_schema()
         snapshot=(Path(__file__).resolve().parents[1]/'database/create_database.sql').read_text(encoding='utf-8')
         statements=[s for s in migrate.split_sql(snapshot) if not s.upper().startswith(('CREATE DATABASE','USE '))]
         migrate.execute_statements(self.connection,migrate.validate_statements(statements))
-        self.assertEqual(migrate.run_baseline(self.connection,self.settings,self.migrations,confirmed=True),'010')
+        self.assertEqual(migrate.run_baseline(self.connection,self.settings,self.migrations,confirmed=True),'016')
         self.assertEqual(migrate.run_up(self.connection,self.settings,self.migrations),0)
         with self.connection.cursor() as c:
             c.execute('SHOW CREATE TABLE registros_privacidade'); self.assertEqual(c.fetchone()['Create Table'],ddl)

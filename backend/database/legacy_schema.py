@@ -9,6 +9,7 @@ import re
 import pymysql
 
 from database.migration_types import MigrationError
+from database.sql_resources import detectar_prefixo, possui_recursos
 
 
 HISTORY_TABLE = "schema_migrations"
@@ -539,6 +540,11 @@ def _detect_privacidade_prefix(connection, tables: set[str]) -> str:
 def detect_legacy_prefix(connection) -> str:
     expected_tables = set(EXPECTED_COLUMNS)
     user_tables = _user_tables(connection)
+    if possui_recursos(connection):
+        if 'registros_privacidade' not in user_tables:
+            raise MigrationError('Recursos SQL novos sem prefixo 010 completo.')
+        _detect_privacidade_prefix(connection, user_tables)
+        return detectar_prefixo(connection)
     if "registros_privacidade" in user_tables:
         return _detect_privacidade_prefix(connection, user_tables)
     if set(PLANOS_FINGERPRINTS) & user_tables:

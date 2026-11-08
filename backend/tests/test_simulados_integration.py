@@ -58,16 +58,17 @@ class SimuladosIntegrationTest(MySQLIntegrationTestCase):
         aluno_id = self.aluno.get('/api/auth/sessao').json['usuario']['id']
 
         def medir(operacao):
+            from tests import sql_observer
             consultas = []
             def contar(connection, cursor, statement, parameters, context, executemany):
-                if statement.lstrip().upper().startswith('SELECT'):
+                if statement.lstrip().upper().startswith(('SELECT', 'CALL')):
                     consultas.append(statement)
             db.session.remove()
-            event.listen(db.engine, 'before_cursor_execute', contar)
+            sql_observer.listen(db.engine, 'before_cursor_execute', contar)
             try:
                 resultado = operacao()
             finally:
-                event.remove(db.engine, 'before_cursor_execute', contar)
+                sql_observer.remove(db.engine, 'before_cursor_execute', contar)
             self.assertFalse(any('FOR UPDATE' in sql.upper() for sql in consultas))
             return resultado, len(consultas)
 

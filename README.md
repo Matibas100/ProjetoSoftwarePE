@@ -117,6 +117,11 @@ com SQL especializado nos Repositories e CRUD simples nas Models.
 A [matriz de entrega](docs/technical/entrega-academica.md) liga cada número à
 interface, API, camadas, persistência e evidência. O
 [diagrama de classes](docs/technical/diagrama-de-classes.md) cobre as 21 Models.
+A [modelagem de domínio atual](docs/technical/modelagem-de-dominio.md) explica
+seus papéis e relações. A [matriz CRUD](docs/technical/matriz-crud.md) distingue
+métodos de persistência, API e interface, com lacunas e restrições explícitas.
+Esses documentos não comprovam entrega/aprovação acadêmica nem CRUD integral;
+as evidências de execução permanecem limitadas aos relatórios referenciados.
 Os [fluxogramas de casos de uso](docs/technical/fluxogramas-casos-de-uso.md)
 detalham recuperação de dados (diagnóstico) e entrada (finalização de Simulado),
 ambas já implementadas.
@@ -129,7 +134,7 @@ e conclusão manual do plano básico, acessível nas oito páginas do Aluno.
 
 O acesso inicial é `/login`; o cadastro público cria somente Aluno.
 Administrador é criado pelo comando local, sem senha padrão. Antes de iniciar
-esta versão, aplique as migrations até `010` e configure `AUTH_SECRET_KEY`.
+esta versão, aplique as migrations até `016` e configure `AUTH_SECRET_KEY`.
 Veja [Operação da autenticação escolar](docs/technical/operacao-autenticacao-escolar.md)
 para preparação, comandos, contratos, cookies/origens e recuperação.
 
@@ -248,7 +253,7 @@ python backend/database/migrate.py status
 python backend/database/migrate.py up
 ```
 
-`up` aplica `000` a `010` em ordem. Chamá-lo novamente não reexecuta
+`up` aplica `000` a `016` em ordem. Chamá-lo novamente não reexecuta
 migrations aplicadas. `create_database.sql` permanece como snapshot consolidado
 para compatibilidade; uma instalação feita por ele deve adotar o histórico como
 um banco existente.
@@ -475,3 +480,22 @@ hospedagem ficam a cargo do grupo. Veja a
 [distinção das entregas](docs/technical/entrega-academica.md#entrega-externa).
 Commit, push e merge dependem sempre de autorização explícita para a operação.
 Esta limpeza não autoriza novas operações Git.
+
+## Consultas acadêmicas por procedures
+
+As seis consultas administrativas e de desempenho usam sete procedures de
+leitura e quatro views históricas, pelas migrations 011/012. Contratos HTTP,
+CRUD nas Models, permissões e transações permanecem. Veja
+[assinaturas, caminhos e operação](docs/technical/consultas-academicas-mysql.md)
+e o [ADR-011](docs/technical/adr/ADR-011-interfaces-sql-de-leitura.md).
+O Catálogo editorial acrescenta quinze procedures na migration 013 para seletores,
+impactos, locks, versões e elegibilidade. Práticas/Simulados acrescentam dezesseis
+na migration 014 para propriedade, composição, retomada, históricos e fatos.
+Plano acrescenta seis na 015 para geração atual/replay, itens, elegibilidade e
+eliminação participante após negativa. Contas acrescenta onze na 016 para
+identidade, sessões, limites, limpeza e decisões correntes de privacidade:
+são 55 procedures novas e quatro views no conjunto 011–016, além da legada.
+As [correspondências e a auditoria dos seis módulos](docs/technical/consultas-academicas-mysql.md#contas-e-privacidade--migration-016)
+distinguem executores, projeções de compatibilidade e CRUD básico. Disponibilizar
+o código somente após aplicar e validar a 016 no destino; os testes usam schemas
+descartáveis. Este recorte não representa adequação acadêmica integral nem publicação.

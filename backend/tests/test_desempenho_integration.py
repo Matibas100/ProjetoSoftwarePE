@@ -1,7 +1,8 @@
 """Diagnóstico e dashboards sobre MySQL real, sem mocks de origem."""
 from datetime import datetime, timedelta
 from uuid import uuid4
-from sqlalchemy import event, select, text
+from sqlalchemy import select, text
+from tests import sql_observer as event
 from app.contexto_leitura import ContextoLeitura
 from app.core.relogio import agora_utc
 from app.extensions import db
@@ -134,6 +135,45 @@ class DesempenhoIntegrationTest(MySQLIntegrationTestCase):
         self.transferir(m['id'])
         depois=self.diagnostico();self.assertEqual(depois['materias'],d['materias']);self.assertEqual(depois['materias'][0]['materia_id'],m_id)
 
+    def test_views_preservam_fatos_e_atividades_apos_arquivamento(self):
+        self.pratica('B')
+        tentativa = self.iniciar().json
+        self.resposta(tentativa)
+        self.finalizar(tentativa, revisao=2)
+        antes = self.diagnostico()
+        atividades = self.aluno.get('/api/aluno/dashboard').json['ultimas_atividades']
+        for url, dados in [
+            (self.path+'/arquivar', self.confirmar()),
+            (self.qpath+'/arquivar', self.confirmar()),
+            (f"/api/assuntos/{self.assunto['id']}/arquivar", {}),
+            (f"/api/materias/{self.materia['id']}/arquivar", {}),
+        ]:
+            resposta = self.client.post(url, json=dados)
+            self.assertEqual(resposta.status_code, 200, resposta.json)
+        depois = self.diagnostico()
+        for campo in ['geral', 'base', 'materias', 'assuntos']:
+            self.assertEqual(depois[campo], antes[campo])
+        self.assertEqual(self.aluno.get('/api/aluno/dashboard').json['ultimas_atividades'], atividades)
+
+    def test_procedures_aluno_ausentes_falham_sem_blocos_parciais_e_pool_recupera(self):
+        for rotina in ['sp_desempenho_resumo', 'sp_atividades_recentes']:
+            with self.subTest(rotina=rotina), self.app.app_context():
+                with db.engine.connect() as con:
+                    ddl = con.exec_driver_sql('SHOW CREATE PROCEDURE '+rotina).mappings().one()['Create Procedure']
+                    with con.connection.driver_connection.cursor() as c:
+                        c.execute('DROP PROCEDURE '+rotina)
+                try:
+                    resposta = self.aluno.get('/api/aluno/dashboard')
+                    self.assertEqual(resposta.status_code, 500)
+                    self.assertEqual(set(resposta.json), {'erro'})
+                    self.assertNotIn(rotina, resposta.json['erro'])
+                finally:
+                    db.session.remove()
+                    with db.engine.connect() as con:
+                        with con.connection.driver_connection.cursor() as c:
+                            c.execute(ddl)
+                self.assertEqual(self.aluno.get('/api/aluno/dashboard').status_code, 200)
+
     def test_grupos_distintos_apos_transferencia_nao_reatribuem_historico(self):
         self.pratica('B');self.pratica('B')
         destino=self.client.post('/api/materias',json={'nome':'Outra matéria '+uuid4().hex,'area_enem_id':4}).json
@@ -188,7 +228,7 @@ class DesempenhoIntegrationTest(MySQLIntegrationTestCase):
                     with ContextoLeitura(conexao):pass
                 self.assertTrue(transacao.is_active);transacao.rollback()
             def falhar(conexao,cursor,statement,parameters,context,executemany):
-                if 'LIMIT' in statement:raise RuntimeError('Falha interna controlada')
+                if 'CALL sp_atividades_recentes' in statement:raise RuntimeError('Falha interna controlada')
             engine=db.engine;event.listen(engine,'before_cursor_execute',falhar)
             try:
                 r=self.aluno.get('/api/aluno/dashboard');self.assertEqual(r.status_code,500)
@@ -199,15 +239,15 @@ class DesempenhoIntegrationTest(MySQLIntegrationTestCase):
                 with c:raise RuntimeError('falha')
             self.assertTrue(c._conexao.closed)
             def falhar_diagnostico(conexao,cursor,statement,parameters,context,executemany):
-                if 'fatos AS' in statement:raise RuntimeError('Falha na leitura externa')
+                if 'CALL sp_desempenho_resumo' in statement:raise RuntimeError('Falha na leitura externa')
             with engine.connect().execution_options(isolation_level='REPEATABLE READ') as conexao:
                 transacao=conexao.begin()
                 conexao.execute(text("INSERT INTO materias(nome,area_enem_id) VALUES('Falha externa',4)"))
                 with ContextoLeitura(conexao) as leitura:
-                    event.listen(engine,'before_cursor_execute',falhar_diagnostico)
+                    event.listen(conexao,'before_cursor_execute',falhar_diagnostico)
                     try:
                         with self.assertRaises(RuntimeError):servicos().desempenho.executar(self.usuario,contexto=leitura)
-                    finally:event.remove(engine,'before_cursor_execute',falhar_diagnostico)
+                    finally:event.remove(conexao,'before_cursor_execute',falhar_diagnostico)
                     self.assertTrue(transacao.is_active)
                 self.assertTrue(transacao.is_active);transacao.rollback()
             self.assertEqual(db.session.execute(text("SELECT COUNT(*) FROM materias WHERE nome IN ('Falha externa','Escrita proibida')")).scalar_one(),0)
@@ -227,7 +267,7 @@ class DesempenhoIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             engine=db.engine;executou=[]
             def inserir(conexao,cursor,statement,parameters,context,executemany):
-                if not executou and 'count' in statement.lower() and 'materias' in statement:
+                if not executou and 'CALL sp_conteudo_contagens_dashboard' in statement:
                     executou.append(True)
                     with engine.begin() as outra:
                         materia=outra.execute(text("INSERT INTO materias(nome,area_enem_id) VALUES('Nova concorrente',4)")).lastrowid

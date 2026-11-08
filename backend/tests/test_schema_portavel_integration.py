@@ -5,7 +5,7 @@ from dataclasses import replace
 import re
 from uuid import uuid4
 
-from database import legacy_schema, migrate
+from database import legacy_schema, migrate, sql_resources
 from tests.migration_integration_support import (
     MIGRATION_TEST_PREFIX, MySQLMigrationTestCase, validate_migration_test_schema,
 )
@@ -74,14 +74,30 @@ class SchemaPortavelIntegrationTest(MySQLMigrationTestCase):
                     if rows:
                         cursor.executemany(f"INSERT INTO `{table}` ({names}) VALUES ({','.join(['%s'] * len(columns))})",
                                            [tuple(row[name] for name in columns) for row in rows])
-                source.execute("SHOW CREATE PROCEDURE sp_questoes_por_assunto")
-                cursor.execute(source.fetchone()["Create Procedure"])
+                routines, views = sql_resources.inventariar(self.connection)
+                for routine in sorted(routines):
+                    source.execute(f"SHOW CREATE PROCEDURE `{routine}`")
+                    ddl = source.fetchone()["Create Procedure"]
+                    cursor.execute(re.sub(r'DEFINER=`[^`]*`@`[^`]*`', '', ddl))
+                source.execute('SELECT DATABASE() AS nome')
+                origem = source.fetchone()['nome']
+                cursor.execute('SELECT DATABASE() AS nome')
+                destino = cursor.fetchone()['nome']
+                ordem = ['vw_conteudo_classificacao_historica', 'vw_praticas_fatos_desempenho',
+                         'vw_simulados_fatos_desempenho', 'vw_simulados_atividades']
+                for view in ordem:
+                    if view in views:
+                        source.execute(f"SHOW CREATE VIEW `{view}`")
+                        ddl = source.fetchone()['Create View']
+                        ddl = re.sub(r'DEFINER=`[^`]*`@`[^`]*`', '', ddl)
+                        ddl = sql_resources.normalizar_schema(ddl, origem).replace('`<local>`.', '`'+destino+'`.')
+                        cursor.execute(ddl)
             finally:
                 cursor.execute("SET FOREIGN_KEY_CHECKS=1")
         self.assertGreater(altered, 0, "A fixture precisa conter DDL com charset redundante.")
 
     def test_round_trip_prefixos_baseline_upgrade_dados_e_contadores(self):
-        for prefix in ("008", "009", "010"):
+        for prefix in ("008", "009", "010", "011", "012", "013", "014", "015", "016"):
             with self.subTest(prefix=prefix):
                 self.recreate_schema()
                 self.apply_without_history(prefix)
@@ -95,7 +111,7 @@ class SchemaPortavelIntegrationTest(MySQLMigrationTestCase):
                     self.assertEqual(self.rows(target), before)
                     # Expectativa independente do helper: prefixo oficial e invariantes.
                     self.assertEqual(migrate.detect_legacy_prefix(target), prefix)
-                    for table in set(migrate.SIMULADOS_FINGERPRINTS) | (set(migrate.PLANOS_FINGERPRINTS) if prefix >= '009' else set()) | ({'registros_privacidade'} if prefix == '010' else set()):
+                    for table in set(migrate.SIMULADOS_FINGERPRINTS) | (set(migrate.PLANOS_FINGERPRINTS) if prefix >= '009' else set()) | ({'registros_privacidade'} if prefix >= '010' else set()):
                         self.assertEqual(legacy_schema._table_fingerprint(self.connection, table),
                                          legacy_schema._table_fingerprint(target, table))
                     self.assertEqual(migrate.run_baseline(target, settings, self.migrations, confirmed=True), prefix)
@@ -103,12 +119,12 @@ class SchemaPortavelIntegrationTest(MySQLMigrationTestCase):
                     history = migrate.fetch_history(target)
                     self.assertEqual([(row['version'], row['checksum'], row['status']) for row in history],
                                      [(item.version, item.checksum, 'APPLIED') for item in self.migrations[:int(prefix) + 1]])
-                    self.assertEqual(migrate.run_up(target, settings, self.migrations), 10 - int(prefix))
+                    self.assertEqual(migrate.run_up(target, settings, self.migrations), 16 - int(prefix))
                     self.assertEqual(migrate.run_up(target, settings, self.migrations), 0)
                     after = self.rows(target)
                     for table, rows in before.items():
                         self.assertEqual(after[table], rows)
-                    self.assertEqual(migrate.detect_legacy_prefix(target), '010')
+                    self.assertEqual(migrate.detect_legacy_prefix(target), '016')
 
     def test_round_trip_com_historico_preserva_checksums_e_nao_reexecuta(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
@@ -118,7 +134,7 @@ class SchemaPortavelIntegrationTest(MySQLMigrationTestCase):
             self.restore(target, include_history=True)
             self.assertEqual(migrate.run_up(target, settings, self.migrations), 0)
             self.assertEqual(self.rows(target, include_history=True), before)
-            self.assertEqual(migrate.detect_legacy_prefix(target), '010')
+            self.assertEqual(migrate.detect_legacy_prefix(target), '016')
             with target.cursor() as cursor:
                 cursor.execute("UPDATE schema_migrations SET checksum=%s WHERE version='008'", ('0' * 64,))
             with self.assertRaisesRegex(migrate.MigrationError, 'Checksum'):

@@ -6,6 +6,16 @@ Não conta CI, testes, documentação ou melhorias internas como novos casos de 
 O [diagrama](diagrama-de-classes.md) descreve as 21 Models concretas, incluindo
 a evidência de privacidade da extensão acadêmica.
 
+A [modelagem de domínio atual](modelagem-de-dominio.md) explica os seis módulos
+e os papéis dessas Models; a [matriz CRUD](matriz-crud.md) separa persistência,
+API/caso de uso e interface, incluindo lacunas e restrições. A formalização de
+07/11/2026 não comprova modelagem entregue anteriormente, nova execução dos
+fluxos ou aprovação docente. Os vinte IDs abaixo permanecem; sua cobertura não
+certifica CRUD integral de cada entidade. Na organização modular atual, a
+eliminação dos derivados do plano é executada pelo participante de Plano
+injetado nas negativas de Contas, conforme o
+[adendo do ADR-010](adr/ADR-010-organizacao-modular-do-backend.md#adendo-ao-adr-009).
+
 ## Rastreabilidade dos vinte casos
 
 UI consome os seis Blueprints agregados por [routes.py](../../backend/app/routes.py), que delegam a
@@ -168,3 +178,59 @@ Responsável informado: Matheus Gabriel Oliveira Martins. Contato
 com dados sintéticos; contato válido, retenção geral/direitos e proteção de menores
 dependem de outra change antes de dados reais. Os termos não garantem bônus ou
 adequação jurídica integral. Esta change não publica, hospeda ou envia a entrega.
+
+## Consultas acadêmicas por procedures
+
+O caso 20 mantém a mesma funcionalidade e passa a executar a agregação por
+`DesempenhoRepository` → `sp_desempenho_resumo`, com duas views de fatos
+históricos. As três listas administrativas e os dois dashboards também usam
+as procedures de seus proprietários. Os caminhos Controller → Service →
+Repository → procedure, parâmetros, telas e quatro views estão no
+[documento SQL técnico](consultas-academicas-mysql.md).
+
+As vinte entradas acima conservam IDs, rotas e significado. Procedures auxiliares
+não contam como novas funcionalidades. As etapas 013–016 e a auditoria abaixo
+delimitam a cobertura especializada; este recorte não comprova aceite acadêmico.
+
+O Catálogo editorial da migration 013 acrescenta quinze procedures auxiliares
+para seletores, impactos, transferência, locks e versões/elegibilidade de Questões.
+As cadeias dos casos 3–10 e 13–19 continuam nas mesmas rotas/Services, com as
+consultas especializadas correspondentes no Repository. Históricos e gabaritos
+mantêm suas regras anteriores; as vinte funcionalidades não foram renumeradas.
+
+A migration 014 cobre dezesseis consultas auxiliares de Práticas/Simulados.
+Nos casos 16–18, `PraticaRepository` usa propriedade/replay/histórico por
+procedures e preserva a resposta definitiva na Model. No caso 19, composição,
+lotes e lock de gestão passam por `SimuladoRepository`; cadastro de itens e
+eventos continua nas Models. Início/retomada, salvar/limpar e finalização/correção
+usam as mesmas rotas e Services da execução complementar de Simulados.
+As [dezesseis correspondências e caminhos ponta a ponta](consultas-academicas-mysql.md#práticas-e-simulados--migration-014)
+incluem fatos internos e histórico, sem Controller/tela por consulta auxiliar.
+O caso 20 continua consumindo as views históricas de 012.
+
+A migration 015 cobre seis interfaces complementares de Plano. Na mesma
+`aluno/plano.html`, `PlanoEstudoController` → Services de consultar/gerar/recalcular/
+concluir → `PlanoEstudoRepository` usa atual/replay/itens/item próprio por procedures;
+seleção usa a elegibilidade pela API de Conteúdo. `aluno/privacidade.html` →
+`PrivacidadeController` → Services de recusa/revogação → participante de Plano
+usa `sp_eliminar_planos_proprios` na transação da negativa, sem DELETE público.
+Os [contratos e caminhos](consultas-academicas-mysql.md#plano-de-estudos--migration-015)
+preservam prioridade no Service, autorização anterior aos derivados e escrita
+individual nas Models. Contas é coberta pela etapa 016 abaixo. Os vinte IDs e
+critérios acadêmicos permanecem, sem funcionalidade extra por contar routines.
+
+A migration 016 cobre onze interfaces de Contas: no caso 12, login e sessão
+seguem AutenticacaoController → LoginService/ConsultarSessaoService →
+AutenticacaoRepository → procedures de identidade, sessão e limite. O caso 11
+mantém cadastro/aceite na Model e uma transação; logout/reautenticação e CLI
+continuam auxiliares. Privacidade mantém a mesma tela/Controller e Services:
+lock exato → replay/últimas decisões correntes por procedures → evidência na
+Model → participante da 015 nas negativas. Os [onze contratos e caminhos](consultas-academicas-mysql.md#contas-e-privacidade--migration-016)
+preservam permissões, senha no Service, cookies/CSRF, regras temporais e rollback.
+
+A [auditoria final por fonte e consumidor](consultas-academicas-mysql.md#auditoria-dos-seis-módulos)
+confere os seis módulos e distingue CRUD, projeções de compatibilidade e SQL
+efetivamente executado. As projeções antigas são executadas somente na regressão
+de equivalência; as rotas de produção usam interfaces SQL proprietárias.
+F01/F02 e demais critérios da [matriz CRUD](matriz-crud.md) permanecem próprios;
+não há nova funcionalidade, envio ou promessa de aprovação acadêmica.

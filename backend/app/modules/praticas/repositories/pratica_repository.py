@@ -1,5 +1,7 @@
 """Histórico e locks de propriedade, sem confirmação autônoma."""
-from sqlalchemy import select, func, literal
+from app.core.procedures_mysql import executar_resultados, conferir_resultados
+from app.modules.praticas.repositories.registros_praticas import PRATICA, PraticaHistoricoRegistro
+from sqlalchemy import select, func, literal, text
 from app.extensions import db
 from app.modules.praticas.models.pratica_tentativa import PraticaTentativa as Tentativa
 
@@ -23,30 +25,48 @@ class PraticaRepository:
 
     @staticmethod
     def por_chave(usuario_id, chave, bloquear=False):
-        consulta = select(Tentativa).where(Tentativa.usuario_id == usuario_id, Tentativa.chave_envio == chave)
+        db.session.flush()
+        consulta = select(Tentativa).from_statement(
+            text("CALL sp_pratica_por_chave(:usuario_id,:valor,:bloquear)").columns(*Tentativa.__table__.columns))
         if bloquear:
-            consulta = consulta.with_for_update().execution_options(populate_existing=True)
-        return db.session.execute(consulta).scalar_one_or_none()
+            consulta = consulta.execution_options(populate_existing=True)
+        resultado = db.session.execute(consulta,
+            {'usuario_id': usuario_id, 'valor': chave, 'bloquear': int(bloquear)})
+        try:
+            return resultado.scalar_one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def propria(usuario_id, tentativa_id, bloquear=False):
-        consulta = select(Tentativa).where(Tentativa.usuario_id == usuario_id, Tentativa.id == tentativa_id)
+        db.session.flush()
+        consulta = select(Tentativa).from_statement(
+            text("CALL sp_pratica_propria(:usuario_id,:valor,:bloquear)").columns(*Tentativa.__table__.columns))
         if bloquear:
-            consulta = consulta.with_for_update().execution_options(populate_existing=True)
-        return db.session.execute(consulta).scalar_one_or_none()
+            consulta = consulta.execution_options(populate_existing=True)
+        resultado = db.session.execute(consulta,
+            {'usuario_id': usuario_id, 'valor': tentativa_id, 'bloquear': int(bloquear)})
+        try:
+            return resultado.scalar_one_or_none()
+        finally:
+            resultado.close()
 
     @staticmethod
     def historico(usuario_id, assunto_id, pagina, limite):
-        base = select(Tentativa).where(Tentativa.usuario_id == usuario_id, Tentativa.estado == "respondida")
-        if assunto_id:
-            base = base.where(Tentativa.assunto_id == assunto_id)
-        total = db.session.execute(select(func.count()).select_from(base.subquery())).scalar_one()
-        linhas = db.session.execute(base.order_by(Tentativa.respondida_em.desc(), Tentativa.id.desc())
-            .offset((pagina - 1) * limite).limit(limite)).scalars().all()
-        return linhas, total
+        db.session.flush()
+        resultados = executar_resultados(db.session.connection(), "CALL sp_praticas_historico(%s,%s,%s,%s)",
+            (usuario_id, assunto_id or None, pagina, limite))
+        linhas, totais = conferir_resultados(resultados, [PRATICA, ('total',)])
+        total, = totais
+        return [PraticaHistoricoRegistro(**{**r, 'correta': bool(r['correta'])}) for r in linhas], int(total['total'])
 
     @staticmethod
     def fatos(usuario_id, inicio, fim):
-        return db.session.execute(select(Tentativa).where(Tentativa.usuario_id == usuario_id,
-            Tentativa.estado == "respondida", Tentativa.respondida_em >= inicio,
-            Tentativa.respondida_em < fim).order_by(Tentativa.respondida_em, Tentativa.id)).scalars().all()
+        db.session.flush()
+        resultado = db.session.execute(select(Tentativa).from_statement(
+            text("CALL sp_praticas_fatos(:usuario_id,:inicio,:fim)").columns(*Tentativa.__table__.columns)),
+            {'usuario_id': usuario_id, 'inicio': inicio, 'fim': fim})
+        try:
+            return resultado.scalars().all()
+        finally:
+            resultado.close()

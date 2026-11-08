@@ -16,7 +16,9 @@ class AreaEnem(CrudMixin):
 
     @classmethod
     def listar_ordenadas(cls):
-        return db.session.execute(db.select(cls).order_by(cls.ordem, cls.id)).scalars().all()
+        from app.modules.conteudo.repositories.catalogo_repository import CatalogoRepository
+
+        return CatalogoRepository.listar_areas_ordenadas()
 
     def to_dict(self):
         return {"id": self.id, "codigo": self.codigo, "nome": self.nome, "ordem": self.ordem}

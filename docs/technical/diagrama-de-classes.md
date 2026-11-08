@@ -7,7 +7,15 @@ repetidas entre visões são referências à mesma entidade, sem duplicar tabela
 `PK` indica chave primária; `FK` indica referência; `?` indica campo opcional.
 Os atributos são os principais, não uma reprodução integral do schema.
 
-## Propriedade implementada
+Leitura complementar: [modelagem de domínio](modelagem-de-dominio.md) e
+[matriz CRUD](matriz-crud.md). As visões de domínio mostram persistência;
+as de aplicação mostram coordenação, contratos e composição.
+
+<a id="visoes-de-dominio"></a>
+
+## Visões de domínio
+
+### Propriedade implementada
 
 As classes abaixo residem em `backend/app/modules/<proprietario>/models/`;
 `app.models` apenas registra/reexporta suas identidades canônicas.
@@ -21,23 +29,10 @@ As classes abaixo residem em `backend/app/modules/<proprietario>/models/`;
 | Desempenho (0) | Projeções, sem tabela própria |
 | Plano (2) | PlanoEstudo, PlanoEstudoItem |
 
-```mermaid
-classDiagram
-ContasAPI <.. PlanoEstudoRepository : lock
-ConteudoAPI <.. Praticas : versões
-ConteudoAPI <.. Simulados : versões e classificação
-PraticasAPI <.. DesempenhoRepository : projeções
-SimuladosAPI <.. DesempenhoRepository : projeções
-ConteudoAPI <.. DesempenhoRepository : contagens
-RecusarConsentimentoPlanoService --> EliminarPlanosPropriosService : Callable injetado
-RevogarConsentimentoPlanoService --> EliminarPlanosPropriosService : Callable injetado
-EliminarPlanosPropriosService --> PlanoEstudoRepository : participante sem commit
-```
-
 Interfaces e exceções estritas no [mapa modular](organizacao-modular.md).
 As bases permanecem únicas em `app.core.persistencia`.
 
-## Privacidade — uma Model adicional
+### Privacidade — uma Model adicional
 
 ```mermaid
 classDiagram
@@ -56,30 +51,13 @@ class RegistroPrivacidade {
 }
 ModeloBase <|-- RegistroPrivacidade
 Usuario "1" --> "0..*" RegistroPrivacidade
-PrivacidadeController --> ConsultarTermosService
-PrivacidadeController --> ConsultarPrivacidadeService
-PrivacidadeController --> AceitarTermosUsoService
-PrivacidadeController --> ConsentirPlanoService
-PrivacidadeController --> RecusarConsentimentoPlanoService
-PrivacidadeController --> RevogarConsentimentoPlanoService
-ConsultarPrivacidadeService --> PrivacidadeRepository
-AceitarTermosUsoService --> RegistroPrivacidade
-ConsentirPlanoService --> RegistroPrivacidade
-RecusarConsentimentoPlanoService --> PrivacidadeRepository
-RevogarConsentimentoPlanoService --> PrivacidadeRepository
-ValidarPermissaoPlanoService --> PrivacidadeRepository
-GerarPlanoService --> ValidarPermissaoPlanoService
-RecalcularPlanoService --> ValidarPermissaoPlanoService
-ConsultarPlanoService --> ValidarPermissaoPlanoService
-ConcluirPlanoItemService --> ValidarPermissaoPlanoService
-CadastrarAlunoService --> RegistroPrivacidade
 ```
 
 `RegistroPrivacidade` possui salvar/consultar e guards de imutabilidade, sem
 atualizar/deletar. A negativa confirmada usa eliminação especializada de planos
 no Repository, sem relaxar seus guards ORM, conforme [ADR-009](adr/ADR-009-consentimento-e-eliminacao-do-plano.md).
 
-## Herança e persistência
+### Herança e persistência
 
 ```mermaid
 classDiagram
@@ -110,7 +88,7 @@ CRUD simples usa Active Record; `confirmar=False` participa da fronteira do
 Service via `TransactionManager`. Consultas especializadas ficam nos
 Repositories. As setas de herança nas visões seguintes tornam o caminho explícito.
 
-## Catálogo e identidade — sete Models
+### Catálogo e identidade — sete Models
 
 ```mermaid
 classDiagram
@@ -184,7 +162,7 @@ Usuario "0..1" <-- "0..*" Sessao : usuario_id
 é indexada por hash de limite: **não possui FK de usuário** e não recebe uma
 associação inventada. Transferências guardam origem/destino e contagem histórica.
 
-## Questões e Práticas — quatro Models
+### Questões e Práticas — quatro Models
 
 ```mermaid
 classDiagram
@@ -263,7 +241,7 @@ Materia "1" <-- "0..*" PraticaTentativa : materia_id
 snapshots; não recalculam o passado pela taxonomia atual. Autoria editorial
 fica no ator da versão/evento; não há FK de autor na identidade `Questao`.
 
-## Simulados — sete Models
+### Simulados — sete Models
 
 ```mermaid
 classDiagram
@@ -359,7 +337,7 @@ rascunho o conjunto pode estar vazio. Cada tentativa inicializada tem uma
 resposta por item, inicialmente com alternativa/correção nulas. O diagrama
 mostra as cardinalidades das FKs; regras dos Services acrescentam esses limites.
 
-## Plano — duas Models
+### Plano — duas Models
 
 ```mermaid
 classDiagram
@@ -397,20 +375,71 @@ Materia "1" <-- "0..*" PlanoEstudoItem : materia_id
 
 O Service gera até três prioridades com base suficiente. Cada Aluno tem no
 máximo um plano atual, protegido pelo índice de `usuario_atual` calculado.
-Recálculo cria nova geração; anterior e snapshots permanecem preservados.
+Recálculo cria nova geração; anterior e snapshots permanecem preservados durante
+o uso autorizado. A negativa confirmada de consentimento elimina planos, itens e
+conclusões próprios, atomicamente com a decisão, conforme
+[ADR-009](adr/ADR-009-consentimento-e-eliminacao-do-plano.md) e seu adendo no
+[ADR-010](adr/ADR-010-organizacao-modular-do-backend.md). Nova autorização não
+restaura derivados eliminados; respostas e evidências são preservadas.
 
-## Semântica dos vínculos
+### Semântica dos vínculos
 
 Usamos associações com cardinalidade, sem diamantes de composição/agregação:
 as FKs são `RESTRICT`, não exclusão em cascata. Itens pertencem semanticamente
 a uma composição/plano e não são compartilhados como objetos mutáveis, mas o
 histórico deve sobreviver a arquivamento. Isso não autoriza exclusão destrutiva.
+A eliminação dos derivados do plano após negativa é a exceção especializada
+descrita acima: usa o Repository de Plano, sem desativar FKs ou relaxar guards.
 `Desempenho` é projeção de respostas concluídas via Repository; não existe uma
 Model ou tabela fictícia com esse nome. Segredos não são valores de exemplo no
 diagrama: aparecem apenas os nomes dos atributos de hash já implementados.
 
 
-## Aplicação: consultas compostas
+## Visões de aplicação
+
+### Aplicação: propriedade e colaboração modular
+
+```mermaid
+classDiagram
+ContasAPI <.. PlanoEstudoRepository : lock
+ConteudoAPI <.. Praticas : versões
+ConteudoAPI <.. Simulados : versões e classificação
+PraticasAPI <.. DesempenhoRepository : projeções
+SimuladosAPI <.. DesempenhoRepository : projeções
+ConteudoAPI <.. DesempenhoRepository : contagens
+RecusarConsentimentoPlanoService --> EliminarPlanosPropriosService : Callable injetado
+RevogarConsentimentoPlanoService --> EliminarPlanosPropriosService : Callable injetado
+EliminarPlanosPropriosService --> PlanoEstudoRepository : participante sem commit
+```
+
+### Aplicação: privacidade e permissão do plano
+
+```mermaid
+classDiagram
+PrivacidadeController --> ConsultarTermosService
+PrivacidadeController --> ConsultarPrivacidadeService
+PrivacidadeController --> AceitarTermosUsoService
+PrivacidadeController --> ConsentirPlanoService
+PrivacidadeController --> RecusarConsentimentoPlanoService
+PrivacidadeController --> RevogarConsentimentoPlanoService
+ConsultarPrivacidadeService --> PrivacidadeRepository
+AceitarTermosUsoService --> RegistroPrivacidade
+ConsentirPlanoService --> RegistroPrivacidade
+RecusarConsentimentoPlanoService --> PrivacidadeRepository
+RevogarConsentimentoPlanoService --> PrivacidadeRepository
+ValidarPermissaoPlanoService --> PrivacidadeRepository
+GerarPlanoService --> ValidarPermissaoPlanoService
+RecalcularPlanoService --> ValidarPermissaoPlanoService
+ConsultarPlanoService --> ValidarPermissaoPlanoService
+ConcluirPlanoItemService --> ValidarPermissaoPlanoService
+CadastrarAlunoService --> RegistroPrivacidade
+```
+
+As negativas delegam a eliminação ao participante de Plano mostrado na visão
+modular. Contas mantém a fronteira transacional e recebe o participante pela
+composição; não acessa persistência privada de Plano.
+
+### Aplicação: consultas compostas
 
 ```mermaid
 classDiagram

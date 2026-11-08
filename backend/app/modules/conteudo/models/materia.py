@@ -41,9 +41,9 @@ class Materia(CrudMixin):
 
     @classmethod
     def listar_ativos(cls):
-        return db.session.execute(
-            db.select(cls).where(cls.status == "ativa").order_by(cls.nome, cls.id)
-        ).scalars().all()
+        from app.modules.conteudo.repositories.catalogo_repository import CatalogoRepository
+
+        return CatalogoRepository.listar_materias_ativas()
 
     def to_dict(self):
         return {
