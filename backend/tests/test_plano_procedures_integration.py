@@ -188,7 +188,7 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
                 finally:
                     db.session.remove()
                     with engine.begin() as ddl:
-                        ddl.exec_driver_sql(original)
+                        ddl.exec_driver_sql(original, execution_options={"no_parameters": True})
         self.privacy = Privacidade.privacy
         r, _ = Privacidade.decidir(self, 'revogar')
         self.assertEqual(r.status_code, 201)

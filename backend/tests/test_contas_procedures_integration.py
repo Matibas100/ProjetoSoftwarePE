@@ -243,7 +243,7 @@ class ContasProceduresIntegrationTest(MySQLIntegrationTestCase):
                 finally:
                     db.session.remove()
                     with engine.begin() as ddl:
-                        ddl.exec_driver_sql(original)
+                        ddl.exec_driver_sql(original, execution_options={"no_parameters": True})
         self.assertEqual(self.client.get('/api/auth/sessao').status_code, 200)
 
     def test_prova_ultimas_conjunto_unico_vazios_tipos_identidade_e_snapshot(self):
