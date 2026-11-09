@@ -136,4 +136,46 @@ button:focus-visible,a:focus-visible,input:focus-visible {
 }
 .aluno-page .dash-colunas {
   grid-template-columns: 1fr;
+  gap: 0;
+}
+.aluno-page .dash-acoes {
+  gap: 8px;
+  margin: 24px 0;
+}
+.aluno-page .dash-acoes a {
+  padding: 8px 14px;
+  border: 1px solid var(--aluno-line);
+  border-radius: 8px;
+  background: var(--aluno-surface);
+  font-size: 14px;
+}
+.aluno-page .dash-acoes a:hover {
+  background: var(--aluno-soft);
+}
+.aluno-page .dash-block {
+  margin: 18px 0;
+}
+.aluno-page .dash-card {
+  background: var(--aluno-bg);
+  border-color: var(--aluno-line);
+  padding: 20px;
+}
+.aluno-page .dash-card strong {
+  color: var(--aluno-violet-dark);
+  font-size: 30px;
+  overflow-wrap: anywhere;
+}
+.aluno-page .dash-table {
+  line-height: 1.6;
+}
+.aluno-page .dash-table th {
+  background: var(--aluno-bg);
+  color: var(--aluno-muted);
+}
+.aluno-page .dash-scroll {
+  border: 1px solid var(--aluno-line);
+  border-radius: 8px;
+}
+.aluno-page #dash-meta {
+  line-height: 1.7;
 }

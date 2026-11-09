@@ -1,5 +1,7 @@
 .privacidade-acoes { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
 #privacidade-conteudo { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
 #privacidade-conteudo .pratica-card { overflow-wrap: anywhere; }
+.aluno-page #privacidade-conteudo .pratica-card { margin: 0; }
+.aluno-page #privacidade-conteudo h2 { margin-top: 0; }
 .privacidade-acoes button { flex: 0 1 auto; }
 @media (max-width: 600px) { .privacidade-acoes button { width: 100%; } }

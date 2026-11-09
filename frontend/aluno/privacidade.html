@@ -5,7 +5,7 @@
   <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section>
   <div id="auth-content" class="aluno-shell" hidden>
     <nav class="aluno-nav" aria-label="Navegação do aluno"><img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM"><div class="navigation-slot" data-navigation="aluno" data-current="privacidade"></div></nav>
-    <div class="aluno-main"><header class="aluno-top"><strong>Privacidade e termos</strong><div><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
+    <div class="aluno-main"><header class="aluno-top"><strong>Privacidade e termos</strong><div class="aluno-user"><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
     <main class="aluno-page"><h1>Privacidade e termos</h1>
       <p class="aluno-subtitle">Consulte seus registros e escolha se deseja utilizar o plano personalizado.</p>
       <p class="pratica-card">Demonstração acadêmica com dados sintéticos. O contato informado nos textos é fictício e não operacional. Dados reais exigem contato válido, política geral de retenção e proteção/autorização de menores.</p>
@@ -34,7 +34,7 @@
   <dialog id="privacidade-confirmacao" class="auth-dialog" aria-labelledby="privacidade-confirmacao-titulo" aria-describedby="privacidade-confirmacao-texto">
     <h2 id="privacidade-confirmacao-titulo">Confirmar decisão?</h2>
     <p id="privacidade-confirmacao-texto">Se houver planos salvos, eles e suas conclusões serão apagados. Suas respostas, simulados e desempenho continuarão disponíveis. A eliminação é irreversível na aplicação.</p>
-    <div class="auth-dialog-actions"><button id="privacidade-cancelar" type="button" class="auth-secondary">Cancelar</button><button id="privacidade-confirmar" type="button" class="auth-secondary">Confirmar eliminação e decisão</button></div>
+    <div class="auth-dialog-actions"><button id="privacidade-cancelar" type="button" class="auth-secondary">Cancelar</button><button id="privacidade-confirmar" type="button" class="auth-secondary aluno-danger">Confirmar eliminação e decisão</button></div>
   </dialog>
   <script src="../js/navigation.js"></script><script src="../js/api.js"></script><script src="../js/auth-session.js"></script><script src="../js/aluno-privacidade.js"></script>
 </body></html>

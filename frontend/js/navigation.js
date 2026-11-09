@@ -1,17 +1,18 @@
 (() => {
   const aluno = [
-    ["inicio", "/aluno/inicio.html", "Meu início"],
+    ["inicio", "/aluno/inicio.html", "Meu início", "home"],
     ["grupo", "ESTUDAR"],
-    ["questoes", "/aluno/questoes.html", "Praticar questões"],
-    ["historico", "/aluno/historico.html", "Meu histórico"],
-    ["simulados", "/aluno/simulados.html", "Simulados"],
-    ["tutor", "/aluno/tutor.html", "Tutor IA"],
+    ["questoes", "/aluno/questoes.html", "Praticar questões", "clipboard"],
+    ["historico", "/aluno/historico.html", "Meu histórico", "history"],
+    ["simulados", "/aluno/simulados.html", "Simulados", "file"],
+    ["tutor", "/aluno/tutor.html", "Tutor IA", "tutor"],
     ["grupo", "MINHA EVOLUÇÃO"],
-    ["desempenho", "/aluno/desempenho.html", "Desempenho"],
-    ["plano", "/aluno/plano.html", "Plano de Estudos"],
-    ["privacidade", "/aluno/privacidade.html", "Privacidade e termos"],
+    ["desempenho", "/aluno/desempenho.html", "Desempenho", "chart"],
+    ["plano", "/aluno/plano.html", "Plano de Estudos", "calendar"],
+    ["grupo", "MINHA CONTA"],
+    ["privacidade", "/aluno/privacidade.html", "Privacidade e termos", "shield"],
     ["grupo", "EM BREVE"],
-    ["indisponivel", "Resumos · indisponível"],
+    ["indisponivel", "Resumos · indisponível", "book"],
   ];
   const admin = [
     ["grupo", "Administração"],
@@ -31,13 +32,13 @@
     ["indisponivel", "Perfil", "user"],
     ["indisponivel", "Área do aluno", "arrow"],
   ];
-  function icon(name) {
+  function icon(name, administrative = true) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("class", "nav-icon");
+    svg.setAttribute("class", administrative ? "nav-icon" : "aluno-nav-icon");
     svg.setAttribute("aria-hidden", "true");
     svg.setAttribute("focusable", "false");
     const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-    use.setAttribute("href", `../assets/admin-icons.svg#${name}`);
+    use.setAttribute("href", `../assets/${administrative ? "admin" : "aluno"}-icons.svg#${name}`);
     svg.append(use);
     return svg;
   }
@@ -49,13 +50,14 @@
       const group = key === "grupo", disabled = key === "indisponivel";
       const node = document.createElement(group ? administrative ? "p" : "small" : disabled ? "span" : "a");
       if (administrative) node.className = group ? "nav-label" : "nav-link";
+      else node.className = group ? "aluno-nav-label" : "aluno-nav-link";
       node.textContent = group || disabled ? target : label;
       if (disabled) node.setAttribute("aria-disabled", "true");
       else if (!group) {
         node.setAttribute("href", target);
         if (key === slot.dataset.current) node.setAttribute("aria-current", "page");
       }
-      if (administrative && !group) node.prepend(icon(disabled ? label : symbol));
+      if (!group) node.prepend(icon(disabled ? label : symbol, administrative));
       slot.append(node);
     }
   }

@@ -29,7 +29,21 @@ for (const area of ["aluno", "admin"]) {
       expect(html.indexOf("js/navigation.js")).toBeLessThan(html.indexOf("js/auth-session.js"));
       expect(document.querySelector("[data-auth-exit]")).not.toBeNull();
       expect(document.querySelector("[data-auth-name]")).not.toBeNull();
-      if (area === "aluno") expect(slot.querySelector('a[href="/aluno/plano.html"]').textContent).toBe("Plano de Estudos");
+      if (area === "aluno") {
+        expect([...slot.querySelectorAll("a")].map(a => a.textContent)).toEqual([
+          "Meu início", "Praticar questões", "Meu histórico", "Simulados", "Tutor IA", "Desempenho", "Plano de Estudos", "Privacidade e termos",
+        ]);
+      }
+      for (const item of slot.querySelectorAll('a,[aria-disabled="true"]')) {
+        const icon = item.querySelector("svg");
+        expect(icon.getAttribute("aria-hidden")).toBe("true");
+        expect(icon.getAttribute("focusable")).toBe("false");
+        expect(icon.hasAttribute("tabindex")).toBe(false);
+        const href = icon.querySelector("use").getAttribute("href");
+        const [sprite, symbol] = href.split("#");
+        expect(sprite).toBe(`../assets/${area}-icons.svg`);
+        expect(fs.readFileSync(path.join(root, "frontend", "assets", `${area}-icons.svg`), "utf8")).toContain(`id="${symbol}"`);
+      }
     });
   }
 }

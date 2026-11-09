@@ -21,4 +21,9 @@
 #tutor-ajuda { font-size: 13px; color: #566580; }
 #tutor-enviar { display: block; margin-left: auto; min-height: 48px; }
 .tutor-rodape { font-size: 13px; margin-top: 24px; }
+.aluno-page .tutor-aviso { border: 1px solid #e6c797; line-height: 1.7; }
+.aluno-page .tutor-dados { border: 1px solid #cbdcf5; }
+.aluno-page .tutor-painel section { border-color: var(--aluno-line); padding: 16px 0; }
+.aluno-page .tutor-painel section h3 { font-size: 17px; color: var(--aluno-violet-dark); }
+.aluno-page .tutor-contexto a { display: inline-flex; align-items: center; min-height: 44px; }
 @media (max-width: 900px) { .tutor-layout { grid-template-columns: minmax(0, 1fr); gap: 0; } .tutor-filtros > div, .tutor-filtros select { width: 100%; } }
