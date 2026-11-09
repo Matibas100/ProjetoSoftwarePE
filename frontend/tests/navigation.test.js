@@ -12,11 +12,11 @@ for (const area of ["aluno", "admin"]) {
       await import("../js/navigation.js");
       const slot = document.querySelector("[data-navigation]");
       expect(slot.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
-      const section = { questao: "questoes", simulado: "simulados" }[file.replace(".html", "")] || file.replace(".html", "");
+      const section = { questao: "questoes", simulado: "simulados", usuario: "usuarios" }[file.replace(".html", "")] || file.replace(".html", "");
       expect(slot.querySelector('[aria-current="page"]').getAttribute("href")).toBe(
         area === "aluno" ? `/aluno/${section}.html` : `${section}.html`,
       );
-      const expected = area === "aluno" ? ["inicio", "questoes", "historico", "simulados", "tutor", "desempenho", "plano", "privacidade"] : ["dashboard", "materias", "assuntos", "questoes", "simulados"];
+      const expected = area === "aluno" ? ["inicio", "questoes", "historico", "simulados", "tutor", "desempenho", "plano", "privacidade"] : ["dashboard", "materias", "assuntos", "questoes", "simulados", "usuarios"];
       expect([...slot.querySelectorAll("a")].map((a) => a.getAttribute("href"))).toEqual(
         expected.map((key) => area === "aluno" ? `/aluno/${key}.html` : `${key}.html`),
       );

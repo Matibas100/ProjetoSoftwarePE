@@ -26,7 +26,7 @@
     ["indisponivel", "Temas de Redação", "pencil"],
     ["indisponivel", "Redações", "pencil"],
     ["grupo", "Gestão"],
-    ["indisponivel", "Usuários", "user"],
+    ["usuarios", "usuarios.html", "Usuários", "user"],
     ["grupo", "Minha conta"],
     ["indisponivel", "Perfil", "user"],
     ["indisponivel", "Área do aluno", "arrow"],

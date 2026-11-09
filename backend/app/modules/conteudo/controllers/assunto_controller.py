@@ -1,6 +1,7 @@
 from flask import request
 
 from app.http_response import responder_http, resposta_json
+from app.modules.conteudo.services.buscar_assunto_por_id_service import BuscarAssuntoPorIdService
 from app.modules.conteudo.services.atualizar_assunto_service import AtualizarAssuntoService
 from app.modules.conteudo.services.criar_assunto_service import CriarAssuntoService
 from app.modules.conteudo.services.deletar_assunto_service import DeletarAssuntoService
@@ -13,6 +14,12 @@ from app.modules.conteudo.services.transferir_assunto_service import TransferirA
 
 class AssuntoController:
     """Recebe HTTP e delega os casos de uso do recurso Assunto."""
+
+    @staticmethod
+    def buscar_por_id(assunto_id):
+        return AssuntoController._responder(
+            lambda: BuscarAssuntoPorIdService.executar(assunto_id)
+        )
 
     @staticmethod
     def cadastrar():

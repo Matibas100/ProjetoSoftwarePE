@@ -51,14 +51,14 @@ class PrivacidadeMigrationIntegrationTest(MySQLMigrationTestCase):
 
     def test_snapshot_baseline_equivalencia_drift_e_instalacao_vazia(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
-        self.assertEqual(migrate.detect_legacy_prefix(self.connection),'016')
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection),'017')
         with self.connection.cursor() as c:
             c.execute('SHOW CREATE TABLE registros_privacidade'); ddl=c.fetchone()['Create Table']
         self.recreate_schema()
         snapshot=(Path(__file__).resolve().parents[1]/'database/create_database.sql').read_text(encoding='utf-8')
         statements=[s for s in migrate.split_sql(snapshot) if not s.upper().startswith(('CREATE DATABASE','USE '))]
         migrate.execute_statements(self.connection,migrate.validate_statements(statements))
-        self.assertEqual(migrate.run_baseline(self.connection,self.settings,self.migrations,confirmed=True),'016')
+        self.assertEqual(migrate.run_baseline(self.connection,self.settings,self.migrations,confirmed=True),'017')
         self.assertEqual(migrate.run_up(self.connection,self.settings,self.migrations),0)
         with self.connection.cursor() as c:
             c.execute('SHOW CREATE TABLE registros_privacidade'); self.assertEqual(c.fetchone()['Create Table'],ddl)

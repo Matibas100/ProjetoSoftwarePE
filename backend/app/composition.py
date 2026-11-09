@@ -1,5 +1,7 @@
 """Ligações explícitas por aplicação; nenhum estado de requisição ou conexão."""
 from dataclasses import dataclass
+from app.modules.contas.repositories.usuario_repository import UsuarioRepository
+from app.modules.contas.services.listar_alunos_admin_service import ListarAlunosAdminService
 from app.modules.contas.api import ValidarPermissaoTutoriaService
 from app.modules.tutor_ia.services.gerar_tutoria_service import GerarTutoriaService
 from app.modules.tutor_ia.services.gemini_service import GeminiService
@@ -43,6 +45,7 @@ class Composicao:
     gerar_plano: GerarPlanoService
     recalcular_plano: RecalcularPlanoService
     gerar_tutoria: GerarTutoriaService
+    alunos_admin: ListarAlunosAdminService
 
 
 def compor(config=None) -> Composicao:
@@ -52,6 +55,7 @@ def compor(config=None) -> Composicao:
     seletor = SelecionarPlanoService(diagnostico)
     eliminador = EliminarPlanosPropriosService()
     return Composicao(
+        alunos_admin=ListarAlunosAdminService(UsuarioRepository()),
         gerar_tutoria=GerarTutoriaService(GeminiService(
             habilitado=config.get('TUTOR_IA_ENABLED', False),
             chave=config.get('GEMINI_API_KEY', ''),

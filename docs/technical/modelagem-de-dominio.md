@@ -99,6 +99,10 @@ respeitam campos permitidos e guards; não garantem CRUD público de cada tabela
 As [vinte funcionalidades oficiais](entrega-academica.md#rastreabilidade-dos-vinte-casos)
 permanecem com os mesmos IDs. A classificação dos seis recursos centrais na
 [matriz CRUD](matriz-crud.md) serve à análise e não dispensa as outras quinze
-Models da avaliação. Gestão de Usuários, consultas individuais dedicadas e
-aceitação acadêmica das restrições continuam como pendências explícitas;
-formalização documental não comprova envio, aprovação ou CRUD integral.
+Models da avaliação. A [gestão administrativa de Alunos](gestao-administrativa-alunos.md)
+acrescenta CRUD condicionado de Usuario: cria sem sessões/aceites, edita nome/e-mail,
+desativa/reativa e exclui somente sem vínculos. Trocar e-mail ou desativar revoga
+sessões atomicamente. Reativar preserva decisões/planos/histórico e exige novo login.
+Administradores não são alvos e perfil não é editável. A busca individual de
+Matéria/Assunto está implementada no recorte de F02. Aceitação acadêmica das
+restrições segue independente; documentação não comprova aprovação ou CRUD integral.

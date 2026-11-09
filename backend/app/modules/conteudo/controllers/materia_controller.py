@@ -1,6 +1,7 @@
 from flask import request
 
 from app.http_response import responder_http, resposta_json
+from app.modules.conteudo.services.buscar_materia_por_id_service import BuscarMateriaPorIdService
 from app.modules.conteudo.services.atualizar_materia_service import AtualizarMateriaService
 from app.modules.conteudo.services.criar_materia_service import CriarMateriaService
 from app.modules.conteudo.services.deletar_materia_service import DeletarMateriaService
@@ -12,6 +13,12 @@ from app.http_composition import servicos
 
 class MateriaController:
     """Recebe HTTP e delega os casos de uso do recurso Materia."""
+
+    @staticmethod
+    def buscar_por_id(materia_id):
+        return MateriaController._responder(
+            lambda: BuscarMateriaPorIdService.executar(materia_id)
+        )
 
     @staticmethod
     def cadastrar():

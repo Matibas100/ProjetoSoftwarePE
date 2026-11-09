@@ -7,7 +7,7 @@ funcionalidades e as mesmas 21 Models. O roadmap mais granular permanece em
 
 | Proprietário | Dados e responsabilidade | Interface para outros módulos |
 | --- | --- | --- |
-| `contas` | 4 Models; identidade, sessões, limites e evidências de privacidade | Lock de usuário e permissões vigentes do plano e da tutoria |
+| `contas` | 4 Models; identidade, sessões, limites, evidências e gestão administrativa de Alunos | Lock de usuário e permissões vigentes do plano e da tutoria |
 | `conteudo` | 7 Models; catálogo, Questões, versões e eventos | Versões elegíveis/históricas; pares elegíveis; classificação histórica e contagens |
 | `praticas` | 1 Model; catálogo do Aluno, tentativas, resposta e feedback | Projeções de fatos concluídos e atividades |
 | `simulados` | 7 Models; composição, publicação, tentativas e correção | Projeções de fatos/atividades e contagens |
@@ -40,6 +40,12 @@ ou contratos. Cada API declara `__all__`. Services não recuperam composição.
 Infraestrutura permanece única na raiz. `core` reúne bases Active Record,
 relógio UTC, paginação, validação neutra e health check. SQL especializado e
 `CALL` continuam nos Repositories; CRUD simples permanece nas Models.
+
+A [gestão de Alunos](gestao-administrativa-alunos.md) acrescenta `UsuarioController`
+e sete Services. `ConsultaAlunosAdmin` recebe `UsuarioRepository` pela composição,
+sem entidade ORM no contrato. A 017 acrescenta somente listagem e lock corrente;
+revogação reutiliza o Repository de autenticação. Não há acesso à persistência
+privada de outros módulos para prever exclusão: FKs decidem os vínculos.
 
 ## Transição e evidências
 

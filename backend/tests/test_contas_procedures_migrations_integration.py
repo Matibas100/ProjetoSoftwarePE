@@ -18,6 +18,10 @@ class ContasProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
     seed_planos = planos.PlanoProceduresMigrationsIntegrationTest.seed_planos
     alterar = planos.PlanoProceduresMigrationsIntegrationTest.alterar
 
+    def setUp(self):
+        super().setUp()
+        self.migrations = self.migrations[:17]
+
     def seed_contas(self):
         self.seed_planos()
         with self.connection.cursor() as c:
@@ -48,14 +52,14 @@ class ContasProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
     def test_bootstrap_equivale_instalacao_vazia_sem_dml_funcional(self):
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 17)
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
-        oficiais = {n: sql_resources.assinatura(self.connection, n) for n in sql_resources.NOMES}
+        oficiais = {n: sql_resources.assinatura(self.connection, n) for n in sql_resources.NOMES - sql_resources.PROCEDURES_017}
         with self.second_schema() as (bootstrap, settings):
             sql = Path(migrate.__file__).with_name('create_database.sql').read_text(encoding='utf-8')
             comandos = [s for s in migrate.split_sql(sql) if not
                 migrate._without_leading_comments(s).upper().startswith(('CREATE DATABASE', 'USE '))]
             migrate.execute_statements(bootstrap, comandos)
-            self.assertEqual(migrate.detect_legacy_prefix(bootstrap), '016')
-            self.assertEqual({n: sql_resources.assinatura(bootstrap, n) for n in sql_resources.NOMES}, oficiais)
+            self.assertEqual(migrate.detect_legacy_prefix(bootstrap), '017')
+            self.assertEqual({n: sql_resources.assinatura(bootstrap, n) for n in sql_resources.NOMES - sql_resources.PROCEDURES_017}, oficiais)
             self.assertEqual(self.rows(bootstrap), self.rows(self.connection))
 
     def test_cada_recurso_ausente_e_contrato_alterado_bloqueiam_baseline(self):

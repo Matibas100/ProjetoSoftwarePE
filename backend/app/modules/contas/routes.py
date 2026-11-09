@@ -3,8 +3,17 @@ from flask import Blueprint
 
 from app.modules.contas.controllers.autenticacao_controller import AutenticacaoController
 from app.modules.contas.controllers.privacidade_controller import PrivacidadeController
+from app.modules.contas.controllers.usuario_controller import UsuarioController
 
 blueprint = Blueprint("contas", __name__)
+
+blueprint.add_url_rule('/admin/usuarios',view_func=UsuarioController.listar,methods=['GET'])
+blueprint.add_url_rule('/admin/usuarios',view_func=UsuarioController.criar,methods=['POST'])
+blueprint.add_url_rule('/admin/usuarios/<int:usuario_id>',view_func=UsuarioController.buscar,methods=['GET'])
+blueprint.add_url_rule('/admin/usuarios/<int:usuario_id>',view_func=UsuarioController.atualizar,methods=['PUT'])
+blueprint.add_url_rule('/admin/usuarios/<int:usuario_id>',view_func=UsuarioController.excluir,methods=['DELETE'])
+blueprint.add_url_rule('/admin/usuarios/<int:usuario_id>/desativar',view_func=UsuarioController.desativar,methods=['POST'])
+blueprint.add_url_rule('/admin/usuarios/<int:usuario_id>/reativar',view_func=UsuarioController.reativar,methods=['POST'])
 
 for nome, metodo in (("csrf", "GET"), ("cadastro", "POST"), ("login", "POST"),
                      ("sessao", "GET"), ("logout", "POST"), ("reautenticar", "POST")):

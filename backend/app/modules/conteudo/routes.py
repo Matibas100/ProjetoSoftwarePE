@@ -8,6 +8,11 @@ from app.modules.conteudo.controllers.questao_controller import QuestaoControlle
 
 blueprint = Blueprint("conteudo", __name__)
 
+blueprint.add_url_rule("/materias/<int:materia_id>", endpoint="buscar_materia_por_id",
+    view_func=MateriaController.buscar_por_id, methods=["GET"])
+blueprint.add_url_rule("/assuntos/<int:assunto_id>", endpoint="buscar_assunto_por_id",
+    view_func=AssuntoController.buscar_por_id, methods=["GET"])
+
 blueprint.add_url_rule("/admin/questoes", endpoint="listar_questoes_admin",
     view_func=QuestaoController.listar_admin, methods=["GET"])
 

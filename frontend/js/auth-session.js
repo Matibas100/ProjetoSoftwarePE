@@ -102,7 +102,7 @@
         password.value = "";
         if (data.usuario.id !== oldId) {
           ui.changedAccount = true;
-          if (mode === "aluno") document.dispatchEvent(new Event("auth-identity-changed"));
+          document.dispatchEvent(new Event("auth-identity-changed"));
           message.textContent = mode === "aluno" ? "A conta mudou. O contexto anterior foi removido. Recarregue para continuar." : "A conta mudou. Copie os dados que precisar e recarregue a página para continuar.";
           const reload = document.createElement("button"); reload.type = "button"; reload.className = "auth-secondary";
           reload.textContent = "Descartar e recarregar"; reload.addEventListener("click", () => location.reload());

@@ -57,5 +57,7 @@
   "sp_revogar_sessoes_usuario": "abd2b22d9eacf0a96c4fae110b61f6c8f4d01e8c4fcc535b2925010003eb8c5e",
   "sp_ultimas_decisoes_privacidade": "efce7bc56a928dd9b3a484abf8a14a99f47b446ff947ab0b3a3dc4b752c951d2",
   "sp_usuario_ativo_bloqueado": "73ac18c89639f8f5a3eb49fe51afc7877705c9b8864f581a8bdde7b6b54b9179",
-  "sp_usuario_por_email": "c4d1a7b9ab9b85ad791c14fedb9759bca34eec0d485ca8f32e8ed4cc3139fe82"
+  "sp_usuario_por_email": "c4d1a7b9ab9b85ad791c14fedb9759bca34eec0d485ca8f32e8ed4cc3139fe82",
+  "sp_alunos_admin": "722d7c3ce894be51a4aef6030c428a7e3ecbbdb766aa18c4e7792f9f0f07e616",
+  "sp_usuario_gestao_bloqueado": "e1105185d50e6a930416017ee6eaaee47ce1f1eed9d600da1b0b20caf818f6d8"
 }

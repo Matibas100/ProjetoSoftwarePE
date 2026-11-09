@@ -462,3 +462,11 @@ continuam nas Models. Expiração/refresh por PK e flush não são consultas
 especializadas alternativas. Não foi necessário ampliar produto ou remover
 APIs para completar a auditoria. F01/F02 e critérios acadêmicos da matriz CRUD
 permanecem pendentes de decisões próprias; os vinte IDs conservam significado.
+
+## Gestão administrativa de Alunos — migration 017
+
+Duas routines adicionais e revogação participante da 016 são descritas em
+[gestão administrativa de Alunos](gestao-administrativa-alunos.md#interfaces-sql-e-instalação).
+Listagem usa snapshot próprio e contrato sem ORM; mutações bloqueiam Usuario
+corrente, incluindo inativos, e mantêm CRUD na Model. Nenhuma FK, tabela,
+routine anterior ou política de evidências é alterada.

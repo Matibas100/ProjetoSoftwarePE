@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Usuários | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/usuarios.css">
+  </head>
+  <body data-auth="administrador" class="admin-page--usuarios">
+    <section class="auth-status-panel" id="auth-loading">
+      <p role="status">Verificando sua sessão...</p>
+    </section>
+    <div id="auth-content" hidden>
+      <div class="admin-shell">
+        <aside class="sidebar" aria-label="Navegação administrativa">
+          <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+          <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+          <div class="navigation-slot" data-navigation="admin" data-current="usuarios"></div>
+          <div class="sidebar-user">
+            <div class="user-row">
+              <span class="avatar">A</span>
+              <span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span>
+            </div>
+            <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
+          </div>
+        </aside>
+        <div class="admin-main">
+          <header class="topbar">
+            <strong class="topbar-title">Usuários</strong>
+            <div class="topbar-actions">
+              <span class="environment-badge">Ambiente administrativo</span>
+              <span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span>
+              <span class="avatar">A</span>
+            </div>
+          </header>
+          <main class="main-content">
+
+            <header class="page-heading"><div><h1>Gestão de Usuários</h1><p>Gerencie contas de Aluno e preserve seu histórico.</p></div><a href="usuario.html" class="button button--primary">Adicionar usuário</a></header>
+            <form id="usuarios-filtros" class="card filters" role="search">
+              <div class="field"><label for="usuarios-busca">Buscar por nome ou e-mail</label><input id="usuarios-busca" maxlength="254" type="search"></div>
+              <div class="field"><label for="usuarios-status">Status</label><select id="usuarios-status"><option value="">Todos</option><option value="ativo">Ativos</option><option value="inativo">Inativos</option></select></div>
+              <button class="button button--primary" type="submit">Buscar</button><button id="usuarios-limpar" class="button button--outline" type="button">Limpar filtros</button>
+            </form>
+            <p class="screen-note">Perfil: Aluno. A listagem apresenta o e-mail mascarado; abra o detalhe para editar.</p>
+            <div id="usuarios-mensagem" class="notice" role="status" aria-live="polite" hidden></div>
+            <section class="card table-card" aria-label="Contas de Aluno">
+              <div class="table-scroll"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Criação</th><th>Ações</th></tr></thead><tbody id="usuarios-corpo"></tbody></table></div>
+              <p id="usuarios-estado" class="table-state" role="status">Carregando usuários...</p>
+              <nav class="pagination" aria-label="Paginação de usuários"><span id="usuarios-total"></span><span><button id="usuarios-anterior" class="button button--text" type="button">Anterior</button><span id="usuarios-pagina"></span><button id="usuarios-proxima" class="button button--text" type="button">Próxima</button></span></nav>
+            </section><button id="usuarios-recarregar" class="button button--outline" type="button">Atualizar lista</button>
+          </main>
+        </div>
+      </div>
+      <dialog id="admin-modal" aria-labelledby="admin-modal-titulo">
+        <div class="modal-body">
+          <h2 id="admin-modal-titulo"></h2>
+          <p id="admin-modal-texto"></p>
+          <div class="modal-actions">
+            <button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button>
+            <button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button>
+          </div>
+        </div>
+      </dialog>
+    </div>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth-session.js"></script>
+    <script src="../js/admin-common.js"></script>
+    <script src="../js/admin-usuarios.js"></script>
+  </body>
+</html>

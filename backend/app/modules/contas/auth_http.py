@@ -41,8 +41,9 @@ def proteger_api():
         rota_aluno = request.path.startswith("/api/aluno/") or rota_tutoria
         admin = not rota_auth and not rota_aluno and (not leitura_catalogo or request.args.get("status") == "todos")
         mutacao = request.method not in {"GET", "HEAD"}
-        dados = None if rota_tutoria else request.get_json(silent=True)
-        sensivel = not rota_auth and (request.method == "DELETE" or
+        gestao_usuarios = request.path == "/api/admin/usuarios" or request.path.startswith("/api/admin/usuarios/")
+        dados = None if rota_tutoria or gestao_usuarios else request.get_json(silent=True)
+        sensivel = (gestao_usuarios and mutacao) or not rota_auth and (request.method == "DELETE" or
             request.path.rsplit("/", 1)[-1] in {"inativar", "arquivar", "reativar", "transferir", "publicar"} or
             (request.method == "PUT" and isinstance(dados, dict) and (
                 ("/materias/" in request.path and bool({"status", "area_enem_id"} & dados.keys())) or
@@ -60,6 +61,8 @@ def proteger_api():
 
 
 def sem_cache_auth(resposta):
-    if request.path in {"/api/termos", "/api/tutoria"} or request.path.startswith(("/api/auth/", "/api/aluno/", "/api/admin/")) or getattr(g, "auth_sessao", None) is not None:
+    detalhe_catalogo = request.endpoint in {
+        "api.conteudo.buscar_materia_por_id", "api.conteudo.buscar_assunto_por_id"}
+    if detalhe_catalogo or request.path in {"/api/termos", "/api/tutoria"} or request.path.startswith(("/api/auth/", "/api/aluno/", "/api/admin/")) or getattr(g, "auth_sessao", None) is not None:
         resposta.headers["Cache-Control"] = "no-store"
     return resposta

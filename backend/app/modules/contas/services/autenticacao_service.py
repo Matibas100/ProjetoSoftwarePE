@@ -62,7 +62,7 @@ class PrepararCsrfService:
 
 class CriarSessaoService:
     @staticmethod
-    def executar(usuario, anterior=None):
+    def executar(usuario, anterior=None, email_esperado=None):
         identificador = secrets.token_urlsafe(32)
         agora = agora_utc()
         sessao = Sessao(usuario_id=usuario.id if usuario else None,
@@ -72,8 +72,12 @@ class CriarSessaoService:
             reautenticada_em=agora if usuario else None)
 
         def persistir():
-            if usuario is not None and Repo.usuario_ativo_bloqueado(usuario.id) is None:
-                raise sessao_invalida()
+            if usuario is not None:
+                atual = Repo.usuario_ativo_bloqueado(usuario.id)
+                if email_esperado is not None and (atual is None or atual.email != email_esperado):
+                    raise AutenticacaoError("E-mail ou senha inválidos.",401,"credenciais_invalidas")
+                if atual is None:
+                    raise sessao_invalida()
             sessao.salvar(confirmar=False)
             if anterior is not None:
                 Repo.revogar(anterior.id, agora)
@@ -126,7 +130,7 @@ class CriarUsuarioService:
 
 class ValidarSenhaService:
     @staticmethod
-    def executar(usuario, senha, chave_limite):
+    def executar(usuario, senha, chave_limite, email_esperado=None):
         hash_anterior = usuario.senha_hash if usuario else HASH_FICTICIO
         correta = check_password_hash(hash_anterior, senha)
         agora = agora_utc()
@@ -138,7 +142,8 @@ class ValidarSenhaService:
             if agora >= limite.janela_inicio + timedelta(minutes=15):
                 limite.atualizar(confirmar=False, falhas=0, janela_inicio=agora, bloqueado_ate=None)
             atual = Repo.usuario_ativo_bloqueado(usuario.id) if usuario else None
-            if correta and atual is not None and atual.senha_hash == hash_anterior:
+            if (correta and atual is not None and atual.senha_hash == hash_anterior
+                    and (email_esperado is None or atual.email == email_esperado)):
                 limite.atualizar(confirmar=False, falhas=0, janela_inicio=agora, bloqueado_ate=None)
                 return atual, None
             falhas = limite.falhas + 1
@@ -161,8 +166,8 @@ class LoginService:
         email = validar_email(dados["email"])
         senha = validar_senha(dados["senha"], minimo=1)
         usuario = ValidarSenhaService.executar(Usuario.buscar_por_email(email), senha,
-            token_assinado(chave, email, "login-limite"))
-        identificador, sessao = CriarSessaoService.executar(usuario, anterior)
+            token_assinado(chave, email, "login-limite"), email_esperado=email)
+        identificador, sessao = CriarSessaoService.executar(usuario, anterior, email_esperado=email)
         return identificador, sessao, {"usuario": usuario.to_dict(),
             "csrf_token": token_assinado(chave, identificador), "destino": destino(usuario)}
 

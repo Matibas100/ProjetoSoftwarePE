@@ -1457,12 +1457,12 @@ Os quatro binários oficiais permanecem congelados.
 | Destino principal | ADM-USU-002 |
 | Dados necessários | usuários; perfis; status; acessos; verificação; permissões |
 | Entidades envolvidas | **A definir formalmente**. Conceitos de dados oficiais: usuários; perfis; status; acessos; verificação; permissões. |
-| Endpoint | **NOVO — contrato ainda será definido**. |
+| Endpoint | `/api/admin/usuarios` e `/api/admin/usuarios/{id}`, com ações explícitas de status. [Contrato implementado](gestao-administrativa-alunos.md#contrato-http). |
 | Tipo de persistência | Model/CRUD; Repository somente para filtros ou relatórios complexos. |
 | Permissões necessárias | Perfil oficial: **Administrador completo; Visualizador autorizado para consulta limitada**; validação no servidor e princípio de menor privilégio. |
 | Estados principais | Vazio; sem resultado; erro; sem permissão; e-mail pendente; exclusão |
 | Critérios iniciais de aceite | Exibir os dados previstos ou um dos estados oficiais; permitir **Adicionar usuário** somente ao perfil autorizado; preservar contexto e encaminhar para **ADM-USU-002**; falhas não podem apagar dados válidos. |
-| Situação atual | **Ainda não existe**. |
+| Situação atual | **Recorte de Alunos implementado** em `/admin/usuarios.html` e `/admin/usuario.html`: Administrador cria/lista/consulta/edita identificação, desativa/reativa e exclui sem vínculos. Demais perfis e ações futuras permanecem indisponíveis. |
 | Aprovação visual | Aprovada; origem: `output/pdf/Plataforma_ENEM_Admin_Final_09_Gestao_Usuarios_1440px.png`. |
 
 ### 58. ADM-USU-002 — Detalhe do Usuário
@@ -1482,13 +1482,15 @@ Os quatro binários oficiais permanecem congelados.
 | Destino principal | ADM-SEG-001 ou ADM-AUD-001 |
 | Dados necessários | conta; dados mínimos; sessões; consentimentos; retenção; histórico |
 | Entidades envolvidas | **A definir formalmente**. Conceitos de dados oficiais: conta; dados mínimos; sessões; consentimentos; retenção; histórico. |
-| Endpoint | **NOVO — contrato ainda será definido**. |
+| Endpoint | `/api/admin/usuarios` e `/api/admin/usuarios/{id}`, com ações explícitas de status. [Contrato implementado](gestao-administrativa-alunos.md#contrato-http). |
 | Tipo de persistência | Model/CRUD; Repository somente para filtros ou relatórios complexos. |
 | Permissões necessárias | Perfil oficial: **Administrador completo; Visualizador autorizado para consulta limitada**; validação no servidor e princípio de menor privilégio. |
 | Estados principais | Ativo; suspenso; reautenticação; ação crítica; exclusão; erro sem perda |
 | Critérios iniciais de aceite | Exibir os dados previstos ou um dos estados oficiais; permitir **Editar perfil** somente ao perfil autorizado; preservar contexto e encaminhar para **ADM-SEG-001 ou ADM-AUD-001**; falhas não podem apagar dados válidos. |
-| Situação atual | **Ainda não existe**. |
+| Situação atual | **Recorte de Alunos implementado** em `/admin/usuarios.html` e `/admin/usuario.html`: Administrador cria/lista/consulta/edita identificação, desativa/reativa e exclui sem vínculos. Demais perfis e ações futuras permanecem indisponíveis. |
 | Aprovação visual | Aprovada; origem: `output/pdf/Plataforma_ENEM_Admin_Final_10_Detalhe_Usuario_1440px.png`. |
+
+Recorte aplicado em 09/11/2026: senha inicial apenas na criação, sem aceite ou sessão automática; troca de e-mail/desativação encerram sessões. Exclusão condicionada não elimina histórico. Filtros avançados, gestão de Administradores, recuperação, exportação, auditoria e estudos alheios não foram habilitados. [Diferenças e evidências](gestao-administrativa-alunos.md#alcance-visual-e-evidências). Os binários oficiais permanecem intactos.
 
 ### 59. ADM-SEG-001 — Perfis e Permissões
 

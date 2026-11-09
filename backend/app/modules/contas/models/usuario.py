@@ -16,7 +16,7 @@ class Usuario(CrudMixin):
     perfil = db.Column(db.String(20), nullable=False)
     ativo = db.Column(db.Boolean, nullable=False, default=True)
     criado_em = db.Column(db.DateTime, nullable=False)
-    campos_atualizaveis = {"ativo", "senha_hash"}
+    campos_atualizaveis = {"nome", "email", "ativo", "senha_hash"}
 
     @classmethod
     def buscar_por_email(cls, email):

@@ -75,7 +75,9 @@ class ApplicationFactoryTest(unittest.TestCase):
 
     def test_registra_as_rotas_api(self):
         rules = [rule for rule in self.app.url_map.iter_rules() if rule.rule.startswith("/api/")]
-        self.assertEqual(len(rules), 68)
+        self.assertEqual(len(rules), 77)
+        for path in ("/api/materias/<int:materia_id>", "/api/assuntos/<int:assunto_id>"):
+            self.assertEqual(sum(rule.rule == path and "GET" in rule.methods for rule in rules), 1)
         self.assertTrue(
             {
                 "/api/health",

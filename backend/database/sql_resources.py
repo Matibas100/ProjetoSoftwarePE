@@ -1,4 +1,4 @@
-"""Reconhecimento conservador dos contratos SQL oficiais de 011–016.
+"""Reconhecimento conservador dos contratos SQL oficiais de 011–017.
 
 Referências versionadas são geradas a partir das migrations em schema descartável,
 nunca a partir do banco a adotar. Nenhum DDL é executado neste módulo.
@@ -34,7 +34,8 @@ PROCEDURES_016 = frozenset({'sp_usuario_por_email', 'sp_consultar_sessao', 'sp_r
     'sp_revogar_sessao', 'sp_revogar_sessoes_usuario', 'sp_usuario_ativo_bloqueado',
     'sp_preparar_limite_autenticacao', 'sp_limpar_autenticacao', 'sp_bloquear_identidade_privacidade',
     'sp_ultimas_decisoes_privacidade', 'sp_decisao_privacidade_por_chave'})
-NOMES = PROCEDURES_011 | PROCEDURES_012 | VIEWS_012 | PROCEDURES_013 | PROCEDURES_014 | PROCEDURES_015 | PROCEDURES_016
+PROCEDURES_017 = frozenset({'sp_alunos_admin', 'sp_usuario_gestao_bloqueado'})
+NOMES = PROCEDURES_011 | PROCEDURES_012 | VIEWS_012 | PROCEDURES_013 | PROCEDURES_014 | PROCEDURES_015 | PROCEDURES_016 | PROCEDURES_017
 REFERENCIA = Path(__file__).with_name('sql_resources_reference.json')
 
 
@@ -123,7 +124,8 @@ def detectar_prefixo(connection):
         presentes = (routines | views) & NOMES
         if not presentes:
             return None
-        prefixo = ('016' if presentes & PROCEDURES_016 else
+        prefixo = ('017' if presentes & PROCEDURES_017 else
+                   '016' if presentes & PROCEDURES_016 else
                    '015' if presentes & PROCEDURES_015 else
                    '014' if presentes & PROCEDURES_014 else
                    '013' if presentes & PROCEDURES_013 else
@@ -137,6 +139,8 @@ def detectar_prefixo(connection):
             esperados |= PROCEDURES_015
         if prefixo >= '016':
             esperados |= PROCEDURES_016
+        if prefixo >= '017':
+            esperados |= PROCEDURES_017
         if presentes != esperados:
             raise MigrationError('Recursos SQL parciais do prefixo ' + prefixo + '.')
         referencia = json.loads(REFERENCIA.read_text(encoding='utf-8'))

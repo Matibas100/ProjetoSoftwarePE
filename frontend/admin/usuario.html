@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Usuários | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/usuarios.css">
+  </head>
+  <body data-auth="administrador" class="admin-page--usuarios">
+    <section class="auth-status-panel" id="auth-loading">
+      <p role="status">Verificando sua sessão...</p>
+    </section>
+    <div id="auth-content" hidden>
+      <div class="admin-shell">
+        <aside class="sidebar" aria-label="Navegação administrativa">
+          <img class="sidebar-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM">
+          <div class="environment"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#grid"></use></svg>Administração</div>
+          <div class="navigation-slot" data-navigation="admin" data-current="usuarios"></div>
+          <div class="sidebar-user">
+            <div class="user-row">
+              <span class="avatar">A</span>
+              <span><strong data-auth-name>Administrador</strong><small>Ambiente local</small></span>
+            </div>
+            <button class="auth-exit" data-auth-exit type="button">Sair</button><a class="switch-link" href="../index.html">Trocar de ambiente</a>
+          </div>
+        </aside>
+        <div class="admin-main">
+          <header class="topbar">
+            <strong class="topbar-title">Usuários</strong>
+            <div class="topbar-actions">
+              <span class="environment-badge">Ambiente administrativo</span>
+              <span role="img" aria-label="Notificações"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="../assets/admin-icons.svg#bell"></use></svg></span>
+              <span class="avatar">A</span>
+            </div>
+          </header>
+          <main class="main-content">
+
+            <header class="page-heading"><div><h1 id="usuario-titulo">Adicionar usuário</h1><p>Contas de Aluno · perfil definido pelo sistema.</p></div><a id="usuario-voltar" href="usuarios.html" class="button button--outline">Voltar à listagem</a></header>
+            <p id="usuario-carregando" role="status" hidden>Carregando usuário...</p><button id="usuario-recarregar" class="button button--outline" type="button" hidden>Atualizar detalhe</button>
+            <div id="usuarios-mensagem" class="notice" role="status" aria-live="polite" hidden></div>
+            <div class="editor-grid">
+              <section class="card editor-card"><h2>Identificação <span id="usuario-unsaved" class="unsaved" hidden>Alterações não salvas</span></h2>
+                <form id="usuario-form">
+                  <div class="editor-fields">
+                    <div class="field"><label for="usuario-nome">Nome</label><input id="usuario-nome" name="nome" minlength="2" maxlength="100" required autocomplete="name"></div>
+                    <div class="field"><label for="usuario-email">E-mail</label><input id="usuario-email" name="email" type="email" maxlength="254" required autocomplete="email"></div>
+                    <div id="usuario-senhas" class="field--wide editor-fields">
+                      <div class="field"><label for="usuario-senha">Senha inicial</label><input id="usuario-senha" name="senha" type="password" minlength="8" maxlength="128" required autocomplete="new-password"></div>
+                      <div class="field"><label for="usuario-confirmacao">Confirme a senha inicial</label><input id="usuario-confirmacao" name="senha_confirmacao" type="password" minlength="8" maxlength="128" required autocomplete="new-password"></div>
+                    </div>
+                  </div>
+                  <p id="usuario-aviso-criacao">A conta será criada sem sessão ou aceite automático. O titular deverá registrar suas próprias decisões de termos na área de privacidade.</p>
+                  <div class="form-actions"><button id="usuario-cancelar" class="button button--outline" type="button">Cancelar</button><button id="usuario-salvar" class="button button--primary" type="submit">Salvar usuário</button></div>
+                </form>
+              </section>
+              <aside class="card state-card"><h2>Conta e histórico</h2><p>Perfil: Aluno</p><p id="usuario-status">Nova conta ativa</p><p id="usuario-criado"></p><p>Trocar o e-mail encerra todas as sessões do Aluno. Alterar somente o nome preserva as sessões.</p><p>Desativar impede o acesso e preserva histórico e decisões. Reativar exige novo login. A exclusão só é permitida sem vínculos.</p>
+                <div id="usuario-acoes" hidden><button id="usuario-status-acao" class="button button--outline" type="button">Desativar conta</button><button id="usuario-excluir" class="button button--danger" type="button">Excluir conta</button></div>
+              </aside>
+            </div>
+          </main>
+        </div>
+      </div>
+      <dialog id="admin-modal" aria-labelledby="admin-modal-titulo">
+        <div class="modal-body">
+          <h2 id="admin-modal-titulo"></h2>
+          <p id="admin-modal-texto"></p>
+          <div class="modal-actions">
+            <button id="admin-modal-cancelar" class="button button--outline" type="button">Cancelar</button>
+            <button id="admin-modal-confirmar" class="button button--primary" type="button">Confirmar</button>
+          </div>
+        </div>
+      </dialog>
+    </div>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth-session.js"></script>
+    <script src="../js/admin-common.js"></script>
+    <script src="../js/admin-usuarios.js"></script>
+  </body>
+</html>

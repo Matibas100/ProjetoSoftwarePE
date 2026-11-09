@@ -356,6 +356,8 @@ def run_up(
                 raise MigrationError("A migration 015 exige o prefixo 014 íntegro.")
             if migration.version == "016" and detect_legacy_prefix(connection) != "015":
                 raise MigrationError("A migration 016 exige o prefixo 015 íntegro.")
+            if migration.version == "017" and detect_legacy_prefix(connection) != "016":
+                raise MigrationError("A migration 017 exige o prefixo 016 íntegro.")
             apply_migration(connection, migration, existing if index == next_index else None)
             existing = None
             applied += 1

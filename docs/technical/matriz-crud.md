@@ -51,9 +51,9 @@ de atualização genérica. As rotas abreviam parâmetros como
 
 | Model / fonte canônica | Persistência | API / caso de uso | Interface | Restrição ou lacuna |
 | --- | --- | --- | --- | --- |
-| [Materia](../../backend/app/modules/conteudo/models/materia.py) | C; nome, descrição, área e status atualizáveis. | Criar, listar, editar, DELETE condicionado; lista administrativa/status/impacto. [Cadeia M](#materia). | `/index.html` e `/admin/materias.html`: cadastro, listagem, edição e exclusão confirmada. | Sem GET individual dedicado. Vínculos bloqueiam DELETE (409); status/arquivamento são operações distintas. |
-| [Assunto](../../backend/app/modules/conteudo/models/assunto.py) | C; nome/normalização, descrição, Matéria e status atualizáveis. | Criar, listar, editar, DELETE condicionado; transferência/status/impacto. [Cadeia A](#assunto). | `/index.html` e `/admin/assuntos.html`: quatro operações e transferência administrativa. | Sem GET individual dedicado; prévia de impacto não é detalhe geral. Questões/histórico impedem DELETE. |
-| [Usuario](../../backend/app/modules/contas/models/usuario.py) | C; atualizar permite apenas `ativo`/`senha_hash`. | Cadastro público de Aluno e identidade da própria sessão; Administrador por CLI. [Cadeia U](#contas). | `/cadastro`, `/login` e identidade nas páginas autenticadas. | Sem listagem/detalhe de gestão, edição de perfil ou DELETE de conta por API/tela. CLI não supre CRUD público; aceite já cria vínculo protegido. |
+| [Materia](../../backend/app/modules/conteudo/models/materia.py) | C; nome, descrição, área e status atualizáveis. | Criar, listar, consultar por ID, editar, DELETE condicionado; lista administrativa/status/impacto. [Cadeia M](#materia). | `/index.html` e `/admin/materias.html`: cadastro, listagem, edição e exclusão confirmada; Editar administrativo consulta detalhe atual. | GET individual exclusivo de Administrador, incluindo inativos/arquivados. Vínculos bloqueiam DELETE (409); status/arquivamento são operações distintas. |
+| [Assunto](../../backend/app/modules/conteudo/models/assunto.py) | C; nome/normalização, descrição, Matéria e status atualizáveis. | Criar, listar, consultar por ID, editar, DELETE condicionado; transferência/status/impacto. [Cadeia A](#assunto). | `/index.html` e `/admin/assuntos.html`: quatro operações e transferência administrativa; Editar consulta detalhe e vínculo atuais. | GET individual exclusivo de Administrador, incluindo inativos/arquivados; prévia de impacto continua distinta. Questões/histórico impedem DELETE. |
+| [Usuario](../../backend/app/modules/contas/models/usuario.py) | C; nome, e-mail, ativo e hash atualizáveis conforme caso de uso. | Cadastro público/CLI preservados; `UsuarioController` → sete Services administrativos para criar/listar/detalhar/editar/desativar/reativar/excluir Alunos. [Cadeia U](#contas). | `/admin/usuarios.html` e `/admin/usuario.html`: CRUD administrativo de Aluno e status confirmado. | Perfil imutável; Administrador não é alvo. DELETE só sem vínculos; sessão mesmo revogada, aceite, autoria e histórico impedem exclusão. Desativação é ação distinta. |
 | [Questao](../../backend/app/modules/conteudo/models/questao.py) | C; conteúdo/classificação atualizáveis conforme caso de uso. | Criar rascunho, listar/detalhar/buscar, editar, publicar e arquivar. [Cadeia Q](#questoes). | `/index.html`, `/admin/questoes.html` e `/admin/questao.html`: busca/cadastro e gestão editorial. | Arquivar é POST, sem DELETE físico exposto. Publicação preserva snapshot e eventos. |
 | [Simulado](../../backend/app/modules/simulados/models/simulado.py) | C; sem `campos_atualizaveis` declarado; Services alteram atributos e salvam sob regras. | Compor, listar/detalhar, editar rascunho, publicar e arquivar. [Cadeia S](#simulados). | `/admin/simulados.html` e `/admin/simulado.html`: composição e ciclo editorial. | Sem DELETE físico exposto; versão e tentativas sobrevivem ao arquivamento. |
 | [PlanoEstudo](../../backend/app/modules/plano_estudos/models/plano_estudo.py) | U; somente `atual` atualizável, com guard de geração histórica. | Gerar, consultar próprio e recalcular; negativa elimina derivados próprios. [Cadeia P](#plano). | `/aluno/plano.html` e `/aluno/privacidade.html`: geração/consulta/recálculo e decisão de consentimento. | Recálculo cria geração, não PUT genérico. Não há DELETE manual de plano; eliminação é efeito especializado da privacidade. |
@@ -97,6 +97,7 @@ na Model não concede acesso HTTP.
 
 - `POST /api/materias` → [CriarMateriaService](../../backend/app/modules/conteudo/services/criar_materia_service.py).
 - `GET /api/materias` → [ListarMateriasService](../../backend/app/modules/conteudo/services/listar_materias_service.py).
+- `GET /api/materias/<id>` → `MateriaController.buscar_por_id` → [BuscarMateriaPorIdService](../../backend/app/modules/conteudo/services/buscar_materia_por_id_service.py) → `Materia.buscar_por_id`/`to_dict` → MySQL. Editar administrativo usa o detalhe antes de preencher, sem escrita automática.
 - `PUT /api/materias/<id>` → [AtualizarMateriaService](../../backend/app/modules/conteudo/services/atualizar_materia_service.py).
 - `DELETE /api/materias/<id>` → [DeletarMateriaService](../../backend/app/modules/conteudo/services/deletar_materia_service.py).
 - `GET /api/admin/materias` → `ListarMateriasAdminService` em
@@ -120,6 +121,7 @@ Mesmo [Blueprint](../../backend/app/modules/conteudo/routes.py) →
 [AssuntoController](../../backend/app/modules/conteudo/controllers/assunto_controller.py):
 
 - `POST/GET /api/assuntos` → [CriarAssuntoService](../../backend/app/modules/conteudo/services/criar_assunto_service.py)/[ListarAssuntosService](../../backend/app/modules/conteudo/services/listar_assuntos_service.py).
+- `GET /api/assuntos/<id>` → `AssuntoController.buscar_por_id` → [BuscarAssuntoPorIdService](../../backend/app/modules/conteudo/services/buscar_assunto_por_id_service.py) → `Assunto.buscar_por_id`/`to_dict` → MySQL. Editar administrativo atualiza opções e origem com o vínculo do detalhe; Salvar comum usa PUT, sem transferência indevida.
 - `PUT/DELETE /api/assuntos/<id>` → [AtualizarAssuntoService](../../backend/app/modules/conteudo/services/atualizar_assunto_service.py)/[DeletarAssuntoService](../../backend/app/modules/conteudo/services/deletar_assunto_service.py).
 - `GET /api/admin/assuntos` → `ListarAssuntosAdminService` em
   [listar_catalogo_admin_service.py](../../backend/app/modules/conteudo/services/listar_catalogo_admin_service.py).
@@ -173,8 +175,12 @@ nas Models. [Contratos e consumidores](consultas-academicas-mysql.md#contas-e-pr
 [Cadastro](../../frontend/cadastro.html), [login](../../frontend/login.html),
 [auth-page.js](../../frontend/js/auth-page.js) e
 [auth-session.js](../../frontend/js/auth-session.js) cobrem autenticação.
-O [menu](../../frontend/js/navigation.js) marca Usuários indisponível.
-Nenhuma dessas ações fornece edição geral de conta ou DELETE público.
+O [menu](../../frontend/js/navigation.js) habilita Usuários para Administradores.
+`UsuarioController` chama `CriarAlunoAdminService`, `ListarAlunosAdminService`,
+`BuscarAlunoAdminService`, `AtualizarAlunoAdminService`, `DesativarAlunoService`,
+`ReativarAlunoService` e `ExcluirAlunoAdminService`. CRUD usa a Model;
+listagem/lock usam `UsuarioRepository` e as duas routines da 017. Revogação
+reutiliza a 016, na mesma transação. [Contratos e limites](gestao-administrativa-alunos.md).
 
 <a id="questoes"></a>
 
@@ -329,8 +335,8 @@ Essa cobertura técnica não resolve F01/F02/E01–E03 nem certifica aceite acad
 | ID | Evidência e situação nesta entrega | Continuidade |
 | --- | --- | --- |
 | D01 | Formalização atual publicada na [modelagem](modelagem-de-dominio.md), no [diagrama](diagrama-de-classes.md) e nesta matriz; lacuna documental resolvida. Não há comprovação de modelagem anterior entregue. | Grupo decide e realiza envio/demonstração; aprovação acadêmica não é presumida. |
-| F01 | Gestão CRUD de Usuários ausente; cadastro/login/sessão e CLI têm alcance limitado. Base C não cria gestão HTTP. | Candidata a change própria: definir ator/dono/Administrador, campos, lista/detalhe, validações de identidade, reautenticação, efeitos nas sessões e política de desativação/exclusão antes de implementar. Permanece aberta. |
-| F02 | `buscar_por_id` existe em Matéria/Assunto, mas GET individual dedicado não existe; listas e prévias de impacto não equivalem a esse contrato. | Se exigido como demonstração isolada, explorar/propor change de busca por ID preservando contratos existentes. Permanece aberta. |
+| F01 | Resolvida em 09/11/2026 somente para gestão administrativa de Alunos: CRUD condicionado, desativação/reativação e efeitos atômicos nas sessões. | [Validação](../../openspec/changes/archive/2026-11-09-gerenciar-contas-de-alunos/validacao.md): MySQL e Chromium reais. Não abrange Administradores, promoção de perfil, exclusão geral ou auditoria completa; E01–E03 permanecem independentes. |
+| F02 | Resolvida em 09/11/2026: GET individual de Matéria/Assunto exclusivo de Administrador e consumido por Editar nas duas telas. Integração MySQL e Chromium com segunda aba comprovam os valores e o vínculo atuais. | Evidências e limites na [validação da busca por ID](../../openspec/changes/archive/2026-11-09-buscar-materias-assuntos-por-id/validacao.md). Não resolve F01/E01–E03 nem altera os vinte casos. |
 | E01 | Arquivamento de Questão/Simulado usa POST e preserva histórico; não implementa DELETE físico. Evidência nas cadeias Q/S e [ADR-003](adr/ADR-003-politica-de-exclusao-catalogo.md). | Confirmar critério acadêmico do ciclo editorial; sem apagar versões/eventos ou prometer novo DELETE nesta change. |
 | E02 | Quinze Models auxiliares representam itens, fatos, referência fixa, execução e infraestrutura; seus casos são coordenados pelos recursos responsáveis acima. | Apresentar classificação ao professor; justificativa técnica não significa dispensa acadêmica de CRUD. |
 | E03 | Seis Models B não têm atualizar/deletar; duas U não têm deletar. Guardam fatos/snapshots/gerações conforme [ADR-008](adr/ADR-008-contratos-e-capacidades-de-persistencia.md) e ADRs 009/010. | Explicar capacidades e a exceção especializada do plano; não acrescentar métodos incompatíveis para aparentar CRUD integral. Aceitação acadêmica pendente. |
@@ -356,3 +362,13 @@ E2E. Os [relatórios históricos](entrega-academica.md#evidências-e-reproduçã
 continuam limitados às execuções/revisões neles registradas. As vinte
 funcionalidades mantêm IDs; esta documentação não adiciona uma funcionalidade,
 não implementa F01/F02 e não certifica cumprimento integral da exigência CRUD.
+
+### Validação adicional — consulta por ID (09/11/2026)
+
+O [relatório adicional](../../openspec/changes/archive/2026-11-09-buscar-materias-assuntos-por-id/validacao.md)
+comprova F02 com GET/HEAD protegido, integração MySQL e edição administrativa
+em Chromium. A segunda aba altera Matéria e transfere Assunto antes de Editar
+na primeira; o formulário recebe o detalhe atual e salva somente após ação
+explícita. O vínculo corrente também é preservado com Matéria inativa criada
+depois da abertura da tela. Essa evidência acrescenta a prova ausente na inspeção
+histórica acima, sem reescrevê-la. F01 e E01–E03 permanecem independentes.

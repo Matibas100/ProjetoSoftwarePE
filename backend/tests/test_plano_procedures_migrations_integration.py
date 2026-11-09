@@ -46,14 +46,14 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
     def test_bootstrap_equivale_instalacao_vazia_sem_dml_funcional(self):
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 16)
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
-        recursos = sql_resources.NOMES - sql_resources.PROCEDURES_016
+        recursos = sql_resources.NOMES - sql_resources.PROCEDURES_016 - sql_resources.PROCEDURES_017
         oficiais = {n: sql_resources.assinatura(self.connection, n) for n in recursos}
         with self.second_schema() as (bootstrap, settings):
             sql = Path(migrate.__file__).with_name('create_database.sql').read_text(encoding='utf-8')
             comandos = [s for s in migrate.split_sql(sql) if not
                 migrate._without_leading_comments(s).upper().startswith(('CREATE DATABASE', 'USE '))
                 and not any(re.match(r'CREATE PROCEDURE '+nome+r'\b', migrate._without_leading_comments(s), re.I)
-                            for nome in sql_resources.PROCEDURES_016)]
+                            for nome in sql_resources.PROCEDURES_016 | sql_resources.PROCEDURES_017)]
             migrate.execute_statements(bootstrap, comandos)
             self.assertEqual(migrate.detect_legacy_prefix(bootstrap), '015')
             self.assertEqual({n: sql_resources.assinatura(bootstrap, n) for n in recursos}, oficiais)

@@ -20,6 +20,18 @@ retenção/direitos e proteção/autorização de menores. Não há adequação 
 integral ou bônus garantido. Veja [fontes e limites](docs/legal/README.md) e
 [operação de privacidade](docs/technical/operacao-privacidade.md).
 
+## Gestão administrativa de Alunos
+
+O menu **Usuários** abre `/admin/usuarios.html`: criar, buscar, consultar,
+editar nome/e-mail, desativar/reativar e excluir contas de Aluno sem vínculos.
+Criação administrativa usa senha inicial, sem sessão ou aceite em nome do titular.
+Trocar e-mail ou desativar revoga sessões; reativar exige novo login.
+Contas com aceites, sessões ou histórico recebem 409 no DELETE; desativação é
+uma ação distinta. Administradores não são alvos deste recorte.
+
+Instale a migration **017** antes das novas telas/rotas, após backup validado
+em ambiente operacional. Veja [contratos, Services, routines e operação](docs/technical/gestao-administrativa-alunos.md).
+
 ## Tecnologias utilizadas
 
 - Python 3.10 ou mais recente
@@ -174,6 +186,34 @@ Stored Procedure:
 - `sp_questoes_por_assunto`: recebe `assunto_id`, filtra as questões no MySQL
   e devolve o resultado ordenado por `id`.
 
+## Consulta individual do catálogo
+
+`GET /api/materias/{id}` e `GET /api/assuntos/{id}` exigem Administrador
+autenticado e incluem registros ativos, inativos e arquivados. Aceitam HEAD,
+usam `Cache-Control: no-store` e não exigem CSRF ou senha recente para leitura.
+Query strings não mudam a permissão nem filtram o detalhe.
+
+Exemplo de Matéria (200):
+
+```json
+{"id":12,"nome":"Matemática","descricao":null,"area_enem_id":4,"status":"inativa","criado_em":"2026-11-09T10:00:00","atualizado_em":"2026-11-09T10:00:00"}
+```
+
+Assunto retorna `id`, `nome`, `nome_normalizado`, `descricao`, `materia_id`,
+`status`, `criado_em` e `atualizado_em`. Os objetos não incluem contagens ou
+relações aninhadas; descrição nula continua `null` e datas seguem ISO 8601.
+IDs zero/acima de 2147483647 retornam 400; ID válido ausente, 404; sem sessão,
+401; Aluno, 403. Erros usam `erro`; falhas inesperadas retornam 500 genérico.
+Texto/negativos mantêm o 404 do roteador.
+
+Em `/admin/materias.html` e `/admin/assuntos.html`, **Editar** consulta o detalhe
+antes de preencher. Assunto também atualiza as opções de Matéria, preservando a
+Matéria corrente mesmo inativa/arquivada. Durante a leitura, Salvar fica bloqueado.
+Falhas preservam rascunho, filtros e página; repetir exige clicar Editar novamente.
+Digitação, outra seleção, Novo/Cancelar/Salvar ou perda/troca de identidade
+invalidam respostas pendentes. O descarte continua confirmado pelo formulário;
+a identidade é revalidada antes do preenchimento. A escrita ocorre só ao Salvar.
+
 ## Rotas legadas da API
 
 As demais rotas e Services dos vinte casos estão na
@@ -253,7 +293,7 @@ python backend/database/migrate.py status
 python backend/database/migrate.py up
 ```
 
-`up` aplica `000` a `016` em ordem. Chamá-lo novamente não reexecuta
+`up` aplica `000` a `017` em ordem. Chamá-lo novamente não reexecuta
 migrations aplicadas. `create_database.sql` permanece como snapshot consolidado
 para compatibilidade; uma instalação feita por ele deve adotar o histórico como
 um banco existente.

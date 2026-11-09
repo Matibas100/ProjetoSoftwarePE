@@ -108,15 +108,15 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
             self.assertEqual([row["id"] for row in cursor.fetchall()], [920003, 920004])
 
     def test_instalacao_idempotencia_historico_e_procedure(self):
-        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 17)
+        self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 18)
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
 
         history = migrate.fetch_history(self.connection)
         self.assertEqual(
-            [row["version"] for row in history], ["000", "001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012", "013", "014", "015", "016"]
+            [row["version"] for row in history], ["000", "001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012", "013", "014", "015", "016", "017"]
         )
         self.assertTrue(all(row["status"] == "APPLIED" for row in history))
-        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "016")
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "017")
 
         with self.connection.cursor() as cursor:
             cursor.execute(
@@ -160,7 +160,7 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
         self.assertEqual(ids, [first_id, second_id])
 
     def test_baseline_reconhece_todos_os_prefixos_sem_alterar_dados(self):
-        for prefix in ("000", "001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012", "013", "014", "015", "016"):
+        for prefix in ("000", "001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012", "013", "014", "015", "016", "017"):
             with self.subTest(prefix=prefix):
                 self.recreate_schema()
                 self.apply_without_history(prefix)
@@ -186,12 +186,12 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
                     cursor.execute("SELECT nome FROM materias WHERE id = %s", (persisted_id,))
                     self.assertEqual(cursor.fetchone()["nome"], "Matemática")
 
-                expected_pending = 16 - int(prefix)
+                expected_pending = 17 - int(prefix)
                 self.assertEqual(
                     migrate.run_up(self.connection, self.settings, self.migrations),
                     expected_pending,
                 )
-                self.assertEqual(migrate.detect_legacy_prefix(self.connection), "016")
+                self.assertEqual(migrate.detect_legacy_prefix(self.connection), "017")
 
     def test_baseline_recusa_schema_divergente(self):
         self.apply_without_history("000")
@@ -288,7 +288,7 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
 
     def test_bootstrap_consolidado_equivale_as_migrations(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
-        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "016")
+        self.assertEqual(migrate.detect_legacy_prefix(self.connection), "017")
 
         other_name = self.schema_name[:-12] + "f" * 12
         if other_name == self.schema_name:
@@ -315,7 +315,7 @@ class MigrationRunnerIntegrationTest(MySQLMigrationTestCase):
                     continue
                 selected.append(statement)
             migrate.execute_statements(other_connection, selected)
-            self.assertEqual(migrate.detect_legacy_prefix(other_connection), "016")
+            self.assertEqual(migrate.detect_legacy_prefix(other_connection), "017")
             def estrutura(connection):
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT TABLE_NAME,COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,"

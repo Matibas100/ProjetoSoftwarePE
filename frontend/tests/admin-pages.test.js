@@ -26,6 +26,7 @@ function envelope(items) {
 async function setupAdmin(htmlPath, script, apiRequest) {
   vi.resetModules();
   prepareAdminGlobalDom(htmlPath);
+  Object.assign(globalThis.AuthUI, { user: { id: 1, perfil: "administrador" }, checkIdentity: async () => true });
   globalThis.apiRequest = apiRequest;
   await import("../js/navigation.js");
   await import("../js/admin-common.js");
@@ -229,6 +230,7 @@ describe("ADM-CON-001", () => {
       if (path === "/areas-enem") return areas;
       if (path.startsWith("/api/never")) return null;
       if (path.startsWith("/admin/materias")) return envelope(items);
+      if (path === "/materias/1" && !options.method) return items[0];
       if (path === "/materias/1" && options.method === "PUT") {
         const payload = JSON.parse(options.body);
         if (payload.nome === "Duplicada") throw Object.assign(new Error("Nome duplicado"), { status: 409 });
@@ -373,6 +375,7 @@ describe("ADM-CON-002", () => {
         { id: 12, nome: "Quimica", area_enem_id: 3, status: "ativa" },
       ];
       if (path.startsWith("/admin/assuntos")) return envelope([subject]);
+      if (path === "/assuntos/5" && !options.method) return subject;
       if (path.includes("materia_destino_id=12")) throw new Error("Destino indisponivel");
       if (path.startsWith("/assuntos/5/impacto-transferencia")) return preview;
       if (path === "/assuntos/5/transferir" && options.method === "POST") {

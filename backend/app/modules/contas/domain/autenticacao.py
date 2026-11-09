@@ -45,13 +45,17 @@ def validar_senha(senha, minimo=8):
 
 def validar_cadastro(dados):
     validar_dados(dados, {"nome", "email", "senha", "senha_confirmacao"})
-    nome = dados["nome"]
-    if not isinstance(nome, str) or not 2 <= len(nome.strip()) <= 100:
-        raise AutenticacaoError("O nome deve ter entre 2 e 100 caracteres.")
+    nome = validar_nome(dados["nome"])
     senha = validar_senha(dados["senha"])
     if senha != dados["senha_confirmacao"]:
         raise AutenticacaoError("As senhas não coincidem.")
     return nome.strip(), validar_email(dados["email"]), senha
+
+
+def validar_nome(nome):
+    if not isinstance(nome, str) or not 2 <= len(nome.strip()) <= 100:
+        raise AutenticacaoError("O nome deve ter entre 2 e 100 caracteres.")
+    return nome.strip()
 
 
 def hash_identificador(identificador):

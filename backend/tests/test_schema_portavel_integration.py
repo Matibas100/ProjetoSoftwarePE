@@ -97,7 +97,7 @@ class SchemaPortavelIntegrationTest(MySQLMigrationTestCase):
         self.assertGreater(altered, 0, "A fixture precisa conter DDL com charset redundante.")
 
     def test_round_trip_prefixos_baseline_upgrade_dados_e_contadores(self):
-        for prefix in ("008", "009", "010", "011", "012", "013", "014", "015", "016"):
+        for prefix in ("008", "009", "010", "011", "012", "013", "014", "015", "016", "017"):
             with self.subTest(prefix=prefix):
                 self.recreate_schema()
                 self.apply_without_history(prefix)
@@ -119,12 +119,12 @@ class SchemaPortavelIntegrationTest(MySQLMigrationTestCase):
                     history = migrate.fetch_history(target)
                     self.assertEqual([(row['version'], row['checksum'], row['status']) for row in history],
                                      [(item.version, item.checksum, 'APPLIED') for item in self.migrations[:int(prefix) + 1]])
-                    self.assertEqual(migrate.run_up(target, settings, self.migrations), 16 - int(prefix))
+                    self.assertEqual(migrate.run_up(target, settings, self.migrations), 17 - int(prefix))
                     self.assertEqual(migrate.run_up(target, settings, self.migrations), 0)
                     after = self.rows(target)
                     for table, rows in before.items():
                         self.assertEqual(after[table], rows)
-                    self.assertEqual(migrate.detect_legacy_prefix(target), '016')
+                    self.assertEqual(migrate.detect_legacy_prefix(target), '017')
 
     def test_round_trip_com_historico_preserva_checksums_e_nao_reexecuta(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
@@ -134,7 +134,7 @@ class SchemaPortavelIntegrationTest(MySQLMigrationTestCase):
             self.restore(target, include_history=True)
             self.assertEqual(migrate.run_up(target, settings, self.migrations), 0)
             self.assertEqual(self.rows(target, include_history=True), before)
-            self.assertEqual(migrate.detect_legacy_prefix(target), '016')
+            self.assertEqual(migrate.detect_legacy_prefix(target), '017')
             with target.cursor() as cursor:
                 cursor.execute("UPDATE schema_migrations SET checksum=%s WHERE version='008'", ('0' * 64,))
             with self.assertRaisesRegex(migrate.MigrationError, 'Checksum'):

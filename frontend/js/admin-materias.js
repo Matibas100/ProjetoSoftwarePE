@@ -18,7 +18,82 @@
   const state = { areas: [], items: [], page: 1, pages: 0 };
   let searchTimer;
 
+  let detailToken = 0;
+  let detailController;
+  let detailLoading = false;
+  let saving = false;
+  const saveButton = document.querySelector("#materia-salvar");
+  const available = () => !AuthUI.blocked && !AuthUI.changedAccount && AuthUI.user?.perfil === "administrador";
+  const identity = () => `${AuthUI.user?.id}:${AuthUI.user?.perfil}`;
+
+  function invalidateDetail() {
+    detailToken += 1;
+    detailController?.abort();
+    detailController = null;
+    if (detailLoading) ui.hideMessage(message);
+    detailLoading = false;
+    saveButton.disabled = saving;
+    form.removeAttribute("aria-busy");
+    return detailToken;
+  }
+
+  function validDetail(item, id) {
+    return item && !Array.isArray(item) && typeof item === "object" && item.id === id
+      && typeof item.nome === "string" && item.nome.trim()
+      && ["ativa", "inativa", "arquivada"].includes(item.status)
+      && Number.isInteger(item.area_enem_id) && item.area_enem_id > 0
+      && (item.descricao === null || typeof item.descricao === "string");
+  }
+
+  async function selectDetail(id) {
+    const token = invalidateDetail();
+    const user = identity();
+    const current = () => token === detailToken && available() && user === identity();
+    if (!available() || saving || !await discardIfNeeded() || !current()) return;
+    const controller = new AbortController();
+    detailController = controller;
+    detailLoading = true;
+    saveButton.disabled = true;
+    form.setAttribute("aria-busy", "true");
+    ui.showMessage(message, "Carregando matéria...", "info");
+    try {
+      const [item] = await Promise.all([
+        apiRequest(`/materias/${id}`, { signal: controller.signal }), optionsReady,
+      ]);
+      if (!current()) return;
+      if (!validDetail(item, id)) throw new Error("Resposta inválida do servidor. Selecione Editar para tentar novamente.");
+      if (!state.areas.some((area) => area.id === item.area_enem_id)) {
+        throw new Error("Área indisponível. Atualize a página e selecione Editar novamente.");
+      }
+      if (!current() || !await AuthUI.checkIdentity() || !current()) return;
+
+      edit(item);
+    } catch (error) {
+      if (current()) ui.showMessage(message, error.message, "error");
+    } finally {
+      if (token === detailToken) {
+        detailController = null;
+        detailLoading = false;
+        saveButton.disabled = saving;
+        form.removeAttribute("aria-busy");
+      }
+    }
+  }
+
+  async function startForm(focus = false) {
+    const token = invalidateDetail();
+    if (await discardIfNeeded() && token === detailToken) resetForm(focus);
+  }
+
+  form.addEventListener("input", invalidateDetail);
+  form.addEventListener("change", invalidateDetail);
+  document.addEventListener("auth-required", invalidateDetail);
+  document.addEventListener("auth-identity-changed", invalidateDetail);
+  guard.markPersisted();
+
+
   function resetForm(focus = false) {
+    invalidateDetail();
     form.reset();
     idInput.value = "";
     formStatus.value = "ativa";
@@ -112,6 +187,9 @@
 
   async function save(event) {
     event.preventDefault();
+    const wasLoading = detailLoading;
+    invalidateDetail();
+    if (wasLoading || saving || !available()) return;
     nameError.textContent = "";
     ui.hideMessage(message);
     if (!nameInput.value.trim() || !areaSelect.value) {
@@ -126,6 +204,7 @@
       status: formStatus.value,
     };
     const button = document.querySelector("#materia-salvar");
+    saving = true;
     button.disabled = true;
     try {
       await apiRequest(id ? `/materias/${id}` : "/materias", {
@@ -139,7 +218,8 @@
       if (error.status === 409) nameError.textContent = error.message;
       ui.showMessage(message, error.message, "error");
     } finally {
-      button.disabled = false;
+      saving = false;
+      button.disabled = detailLoading;
     }
   }
 
@@ -192,7 +272,7 @@
     const item = state.items.find((current) => current.id === Number(button.dataset.id));
     if (!item) return;
     if (button.dataset.action === "edit") {
-      if (await discardIfNeeded()) edit(item);
+      await selectDetail(item.id);
     } else if (button.dataset.action === "delete") {
       await remove(item);
     } else {
@@ -201,8 +281,8 @@
   });
 
   form.addEventListener("submit", save);
-  document.querySelector("#nova-materia").addEventListener("click", async () => { if (await discardIfNeeded()) resetForm(true); });
-  document.querySelector("#materia-cancelar").addEventListener("click", async () => { if (await discardIfNeeded()) resetForm(); });
+  document.querySelector("#nova-materia").addEventListener("click", () => startForm(true));
+  document.querySelector("#materia-cancelar").addEventListener("click", () => startForm(false));
   document.querySelector("#materias-limpar").addEventListener("click", () => { search.value = ""; statusFilter.value = ""; state.page = 1; load(); });
   statusFilter.addEventListener("change", () => { state.page = 1; load(); });
   search.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => {
@@ -210,9 +290,12 @@
   document.querySelector("#materias-anterior").addEventListener("click", () => { state.page -= 1; load(); });
   document.querySelector("#materias-proxima").addEventListener("click", () => { state.page += 1; load(); });
 
-  Promise.all([apiRequest("/areas-enem"), load()]).then(([areas]) => {
+  const optionsReady = apiRequest("/areas-enem").then((areas) => {
+    const pristine = !guard.dirty();
     state.areas = areas;
-    ui.fillSelect(areaSelect, areas, "Selecione");
-    guard.markPersisted();
-  }).catch((error) => ui.showMessage(message, error.message, "error"));
+    ui.fillSelect(areaSelect, areas, "Selecione", areaSelect.value);
+    if (pristine) guard.markPersisted();
+  });
+  optionsReady.catch((error) => ui.showMessage(message, error.message, "error"));
+  load();
 })();

@@ -14,7 +14,7 @@ function report(overrides = {}) {
   return Object.fromEntries(
     [
       "api.js", "app.js", "assuntos.js", "questoes.js",
-      "admin-common.js", "admin-materias.js", "admin-assuntos.js", "admin-questoes.js",
+      "admin-common.js", "admin-materias.js", "admin-assuntos.js", "admin-questoes.js", "admin-usuarios.js",
       "auth-page.js", "auth-session.js", "aluno-praticas.js",
       "admin-simulados.js", "aluno-simulados.js",
       "desempenho.js", "aluno-plano.js", "aluno-privacidade.js", "navigation.js", "aluno-tutor.js",
@@ -36,6 +36,7 @@ describe("validador de cobertura frontend", () => {
       "app.js": { lines: metric(40), branches: metric(40) },
       "assuntos.js": { lines: metric(40), branches: metric(40) },
       "questoes.js": { lines: metric(40), branches: metric(40) },
+      "admin-usuarios.js": { lines: metric(40), branches: metric(40) },
     }));
     expect(result.errors.some((error) => error.includes("zero linhas"))).toBe(true);
     expect(result.errors.some((error) => error.includes("linhas") && error.includes("abaixo"))).toBe(true);
