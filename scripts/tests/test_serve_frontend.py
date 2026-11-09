@@ -103,12 +103,16 @@ class FrontendHTTPTests(unittest.TestCase):
         for route, other in (("/login", "/cadastro"), ("/cadastro", "/login")):
             page = PageResources()
             page.feed(self.request(route)[2].decode("utf-8"))
-            legal = ["/legal/termo-de-uso-v1.html", "/legal/termo-de-consentimento-plano-v1.html"]
+            legal = ["/legal/termo-de-uso-v2.html", "/legal/termo-de-consentimento-plano-v1.html"]
             self.assertEqual(page.links, [other, *legal] if route == "/login" else [*legal, other])
             for document in legal:
                 status, _, body = self.request(document)
                 self.assertEqual(status, 200)
                 self.assertNotIn(b"<script", body)
+                self.assertEqual(self.request(document, "HEAD")[0], 200)
+            for document in ("/legal/termo-de-uso-v1.html", "/legal/termo-de-consentimento-plano-v1.html"):
+                self.assertEqual(self.request(document)[0], 200)
+                self.assertEqual(self.request(document, "HEAD")[0], 200)
             self.assertEqual(page.resources, [
                 "/css/auth.css", "/assets/logo-plataforma-enem-horizontal.svg",
                 "/js/api.js", "/js/auth-session.js", "/js/auth-page.js",

@@ -11,6 +11,8 @@ from pathlib import Path
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = BACKEND_ROOT.parent
 os.environ["PYTHON_DOTENV_DISABLED"] = "1"
+os.environ['GEMINI_API_KEY'] = ''
+os.environ['TUTOR_IA_ENABLED'] = 'false'
 os.environ["DATABASE_URL"] = "mysql+pymysql://unit:unit@127.0.0.1:9/unit"
 os.environ["AUTH_SECRET_KEY"] = "ab" * 32  # Chave ficticia, exclusiva dos testes sem banco.
 sys.path.insert(0, str(BACKEND_ROOT))

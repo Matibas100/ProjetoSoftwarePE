@@ -1,12 +1,13 @@
 """Versões publicadas e estado das decisões, sem acesso a arquivos ou banco."""
 
 DOCUMENTOS = {
-    "uso": {"1.0": {"versao": "1.0", "url": "/legal/termo-de-uso-v1.html",
+    "uso": {"2.0": {"versao": "2.0", "url": "/legal/termo-de-uso-v2.html",
+        "sha256": "92b7b57086dabc193308be0af009189bcd4c32d4006a02cc5908cc649d2b71d1"}, "1.0": {"versao": "1.0", "url": "/legal/termo-de-uso-v1.html",
         "sha256": "e5bcdf3f002508592ee44a3e4cea2ec6dafcbe172a6e28996c2a105232cd9dd5"}},
     "plano": {"1.0": {"versao": "1.0", "url": "/legal/termo-de-consentimento-plano-v1.html",
         "sha256": "6233efccc924f73474e3c9b724f05d30729d55ae7fb177f6c47d3282d1d7b233"}},
 }
-VIGENTES = {"uso": "1.0", "plano": "1.0"}
+VIGENTES = {"uso": "2.0", "plano": "1.0"}
 
 
 def documento_vigente(tipo):

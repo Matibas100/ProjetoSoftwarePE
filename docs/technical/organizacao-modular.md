@@ -1,18 +1,20 @@
 # Organização modular do backend
 
 A transição aprovada pelo [ADR-010](adr/ADR-010-organizacao-modular-do-backend.md)
-organiza o mesmo Flask/MySQL em seis proprietários, mantendo as vinte
+organiza o mesmo Flask/MySQL em sete proprietários, mantendo as vinte
 funcionalidades e as mesmas 21 Models. O roadmap mais granular permanece em
 [Arquitetura Mestre v1](architecture-master-v1.md).
 
 | Proprietário | Dados e responsabilidade | Interface para outros módulos |
 | --- | --- | --- |
-| `contas` | 4 Models; identidade, sessões, limites e evidências de privacidade | Lock de usuário e permissão vigente do plano |
+| `contas` | 4 Models; identidade, sessões, limites e evidências de privacidade | Lock de usuário e permissões vigentes do plano e da tutoria |
 | `conteudo` | 7 Models; catálogo, Questões, versões e eventos | Versões elegíveis/históricas; pares elegíveis; classificação histórica e contagens |
 | `praticas` | 1 Model; catálogo do Aluno, tentativas, resposta e feedback | Projeções de fatos concluídos e atividades |
 | `simulados` | 7 Models; composição, publicação, tentativas e correção | Projeções de fatos/atividades e contagens |
 | `desempenho` | Sem Model; diagnóstico e dashboards | `DiagnosticoAluno`, recebido pelo seletor do plano |
 | `plano_estudos` | 2 Models; gerações, itens e conclusão | Eliminação participante injetada nas negativas de Contas |
+
+| `tutor_ia` | Sem Model; revisão pontual via Gemini e limite local | Contrato textual `GeradorTutoria`, ligado na composição |
 
 Entradas públicas são identificadores, filtros, DTOs e contexto opaco de leitura.
 Saídas são DTOs/dicionários e projeções SQL de leitura delimitadas para

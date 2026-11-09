@@ -15,8 +15,8 @@ context: |
   CRUD simples permanece nas Models Active Record. Repository é reservado
   para acesso especializado e todo CALL de Stored Procedure fica nele.
 
-  O recorte implementado usa seis módulos em backend/app/modules/: contas,
-  conteudo, praticas, simulados, desempenho e plano_estudos. Colaboração externa
+  O recorte implementado usa sete módulos em backend/app/modules/: contas,
+  conteudo, praticas, simulados, desempenho, plano_estudos e tutor_ia. Colaboração externa
   usa api.py/contratos públicos; persistência privada não cruza fronteiras.
   Bases/helpers neutros ficam em core; composição e registro ORM são exceções
   estritas. Preserve as decisões do ADR-010 e os locks/transações anteriores.

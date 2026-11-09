@@ -6,7 +6,7 @@ import { root, settle } from "./helpers/classic-app.js";
 const aluno = { id: 1, nome: "Aluno <teste>", email: "aluno@teste.local", perfil: "aluno" };
 const admin = { ...aluno, perfil: "administrador" };
 const expired = () => Object.assign(new Error("Entre novamente"), { code: "sessao_invalida" });
-const metadata = () => ({ termos_uso: { versao: "1.0", url: "/legal/termo-de-uso-v1.html", sha256: "a".repeat(64) }, consentimento_plano: { versao: "1.0", url: "/legal/termo-de-consentimento-plano-v1.html", sha256: "b".repeat(64) } });
+const metadata = () => ({ termos_uso: { versao: "2.0", url: "/legal/termo-de-uso-v2.html", sha256: "a".repeat(64) }, consentimento_plano: { versao: "1.0", url: "/legal/termo-de-consentimento-plano-v1.html", sha256: "b".repeat(64) } });
 
 async function setup(file = "login.html", api = vi.fn().mockRejectedValue(expired()), termsApi = vi.fn(async () => metadata())) {
   vi.resetModules(); globalThis.AuthUI?.destroy?.();
@@ -62,7 +62,7 @@ describe("cadastro e login", () => {
     api.mockResolvedValueOnce({ usuario: aluno }); fill(true); submit(); await settle();
     const body = JSON.parse(api.mock.calls[1][1].body);
     expect(Object.keys(body).sort()).toEqual(["email", "nome", "senha", "senha_confirmacao", "termos_uso"]);
-    expect(body.termos_uso).toEqual({ versao: "1.0", aceito: true });
+    expect(body.termos_uso).toEqual({ versao: "2.0", aceito: true });
     expect(sessionStorage.getItem("cadastro-email")).toBe(aluno.email);
     expect(sessionStorage.getItem("senha")).toBeNull();
     expect(AuthUI.navigate).toHaveBeenCalledWith("/login");

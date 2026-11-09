@@ -1,5 +1,9 @@
 """Ligações explícitas por aplicação; nenhum estado de requisição ou conexão."""
 from dataclasses import dataclass
+from app.modules.contas.api import ValidarPermissaoTutoriaService
+from app.modules.tutor_ia.services.gerar_tutoria_service import GerarTutoriaService
+from app.modules.tutor_ia.services.gemini_service import GeminiService
+from app.modules.tutor_ia.services.limite_tutoria import LimiteTutoria
 from app.modules.contas.services.recusar_consentimento_plano_service import RecusarConsentimentoPlanoService
 from app.modules.contas.services.revogar_consentimento_plano_service import RevogarConsentimentoPlanoService
 from app.modules.plano_estudos.api import EliminarPlanosPropriosService
@@ -38,14 +42,21 @@ class Composicao:
     dashboard_admin: ConsultarDashboardAdminService
     gerar_plano: GerarPlanoService
     recalcular_plano: RecalcularPlanoService
+    gerar_tutoria: GerarTutoriaService
 
 
-def compor() -> Composicao:
+def compor(config=None) -> Composicao:
+    config = config or {}
     escopos = EscoposLeituraMySQL()
     diagnostico = ConsultarDesempenhoService(ConsultaMetricasMySQL(), escopos)
     seletor = SelecionarPlanoService(diagnostico)
     eliminador = EliminarPlanosPropriosService()
     return Composicao(
+        gerar_tutoria=GerarTutoriaService(GeminiService(
+            habilitado=config.get('TUTOR_IA_ENABLED', False),
+            chave=config.get('GEMINI_API_KEY', ''),
+            modelo=config.get('GEMINI_MODEL', 'gemini-3.6-flash')),
+            ValidarPermissaoTutoriaService.executar, LimiteTutoria()),
         recusar_consentimento_plano=RecusarConsentimentoPlanoService(eliminador.executar),
         revogar_consentimento_plano=RevogarConsentimentoPlanoService(eliminador.executar),
         materias_admin=ListarMateriasAdminService(ConsultaMateriasMySQL()),

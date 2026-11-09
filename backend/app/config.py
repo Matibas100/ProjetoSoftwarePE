@@ -48,6 +48,9 @@ def _cors_origins():
 
 
 class Config:
+    TUTOR_IA_ENABLED = _as_bool(os.getenv('TUTOR_IA_ENABLED', 'false'))
+    GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+    GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'gemini-3.6-flash')
     AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "")
     AUTH_COOKIE_SECURE = _as_bool(os.getenv("AUTH_COOKIE_SECURE", "false"))
     DEBUG = _as_bool(os.getenv("FLASK_DEBUG", "false"))

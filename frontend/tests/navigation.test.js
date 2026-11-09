@@ -16,7 +16,7 @@ for (const area of ["aluno", "admin"]) {
       expect(slot.querySelector('[aria-current="page"]').getAttribute("href")).toBe(
         area === "aluno" ? `/aluno/${section}.html` : `${section}.html`,
       );
-      const expected = area === "aluno" ? ["inicio", "questoes", "historico", "simulados", "desempenho", "plano", "privacidade"] : ["dashboard", "materias", "assuntos", "questoes", "simulados"];
+      const expected = area === "aluno" ? ["inicio", "questoes", "historico", "simulados", "tutor", "desempenho", "plano", "privacidade"] : ["dashboard", "materias", "assuntos", "questoes", "simulados"];
       expect([...slot.querySelectorAll("a")].map((a) => a.getAttribute("href"))).toEqual(
         expected.map((key) => area === "aluno" ? `/aluno/${key}.html` : `${key}.html`),
       );

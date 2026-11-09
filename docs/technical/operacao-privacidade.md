@@ -5,7 +5,7 @@ interfaces e transações no [mapa modular](organizacao-modular.md).
 
 ## Documentos e limites
 
-Fontes e modelos: [minutas](../legal/README.md). Os dois HTML são públicos,
+Fontes e modelos: [minutas](../legal/README.md). Os três HTML são públicos,
 sem JavaScript, legíveis por teclado e imprimíveis. O módulo
 `app/modules/contas/domain/privacidade.py` guarda versões, URLs locais e SHA-256 dos bytes.
 Qualquer alteração em texto publicado exige novo arquivo/versão/hash; o arquivo
@@ -136,3 +136,19 @@ continuam pendentes. Revogação do plano não equivale a exclusão de conta.
 A eliminação especializada pertence agora ao Repository de Plano, chamada pelo
 Service participante injetado em Recusar/Revogar. Não há commit interno nem endpoint
 novo; Contas mantém o lock e a única fronteira transacional (ADR-010).
+
+## Uso 2.0 e Tutor — 09/11/2026
+
+O [uso 2.0](../../frontend/legal/termo-de-uso-v2.html) passa a vigente.
+[Uso 1.0](../../frontend/legal/termo-de-uso-v1.html) e
+[consentimento do plano 1.0](../../frontend/legal/termo-de-consentimento-plano-v1.html)
+preservam bytes, hashes e evidências. Não há backfill, migration ou decisão automática.
+Conta com uso antigo precisa de novo aceite explícito para o Tutor (409) e para
+liberar novamente o plano pela regra existente. Planos e escolha do plano permanecem;
+aceitar uso grava somente evidência de uso. Questões, simulados e desempenho seguem disponíveis.
+
+Tutor verifica somente uso vigente; plano recusado/revogado não o bloqueia.
+Cada dúvida exige envio explícito ao Gemini com contexto mínimo, sem identidade,
+histórico ou desempenho automático. Não se guardam dúvidas/respostas na plataforma.
+`store=false` não garante retenção operacional zero pelo provedor. A minuta e o
+aceite não substituem avaliação jurídica, contato válido ou autorização real de menores.

@@ -35,7 +35,7 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
 
     def cadastro(self, email=None, client=None):
         return self.request("/api/auth/cadastro", {"nome": "Aluno teste", "email": email or self.email,
-            "senha": SENHA, "senha_confirmacao": SENHA, "termos_uso":{"versao":"1.0","aceito":True}}, client)
+            "senha": SENHA, "senha_confirmacao": SENHA, "termos_uso":{"versao":"2.0","aceito":True}}, client)
 
     def login(self, email=None, client=None, senha=SENHA):
         return self.request("/api/auth/login", {"email": email or self.email, "senha": senha}, client)
@@ -77,7 +77,7 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
 
     def test_validacao_duplicidade_e_perfil(self):
         dados = {"nome": "Teste", "email": self.email, "senha": SENHA, "senha_confirmacao": SENHA,
-            "termos_uso":{"versao":"1.0","aceito":True}}
+            "termos_uso":{"versao":"2.0","aceito":True}}
         for alteracao in ({"perfil": "administrador"}, {"nome": " "}, {"email": "a@b"},
                           {"senha": "curta"}, {"senha_confirmacao": "outra"}):
             self.assertEqual(self.request("/api/auth/cadastro", {**dados, **alteracao}).status_code, 400)

@@ -12,6 +12,8 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
+    os.environ['GEMINI_API_KEY'] = ''
+    os.environ['TUTOR_IA_ENABLED'] = 'false'
     if os.getenv("RUN_MYSQL_INTEGRATION") != "1":
         print(
             "Integracoes MySQL bloqueadas. Defina RUN_MYSQL_INTEGRATION=1 "

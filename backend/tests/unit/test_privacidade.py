@@ -21,14 +21,14 @@ class DocumentosPrivacidadeTest(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(conteudo).hexdigest(), doc["sha256"])
                 texto = conteudo.decode("utf-8")
                 self.assertIn('lang="pt-BR"', texto)
-                self.assertIn('datetime="2026-11-06"', texto)
+                self.assertIn('datetime="2026-11-', texto)
                 self.assertIn("Matheus Gabriel Oliveira Martins", texto)
                 self.assertIn("contato@plataformaenem.example", texto)
                 self.assertNotIn("<script", texto)
                 self.assertEqual(doc["versao"], versao)
             self.assertIn(VIGENTES[tipo], versoes)
         copia = documento_vigente("uso"); copia["versao"] = "outra"
-        self.assertEqual(documento_vigente("uso")["versao"], "1.0")
+        self.assertEqual(documento_vigente("uso")["versao"], "2.0")
 
     def test_ausencia_versao_hash_e_negativas(self):
         self.assertFalse(estado_privacidade({})["plano_liberado"])

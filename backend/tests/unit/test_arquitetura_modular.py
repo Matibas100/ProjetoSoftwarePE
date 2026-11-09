@@ -12,8 +12,8 @@ from tests.unit.test_config_and_app import TestConfig
 
 APP = Path(__file__).resolve().parents[2] / 'app'
 MODULOS = {'contas': 4, 'conteudo': 7, 'praticas': 1, 'simulados': 7,
-           'desempenho': 0, 'plano_estudos': 2}
-# O gate acompanha os grupos concluídos; ao final inclui os seis proprietários.
+           'desempenho': 0, 'plano_estudos': 2, 'tutor_ia': 0}
+# Sete proprietários; Tutor acrescenta zero mappers.
 MIGRADOS = tuple(MODULOS)
 
 

@@ -640,18 +640,30 @@ Regra de governança corrigida pela [Errata do Desktop V1](../design/desktop-v1/
 | Perfil autorizado | Aluno |
 | Objetivo | Apoiar o raciocínio preservando o contexto de estudo. |
 | Caso de uso principal | Enviar dúvida — Apoiar o raciocínio preservando o contexto de estudo. |
-| Casos de uso secundários | Explicar de outro jeito; exemplo; praticar; resumo; plano |
-| Ponto de entrada | Sidebar ou abertura contextual |
+| Casos de uso secundários | Praticar questões existente; explicar de outro jeito, resumo e ações no plano ficam futuros |
+| Ponto de entrada | Sidebar; abertura contextual futura |
 | Destino principal | Destino contextual |
-| Dados necessários | matéria; assunto; contexto de origem; conversa atual; disponibilidade da IA |
+| Dados necessários | matéria; assunto; nível fixo de ensino médio; dúvida; disponibilidade da IA. Origem/conversa permanecem futuras. |
 | Entidades envolvidas | **A definir formalmente**. Conceitos de dados oficiais: matéria; assunto; contexto de origem; conversa atual; disponibilidade da IA. |
-| Endpoint | **NOVO — contrato ainda será definido**. |
-| Tipo de persistência | Serviço externo + Model/CRUD para contexto e conversa. |
+| Endpoint | `POST /api/tutoria`, quatro campos de estudo e sessão de Aluno com Origin/CSRF e uso 2.0. |
+| Tipo de persistência | Serviço externo sem Model/Repository ou histórico. Persistência de conversa permanece futura. |
 | Permissões necessárias | Perfil oficial: **Aluno**; validação no servidor e princípio de menor privilégio. |
 | Estados principais | Conversa vazia; enviando; respondendo; timeout; falha; resposta incompleta; limite |
 | Critérios iniciais de aceite | Exibir os dados previstos ou um dos estados oficiais; permitir **Enviar dúvida** somente ao perfil autorizado; preservar contexto e encaminhar para **Destino contextual**; falhas não podem apagar dados válidos. |
-| Situação atual | **Ainda não existe**. |
+| Situação atual | **Recorte pontual implementado**; prova real do Gemini validada com HTTP 200 no relatório da change. |
 | Aprovação visual | Aprovada; origem: `output/pdf/Plataforma_ENEM_03_Tutor_IA_1440px.png`. |
+
+#### Recorte implementado em 09/11/2026
+
+`/aluno/tutor.html` reutiliza a composição da página 26 do protótipo, com Matéria,
+Assunto do catálogo ativo, nível fixo de ensino médio, aviso e quatro seções.
+Entrada pela sidebar; `POST /api/tutoria` envia somente os quatro campos da aula
+para Gemini, sem persistência. Exige uso 2.0, independente do consentimento do plano.
+As ações secundárias documentam a visão futura: contexto de origem, conversa, resumos,
+explicar de outro jeito e ações no plano não fazem parte deste recorte.
+Estados: vazio, enviando, sucesso, validação, termos pendentes, limite, timeout,
+catálogo vazio/falho e falha externa; sem controles ativos para recursos futuros.
+Os quatro binários oficiais permanecem congelados.
 
 ### 26. ALU-PER-001 — Perfil
 

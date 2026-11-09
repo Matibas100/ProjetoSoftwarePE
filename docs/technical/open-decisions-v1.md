@@ -66,6 +66,15 @@ Este registro reúne decisões que exigem validação do professor e/ou da equip
 - **Recomendação preliminar:** contrato de cliente independente de provedor, com políticas explícitas de dados e avaliação antes da ativação.
 - **Status:** A decidir.
 
+### Fechamento parcial — 09/11/2026
+
+Gemini REST (`gemini-3.6-flash`, configurável no backend) foi selecionado somente
+para a revisão pontual de `ALU-TUT-001`, conforme a change
+`adicionar-tutor-revisao-com-gemini`. Sem histórico, ferramentas ou desempenho;
+`store=false`, uso 2.0 e envio explícito, limites locais e ativação opcional.
+A prova com acesso real permanece indicada no relatório da change. OD-07 segue
+aberta para redação, geração assistida, produção, retenção geral e outros casos.
+
 ## OD-08 — Política de retenção e exclusão de dados
 
 - **Contexto:** contas, práticas, desempenho, redações, auditoria e conteúdo editorial têm necessidades de retenção diferentes.

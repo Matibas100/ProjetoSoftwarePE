@@ -102,7 +102,7 @@ class QuestoesVersionadasIntegrationTest(MySQLIntegrationTestCase):
         token=anonimo.get('/api/auth/csrf').get_json()['csrf_token']
         email=uuid4().hex+'@teste.local'; senha='Senha teste segura 123'
         headers={'Origin':'http://frontend.test','X-CSRF-Token':token}
-        self.assertEqual(anonimo.post('/api/auth/cadastro',json={'nome':'Aluno','email':email,'senha':senha,'senha_confirmacao':senha,'termos_uso':{'versao':'1.0','aceito':True}},headers=headers).status_code,201)
+        self.assertEqual(anonimo.post('/api/auth/cadastro',json={'nome':'Aluno','email':email,'senha':senha,'senha_confirmacao':senha,'termos_uso':{'versao':"2.0",'aceito':True}},headers=headers).status_code,201)
         self.assertEqual(anonimo.post('/api/auth/login',json={'email':email,'senha':senha},headers=headers).status_code,200)
         self.assertEqual(anonimo.get(url).status_code,403)
         self.assertEqual(anonimo.get(self.path).status_code,403)

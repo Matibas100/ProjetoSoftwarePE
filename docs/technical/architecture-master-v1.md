@@ -26,6 +26,16 @@ Ver [propriedades e interfaces](organizacao-modular.md).
 As seções seguintes preservam a visão futura mais granular como roadmap;
 seus módulos e entidades futuros não são declarados implementados.
 
+## Recorte Tutor — 09/11/2026
+
+O sétimo módulo `tutor_ia` implementa revisão pontual em `ALU-TUT-001` com Gemini,
+quatro campos de estudo e resposta em quatro partes. `POST /api/tutoria` exige
+Aluno, Origin/CSRF e uso 2.0. Permissão de Contas encerra a leitura antes da rede;
+cliente e limite pertencem à aplicação. Não acrescenta Model, tabela, Repository
+ou CRUD. As 21 Models e os vinte casos anteriores permanecem.
+Abertura contextual, chat persistente, resumos e escrita no plano continuam futuros.
+Ver [design](../../openspec/changes/archive/2026-11-09-adicionar-tutor-revisao-com-gemini/design.md).
+
 ## 2. Forma do Monólito Modular
 
 A organização futura poderá adotar `backend/app/modules/<modulo>/`, mantendo dentro de cada módulo as separações exigidas pela disciplina. A estrutura exata ainda depende de aprovação; nenhuma pasta de módulo foi criada nesta etapa.

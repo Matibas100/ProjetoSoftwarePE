@@ -19,7 +19,7 @@ Frontend -> Route -> Controller -> Service -> Model/Repository -> MySQL
 
 ## Fronteiras modulares
 
-- Cada caso de uso pertence a um dos seis módulos do [mapa modular](../technical/organizacao-modular.md).
+- Cada caso de uso pertence a um dos sete módulos do [mapa modular](../technical/organizacao-modular.md).
 - Módulos externos usam somente `api.py` com `__all__` explícito ou contratos públicos; não importam Models/Repositories/Services privados.
 - APIs não exportam ORM nem Repository completo. Projeções de leitura delimitadas são agregadas somente em Repository.
 - Composição e registro ORM são as exceções estritas para importar implementações proprietárias; Services não resolvem composição.

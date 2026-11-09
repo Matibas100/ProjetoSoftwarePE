@@ -1,0 +1,1 @@
+"""Validação textual sem infraestrutura."""

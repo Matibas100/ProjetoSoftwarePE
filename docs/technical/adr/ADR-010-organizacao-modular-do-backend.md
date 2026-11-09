@@ -59,3 +59,13 @@ Movimentos preservam o baseline de HTTP/CLI, metadata, guards e hashes SQL/legai
 Testes de arquitetura protegem camadas, fronteiras e factories independentes;
 integrações MySQL verificam histórico, locks, replay e rollback real.
 O [mapa modular](../organizacao-modular.md) registra as interfaces e a transição.
+
+## Adendo — Tutor pontual (09/11/2026)
+
+A change `adicionar-tutor-revisao-com-gemini` acrescenta o sétimo proprietário,
+`tutor_ia`, sem Model/Repository: sua consulta externa não cria entidade ou CRUD.
+Controller adapta HTTP; `GerarTutoriaService` valida e coordena a permissão pública
+`ValidarPermissaoTutoriaService` de Contas, o limite local e `GeminiService` pelo
+contrato textual `GeradorTutoria`. A leitura transacional de Contas termina antes
+da rede. Configuração, cliente e limite são próprios de cada aplicação; inicializar
+não consulta Gemini. Os 21 mappers e as fronteiras existentes permanecem.

@@ -6,7 +6,7 @@ import { root, settle } from "./helpers/classic-app.js";
 const $ = id => document.getElementById(id);
 const user = { id: 1, nome: "Aluno", email: "aluno@teste.local", perfil: "aluno" };
 const record = (id = 1, acao = "aceitar") => ({ id, acao, versao: "1.0", documento_sha256: "a".repeat(64), registrado_em: "2026-11-06T12:00:00Z" });
-const privacy = (estado = "nao_informado", uso = true) => ({ termos_uso: { versao_vigente: "1.0", documento_url: "/legal/termo-de-uso-v1.html", aceite_vigente: uso, registro: uso ? record() : null },
+const privacy = (estado = "nao_informado", uso = true) => ({ termos_uso: { versao_vigente: "2.0", documento_url: "/legal/termo-de-uso-v2.html", aceite_vigente: uso, registro: uso ? record() : null },
   consentimento_plano: { versao_vigente: "1.0", documento_url: "/legal/termo-de-consentimento-plano-v1.html", estado,
     registro: estado === "nao_informado" ? null : record(2, ({ recusado: "recusar", revogado: "revogar" })[estado] || "aceitar") }, plano_liberado: estado === "aceito" && uso });
 async function setup(override = () => undefined) {

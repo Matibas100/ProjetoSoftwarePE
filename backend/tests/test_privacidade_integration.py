@@ -34,7 +34,7 @@ class PrivacidadeIntegrationTest(MySQLIntegrationTestCase):
         estado=cliente.get(self.privacy).json
         tipo='termos_uso' if acao=='termos-uso' else 'consentimento_plano'
         registro=estado[tipo]['registro']
-        body={'versao':registro['versao'] if acao=='revogar' and registro else '1.0',
+        body={'versao':registro['versao'] if acao=='revogar' and registro else estado[tipo]['versao_vigente'],
             'chave_envio':str(uuid4()),'revisao':registro['id'] if registro else 0}
         if acao in ('recusar','revogar'): body['confirmar']=True
         body.update(extra)
@@ -121,6 +121,37 @@ class PrivacidadeIntegrationTest(MySQLIntegrationTestCase):
             with self.assertRaises(ConflitoError):db.session.flush()
             db.session.rollback()
 
+    def test_upgrade_uso_preserva_plano_decisoes_e_evidencia_antiga(self):
+        from app.modules.contas.domain.privacidade import DOCUMENTOS
+        self.decidir('aceitar'); self.base()
+        plano = self.gerar().json['plano']
+        with self.app.app_context():
+            registro = db.session.execute(select(RegistroPrivacidade).where(
+                RegistroPrivacidade.usuario_id == self.usuario,
+                RegistroPrivacidade.tipo == 'uso')).scalar_one()
+            antigo_id = registro.id
+            # Fixture de conta publicada antes do upgrade; nenhum backfill de produção.
+            db.session.execute(text('UPDATE registros_privacidade SET versao=:v,documento_sha256=:h WHERE id=:id'),
+                {'v': '1.0', 'h': DOCUMENTOS['uso']['1.0']['sha256'], 'id': antigo_id})
+            db.session.commit()
+        antes = self.aluno.get(self.privacy).json
+        self.assertFalse(antes['termos_uso']['aceite_vigente'])
+        self.assertEqual(self.aluno.get(self.url).status_code, 403)
+        for path in ('questoes', 'simulados', 'desempenho'):
+            self.assertEqual(self.aluno.get('/api/aluno/' + path).status_code, 200)
+        resposta, _ = self.decidir('termos-uso')
+        self.assertEqual(resposta.status_code, 201)
+        self.assertEqual(resposta.json['registro']['versao'], '2.0')
+        self.assertEqual(resposta.json['privacidade']['consentimento_plano'], antes['consentimento_plano'])
+        self.assertEqual(self.aluno.get(self.url).json['plano'], plano)
+        with self.app.app_context():
+            antigo = db.session.get(RegistroPrivacidade, antigo_id)
+            self.assertEqual((antigo.versao, antigo.documento_sha256),
+                ('1.0', DOCUMENTOS['uso']['1.0']['sha256']))
+            registros = db.session.execute(select(RegistroPrivacidade).where(
+                RegistroPrivacidade.usuario_id == self.usuario)).scalars().all()
+            self.assertEqual(len(registros), 3)
+
     def test_guard_uniforme_e_sem_efeitos_antes_de_consentir(self):
         for path,body in [(self.url,None),(self.url+'/gerar',{'chave_envio':str(uuid4())}),
                 (self.url+'/recalcular',{'chave_envio':str(uuid4()),'plano_atual_id':1,'confirmar':True}),
@@ -171,7 +202,7 @@ class PrivacidadeIntegrationTest(MySQLIntegrationTestCase):
             with self.app.app_context():db.session.execute(text('DROP TRIGGER falhar_privacidade_delete'));db.session.commit()
         cliente=self.app.test_client();cliente.csrf=cliente.get('/api/auth/csrf').json['csrf_token']
         dados={'nome':'Falha real','email':uuid4().hex+'@teste.local','senha':self.senha,'senha_confirmacao':self.senha,
-            'termos_uso':{'versao':'1.0','aceito':True}}
+            'termos_uso':{'versao':"2.0",'aceito':True}}
         with self.app.app_context():
             db.session.execute(text("CREATE TRIGGER falhar_privacidade_insert BEFORE INSERT ON registros_privacidade FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='falha de teste'"));db.session.commit()
         try:

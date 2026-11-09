@@ -83,8 +83,12 @@ def executar_suite(base, environment, comando=None):
         "APP_PORT": str(api_port), "E2E_BASE_URL": frontend, "E2E_API_URL": api + "/api",
         "E2E_ADMIN_EMAIL": f"operador-{uuid4().hex[:12]}@teste.local",
         "E2E_ADMIN_PASSWORD": secrets.token_urlsafe(24), "E2E_SCHEMA": nome}
+    env.pop('GEMINI_API_KEY', None)
+    env['TUTOR_IA_ENABLED'] = 'false'
     env["E2E_STUDENT_EMAIL"] = f"aluno-{uuid4().hex[:12]}@teste.local"
     env["E2E_STUDENT_PASSWORD"] = secrets.token_urlsafe(24)
+    env['E2E_TUTOR_EMAIL'] = f"tutor-{uuid4().hex[:12]}@teste.local"
+    env['E2E_TUTOR_PASSWORD'] = secrets.token_urlsafe(24)
     admin = pymysql.connect(host=base.host, port=base.port, user=base.user,
         password=base.password, charset=base.charset, autocommit=True)
     criado = False
@@ -103,11 +107,20 @@ def executar_suite(base, environment, comando=None):
 from app import create_app
 from app.extensions import db
 from app.modules.contas.services.autenticacao_service import CriarUsuarioService
+from app.modules.contas.domain.privacidade import DOCUMENTOS
+from app.modules.contas.models.registro_privacidade import RegistroPrivacidade
+from uuid import uuid4
 app = create_app()
 with app.app_context():
     senha = os.environ['E2E_ADMIN_PASSWORD']
     CriarUsuarioService.executar({'nome':'Operador sintético', 'email':os.environ['E2E_ADMIN_EMAIL'],
         'senha':senha, 'senha_confirmacao':senha}, 'administrador')
+    senha_tutor = os.environ['E2E_TUTOR_PASSWORD']
+    legado = CriarUsuarioService.executar({'nome':'Estudante de revisão', 'email':os.environ['E2E_TUTOR_EMAIL'],
+        'senha':senha_tutor, 'senha_confirmacao':senha_tutor}, 'aluno')
+    doc = DOCUMENTOS['uso']['1.0']
+    RegistroPrivacidade(usuario_id=legado['id'], tipo='uso', acao='aceitar', versao='1.0',
+        documento_sha256=doc['sha256'], chave_envio=str(uuid4()), revisao_base=0).salvar()
     db.session.remove()
     db.engine.dispose()
 """

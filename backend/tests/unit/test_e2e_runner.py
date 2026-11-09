@@ -31,13 +31,17 @@ class E2ERunnerTest(unittest.TestCase):
              patch.object(runner.migrate, 'connect') as conectar, \
              patch.object(runner.migrate, 'run_up', side_effect=falha), \
              patch.object(runner.subprocess, 'Popen', return_value=processo), \
-             patch.object(runner.subprocess, 'run', side_effect=[MagicMock(returncode=0), MagicMock(returncode=retorno)]), \
+             patch.object(runner.subprocess, 'run', side_effect=[MagicMock(returncode=0), MagicMock(returncode=retorno)]) as executar, \
              patch.object(runner, 'aguardar_http'):
             if falha:
                 with self.assertRaises(RuntimeError):
                     runner.executar_suite(base, {'RUN_MYSQL_E2E':'1'})
             else:
-                self.assertEqual(runner.executar_suite(base, {'RUN_MYSQL_E2E':'1'}), retorno)
+                self.assertEqual(runner.executar_suite(base, {'RUN_MYSQL_E2E':'1',
+                    'GEMINI_API_KEY':'chave-sentinela-unitaria', 'TUTOR_IA_ENABLED':'true'}), retorno)
+                for chamada in executar.call_args_list:
+                    self.assertNotIn('GEMINI_API_KEY', chamada.kwargs['env'])
+                    self.assertEqual(chamada.kwargs['env']['TUTOR_IA_ENABLED'], 'false')
                 self.assertEqual(processo.terminate.call_count, 2)
             conectar.return_value.close.assert_called_once()
         statements = [call.args[0] for call in admin.cursor.return_value.__enter__.return_value.execute.call_args_list]

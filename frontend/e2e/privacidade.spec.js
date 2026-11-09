@@ -29,7 +29,7 @@ test("Privacidade independente: documentos, recusa, estudo real, autorização, 
   }
   try {
     const publicContext=await context({javaScriptEnabled:false});const publicPage=await publicContext.newPage();
-    for(const name of ["termo-de-uso-v1","termo-de-consentimento-plano-v1"]) {
+    for(const name of ["termo-de-uso-v1","termo-de-uso-v2","termo-de-consentimento-plano-v1"]) {
       for(const width of [1440,390]) {
         await publicPage.setViewportSize({width,height:900});
         const r=await publicPage.goto(`/legal/${name}.html`);expect(r.status()).toBe(200);

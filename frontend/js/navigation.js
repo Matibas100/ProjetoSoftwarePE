@@ -5,13 +5,13 @@
     ["questoes", "/aluno/questoes.html", "Praticar questões"],
     ["historico", "/aluno/historico.html", "Meu histórico"],
     ["simulados", "/aluno/simulados.html", "Simulados"],
+    ["tutor", "/aluno/tutor.html", "Tutor IA"],
     ["grupo", "MINHA EVOLUÇÃO"],
     ["desempenho", "/aluno/desempenho.html", "Desempenho"],
     ["plano", "/aluno/plano.html", "Plano de Estudos"],
     ["privacidade", "/aluno/privacidade.html", "Privacidade e termos"],
     ["grupo", "EM BREVE"],
     ["indisponivel", "Resumos · indisponível"],
-    ["indisponivel", "Tutor IA · indisponível"],
   ];
   const admin = [
     ["grupo", "Administração"],

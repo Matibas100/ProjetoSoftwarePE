@@ -1,0 +1,24 @@
+.tutor-layout { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr); gap: 24px; align-items: start; }
+.tutor-layout .pratica-card { margin-top: 0; min-width: 0; }
+.tutor-filtros { gap: 18px; }
+.tutor-filtros p { margin: 0; flex: 1; font-size: 14px; }
+.tutor-filtros select { width: 220px; }
+.tutor-contexto h2, .tutor-painel h2 { font-size: 21px; margin: 0 0 18px; }
+.tutor-contexto h3 { margin-top: 24px; font-size: 15px; }
+.tutor-contexto a { font-weight: bold; color: #5143df; }
+.tutor-aviso, .tutor-dados, .tutor-pergunta { padding: 18px; border-radius: 10px; }
+.tutor-aviso { background: #fff4e5; color: #75420a; margin-top: 0; font-size: 14px; }
+.tutor-dados { background: #edf4ff; color: #284c82; margin-top: 28px; }
+.tutor-pergunta { background: #eeebff; white-space: pre-wrap; }
+.tutor-painel { overflow-wrap: anywhere; }
+.tutor-painel section { border-top: 1px solid #e0e5ef; padding: 8px 0; }
+.tutor-painel section h3 { font-size: 15px; color: #5143df; }
+.tutor-painel section p { white-space: pre-wrap; }
+.tutor-resposta-contexto { font-size: 14px; color: #566580; }
+.tutor-painel textarea { width: 100%; max-width: 100%; resize: vertical; min-height: 130px; border: 1px solid #8b98ad; border-radius: 10px; padding: 16px; font: inherit; }
+.tutor-painel .auth-field { margin-top: 24px; }
+.tutor-painel .auth-field label { display: block; margin-bottom: 10px; font-weight: bold; }
+#tutor-ajuda { font-size: 13px; color: #566580; }
+#tutor-enviar { display: block; margin-left: auto; min-height: 48px; }
+.tutor-rodape { font-size: 13px; margin-top: 24px; }
+@media (max-width: 900px) { .tutor-layout { grid-template-columns: minmax(0, 1fr); gap: 0; } .tutor-filtros > div, .tutor-filtros select { width: 100%; } }

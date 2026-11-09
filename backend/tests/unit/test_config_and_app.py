@@ -75,10 +75,11 @@ class ApplicationFactoryTest(unittest.TestCase):
 
     def test_registra_as_rotas_api(self):
         rules = [rule for rule in self.app.url_map.iter_rules() if rule.rule.startswith("/api/")]
-        self.assertEqual(len(rules), 67)
+        self.assertEqual(len(rules), 68)
         self.assertTrue(
             {
                 "/api/health",
+                "/api/tutoria",
                 "/api/aluno/plano",
                 "/api/aluno/plano/gerar",
                 "/api/aluno/plano/recalcular",
