@@ -7,7 +7,10 @@ O [diagrama](diagrama-de-classes.md) descreve as 21 Models concretas, incluindo
 a evidência de privacidade da extensão acadêmica.
 
 A [modelagem de domínio atual](modelagem-de-dominio.md) explica os seis módulos
-e os papéis dessas Models; a [matriz CRUD](matriz-crud.md) separa persistência,
+do recorte original e os papéis dessas Models. A organização atual acrescenta
+`tutor_ia` como sétimo módulo, sem Model, tabela ou Repository próprios, conforme
+o [adendo do ADR-010](adr/ADR-010-organizacao-modular-do-backend.md#adendo--tutor-pontual-09112026).
+As 21 Models permanecem; a [matriz CRUD](matriz-crud.md) separa persistência,
 API/caso de uso e interface, incluindo lacunas e restrições. A formalização de
 07/11/2026 não comprova modelagem entregue anteriormente, nova execução dos
 fluxos ou aprovação docente. Os vinte IDs abaixo permanecem; sua cobertura não
@@ -18,7 +21,9 @@ injetado nas negativas de Contas, conforme o
 
 ## Rastreabilidade dos vinte casos
 
-UI consome os seis Blueprints agregados por [routes.py](../../backend/app/routes.py), que delegam a
+UI consome os sete Blueprints proprietários (`contas`, `conteudo`, `praticas`,
+`simulados`, `desempenho`, `plano_estudos` e `tutor_ia`), agregados por
+[routes.py](../../backend/app/routes.py), que delegam a
 Controllers e Services. `AR` abaixo significa CRUD Active Record da Model,
 sem duplicação no Repository. O teste de navegador é
 [entrega-academica.spec.js](../../frontend/e2e/entrega-academica.spec.js),
@@ -74,7 +79,8 @@ evidências de execução abaixo ou contar como funcionalidades novas.
   comandos, versões, resultados históricos e limitações da consolidação.
 - [Relatório SOLID](../../openspec/changes/archive/2026-11-06-refatorar-backend-com-solid/validacao.md):
   refatoração, preservação do baseline e regressão executada naquela change.
-- A suíte contém **três testes Playwright**: os vinte casos numerados estão
+- A suíte atual contém **seis testes Playwright em seis arquivos**: os vinte
+  casos numerados continuam passos de um único teste
   em [entrega-academica.spec.js](../../frontend/e2e/entrega-academica.spec.js);
   [plano-simulado.spec.js](../../frontend/e2e/plano-simulado.spec.js) usa conta/conteúdo próprios
   para gerar/concluir Plano, finalizar/corrigir Simulado e confirmar recálculo.
@@ -89,7 +95,17 @@ evidências de execução abaixo ou contar como funcionalidades novas.
   autorização/geração/conclusão do plano, revogação com eliminação e nova
   autorização, incluindo plano aberto em outra aba. Esses percursos adicionais
   não alteram os IDs 1–20 da matriz.
-- `npm run test:e2e:list` somente descobre os três testes, sem executar seus
+  [tutor.spec.js](../../frontend/e2e/tutor.spec.js) cobre navegação, uso antigo,
+  novo aceite e indisponibilidade com o Tutor desabilitado, sem chamar Gemini
+  nem comprovar geração de resposta pela IA.
+  [catalogo-detalhe.spec.js](../../frontend/e2e/catalogo-detalhe.spec.js) confere
+  a leitura atual de Matéria/Assunto ao editar após mudanças em outra aba,
+  sem escrita automática nem transferência indevida.
+  [usuarios.spec.js](../../frontend/e2e/usuarios.spec.js) cobre gestão de Alunos:
+  CRUD permitido, exclusão bloqueada por vínculos, revogação de sessões,
+  reativação e troca de e-mail, com revisão em 1440/390 px. Os seis testes, seus
+  setups e as ferramentas de validação não ampliam a lista oficial de vinte casos.
+- `npm run test:e2e:list` somente descobre os seis testes, sem executar seus
   percursos nem comprovar aprovação; `RUN_MYSQL_E2E=1 npm run test:e2e`
   em shell POSIX ou o exemplo PowerShell do [README](../../README.md) a executa.
 - `test-results/e2e.json` registra os testes e seus passos, incluindo os vinte
@@ -110,6 +126,16 @@ evidências de execução abaixo ou contar como funcionalidades novas.
   posteriores, incluindo este alinhamento documental local, não herdam a aprovação.
   Os relatórios históricos mantêm seus resultados originais. Essa publicação
   de código não comprova hospedagem na AWS ou demonstração acadêmica do grupo.
+- O checkpoint publicado mais recente
+  [`bb9823de87f3be6ae4d0a0cb3484ff2725353d7e`](https://github.com/Matibas100/ProjetoSoftwarePE/commit/bb9823de87f3be6ae4d0a0cb3484ff2725353d7e)
+  teve CI concluído com sucesso na
+  [execução 42736058343](https://github.com/Matibas100/ProjetoSoftwarePE/actions/runs/42736058343),
+  em 9 de novembro de 2026, às 22:36:40 (America/Sao_Paulo;
+  10/11/2026 às 01:36:40 UTC). A execução corresponde a esse SHA e antecede esta
+  correção documental. A revisão dos links e contagens nesta change é uma
+  checagem documental local, sem nova execução da suíte da aplicação e sem
+  herdar a aprovação do CI. As evidências históricas e os limites de entrega
+  externa e aceite docente permanecem.
 
 ## Entrega externa
 
