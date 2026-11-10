@@ -1,7 +1,11 @@
 from sqlalchemy.exc import IntegrityError
 from app.core.relogio import agora_utc
 from app.exceptions import ConflitoError, RecursoNaoEncontradoError
-from app.modules.simulados.models.simulado import SimuladoVersao, SimuladoTentativa, SimuladoResposta
+from app.modules.simulados.models.simulado import (
+    SimuladoVersao,
+    SimuladoTentativa,
+    SimuladoResposta,
+)
 from app.modules.simulados.repositories.simulado_repository import SimuladoRepository as Repo
 from app.modules.simulados.services.consultar_simulado_service import detalhe
 from app.modules.simulados.services.gestao_simulado_service import elegiveis
@@ -13,10 +17,12 @@ class IniciarSimuladoService:
     @staticmethod
     def executar(usuario_id, dados):
         versao_id, chave = inicio_simulado(dados)
+
         def replay(t):
             if t.simulado_versao_id != versao_id:
                 raise ConflitoError("Chave já utilizada para outra versão.")
             return detalhe(t, bloquear=True), 200
+
         def operacao():
             v = SimuladoVersao.buscar_por_id(versao_id)
             if v is None:
@@ -32,8 +38,14 @@ class IniciarSimuladoService:
                 raise ConflitoError("Simulado indisponível para novo início.")
             itens = Repo.itens(versao_id=versao_id)
             elegiveis([i.questao_versao_id for i in itens])
-            t = SimuladoTentativa(usuario_id=usuario_id, simulado_versao_id=versao_id,
-                chave_envio=chave, estado="em_andamento", revisao=1, iniciada_em=agora_utc()).salvar(confirmar=False)
+            t = SimuladoTentativa(
+                usuario_id=usuario_id,
+                simulado_versao_id=versao_id,
+                chave_envio=chave,
+                estado="em_andamento",
+                revisao=1,
+                iniciada_em=agora_utc()
+            ).salvar(confirmar=False)
             for i in itens:
                 SimuladoResposta(tentativa_id=t.id, item_id=i.id).salvar(confirmar=False)
             return detalhe(t, bloquear=True), 201

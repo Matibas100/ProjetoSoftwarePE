@@ -235,7 +235,7 @@ def inspect_history(migrations: Sequence[Migration], rows: Sequence[dict]) -> Hi
 
 
 def _lock_name(schema: str) -> str:
-    digest = hashlib.sha256(schema.encode("utf-8")).hexdigest()[:40]
+    digest = hashlib.sha256(schema.encode("utf-8")).hexdigest()[: 40]
     return f"enem:migrations:{digest}"
 
 
@@ -261,7 +261,7 @@ def migration_lock(connection, schema: str, timeout: int = LOCK_TIMEOUT_SECONDS)
 def _safe_error_code(error: Exception) -> str:
     if error.args and isinstance(error.args[0], int):
         return f"MYSQL_{error.args[0]}"
-    return error.__class__.__name__[:64]
+    return error.__class__.__name__[: 64]
 
 
 def _mark_running(connection, migration: Migration, existing: dict | None) -> None:
@@ -469,7 +469,10 @@ def status_lines(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Migrations SQL da Plataforma ENEM")
     parser.add_argument(
-        "--migrations-dir", type=Path, default=DEFAULT_MIGRATIONS_DIR, help=argparse.SUPPRESS
+        "--migrations-dir",
+        type=Path,
+        default=DEFAULT_MIGRATIONS_DIR,
+        help=argparse.SUPPRESS
     )
     parser.add_argument("--lock-timeout", type=int, default=LOCK_TIMEOUT_SECONDS)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -495,7 +498,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         connection = connect(settings)
         if args.command == "status":
             for line in status_lines(
-                connection, settings, migrations, args.lock_timeout
+                connection,
+                settings,
+                migrations,
+                args.lock_timeout
             ):
                 print(line)
         elif args.command == "up":
@@ -503,7 +509,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"Schema {settings.name}: {applied} migration(s) aplicada(s).")
         elif args.command == "baseline":
             prefix = run_baseline(
-                connection, settings, migrations, args.confirm, args.lock_timeout
+                connection,
+                settings,
+                migrations,
+                args.confirm,
+                args.lock_timeout
             )
             print(f"Schema {settings.name}: baseline reconhecido ate {prefix}.")
         else:

@@ -11,6 +11,7 @@ ConsultarVersaoHistoricaService = _ConsultarVersaoHistoricaService
 ConsultarVersoesElegiveisService = _ConsultarVersoesElegiveisService
 ConsultarVersoesHistoricasService = _ConsultarVersoesHistoricasService
 
+
 def pares_elegiveis_plano(assunto_ids, bloquear=False):
     return _Questoes.pares_elegiveis_plano(assunto_ids, bloquear=bloquear)
 
@@ -27,4 +28,13 @@ def contagens_catalogo(contexto):
     return _Catalogo.contagens_dashboard(contexto)
 
 
-__all__ = ['ConsultarVersaoElegivelService', 'ConsultarVersaoHistoricaService', 'ConsultarVersoesElegiveisService', 'ConsultarVersoesHistoricasService', 'pares_elegiveis_plano', 'projecao_classificacao_historica', 'contagens_questoes', 'contagens_catalogo']
+__all__ = [
+    'ConsultarVersaoElegivelService',
+    'ConsultarVersaoHistoricaService',
+    'ConsultarVersoesElegiveisService',
+    'ConsultarVersoesHistoricasService',
+    'pares_elegiveis_plano',
+    'projecao_classificacao_historica',
+    'contagens_questoes',
+    'contagens_catalogo'
+]

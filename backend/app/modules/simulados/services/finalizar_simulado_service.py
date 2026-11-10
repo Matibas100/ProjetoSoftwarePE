@@ -29,7 +29,8 @@ class FinalizarSimuladoService:
                     brancos += 1
                 else:
                     versao_historica = ConsultarVersaoHistoricaService.executar(
-                        item.questao_versao_id, correcao=True
+                        item.questao_versao_id,
+                        correcao=True
                     )
                     resposta.correta = (
                         resposta.alternativa == versao_historica["resposta_correta"]

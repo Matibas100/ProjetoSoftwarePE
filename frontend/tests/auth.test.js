@@ -6,20 +6,33 @@ import { root, settle } from "./helpers/classic-app.js";
 const aluno = { id: 1, nome: "Aluno <teste>", email: "aluno@teste.local", perfil: "aluno" };
 const admin = { ...aluno, perfil: "administrador" };
 const expired = () => Object.assign(new Error("Entre novamente"), { code: "sessao_invalida" });
-const metadata = () => ({ termos_uso: { versao: "2.0", url: "/legal/termo-de-uso-v2.html", sha256: "a".repeat(64) }, consentimento_plano: { versao: "1.0", url: "/legal/termo-de-consentimento-plano-v1.html", sha256: "b".repeat(64) } });
+const metadata = () => ({
+  termos_uso: { versao: "2.0", url: "/legal/termo-de-uso-v2.html", sha256: "a".repeat(64) },
+  consentimento_plano: { versao: "1.0", url: "/legal/termo-de-consentimento-plano-v1.html", sha256: "b".repeat(64) }
+});
 
 async function setup(file = "login.html", api = vi.fn().mockRejectedValue(expired()), termsApi = vi.fn(async () => metadata())) {
-  vi.resetModules(); globalThis.AuthUI?.destroy?.();
+  vi.resetModules();
+  globalThis.AuthUI?.destroy?.();
   const html = fs.readFileSync(path.join(root, "frontend", file), "utf8").replace(/<script\s+src="[^"]+"><\/script>/g, "");
-  document.open(); document.write(html); document.close();
-  HTMLDialogElement.prototype.showModal = function () { this.open = true; };
-  HTMLDialogElement.prototype.close = function () { this.open = false; };
+  document.open();
+  document.write(html);
+  document.close();
+  HTMLDialogElement.prototype.showModal = function () {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close = function () {
+    this.open = false;
+  };
   // Observar a navegação antes de resolver a primeira consulta de sessão.
   let release;
-  const bootstrap = new Promise((resolve) => { release = resolve; });
+  const bootstrap = new Promise((resolve) => {
+    release = resolve;
+  });
   globalThis.apiRequest = (...args) => bootstrap.then(() => api(...args));
   globalThis.resetCsrf = vi.fn();
-  await import("../js/navigation.js"); await import("../js/auth-session.js");
+  await import("../js/navigation.js");
+  await import("../js/auth-session.js");
   globalThis.AuthUI.navigate = vi.fn();
   globalThis.apiRequest = (route, ...args) => route === "/termos" ? termsApi() : api(route, ...args);
   release();
@@ -40,13 +53,22 @@ function fill(signup = false) {
 const submit = () => document.querySelector("#auth-form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 
 describe("cadastro e login", () => {
-  beforeEach(() => { sessionStorage.clear(); });
-  afterEach(() => { globalThis.AuthUI?.destroy?.(); delete globalThis.AuthUI; delete globalThis.apiRequest; });
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+  afterEach(() => {
+    globalThis.AuthUI?.destroy?.();
+    delete globalThis.AuthUI;
+    delete globalThis.apiRequest;
+  });
 
   it("valida campo e coincidencia sem chamar API", async () => {
-    const api = await setup("cadastro.html"); submit();
+    const api = await setup("cadastro.html");
+    submit();
     expect(document.querySelector("#auth-name").getAttribute("aria-invalid")).toBe("true");
-    fill(true); document.querySelector("#auth-confirmation").value = "diferente"; submit();
+    fill(true);
+    document.querySelector("#auth-confirmation").value = "diferente";
+    submit();
     expect(document.querySelector("#auth-confirmation-error").textContent).toContain("coincidem");
     expect(api).toHaveBeenCalledTimes(1);
     document.querySelector("#auth-form").dispatchEvent(new Event("input"));
@@ -59,7 +81,10 @@ describe("cadastro e login", () => {
 
   it("cadastra sem perfil, preserva email para login e nao salva senha", async () => {
     const api = await setup("cadastro.html");
-    api.mockResolvedValueOnce({ usuario: aluno }); fill(true); submit(); await settle();
+    api.mockResolvedValueOnce({ usuario: aluno });
+    fill(true);
+    submit();
+    await settle();
     const body = JSON.parse(api.mock.calls[1][1].body);
     expect(Object.keys(body).sort()).toEqual(["email", "nome", "senha", "senha_confirmacao", "termos_uso"]);
     expect(body.termos_uso).toEqual({ versao: "2.0", aceito: true });
@@ -73,10 +98,12 @@ describe("cadastro e login", () => {
   });
 
   it("associa erro ao nome normalizado e permite corrigir sem perder os demais campos", async () => {
-    const api = await setup("cadastro.html"); fill(true);
+    const api = await setup("cadastro.html");
+    fill(true);
     const name = document.querySelector("#auth-name");
     for (const value of ["  ", " A ", "a".repeat(101)]) {
-      name.value = value; submit();
+      name.value = value;
+      submit();
       expect(name.getAttribute("aria-invalid")).toBe("true");
       expect(document.querySelector("#auth-name-error").textContent).toContain("2 e 100");
       expect(document.activeElement).toBe(name);
@@ -85,7 +112,8 @@ describe("cadastro e login", () => {
     }
     name.value = " Ana Silva ";
     api.mockResolvedValueOnce({ usuario: { ...aluno, nome: "Ana Silva" } });
-    submit(); await settle();
+    submit();
+    await settle();
     expect(name.hasAttribute("aria-invalid")).toBe(false);
     expect(document.querySelector("#auth-name-error").textContent).toBe("");
     expect(AuthUI.navigate).toHaveBeenCalledWith("/login");
@@ -93,26 +121,42 @@ describe("cadastro e login", () => {
   });
 
   it("trata duplicidade e rede mantendo campos e habilitando nova tentativa", async () => {
-    const api = await setup("cadastro.html"); fill(true);
+    const api = await setup("cadastro.html");
+    fill(true);
     api.mockRejectedValueOnce(Object.assign(new Error("Email em uso"), { code: "email_em_uso" }));
-    submit(); await settle();
+    submit();
+    await settle();
     expect(document.querySelector("#auth-email-error").textContent).toBe("Email em uso");
     expect(document.querySelector("#auth-email").value).toBe(aluno.email);
-    api.mockRejectedValueOnce(new Error("Sem rede")); submit(); await settle();
+    api.mockRejectedValueOnce(new Error("Sem rede"));
+    submit();
+    await settle();
     expect(document.querySelector("#auth-message").textContent).toBe("Sem rede");
     expect(document.querySelector('[type="submit"]').disabled).toBe(false);
   });
 
   it("mostra e oculta senhas, impede envio duplicado e aplica destinos fixos", async () => {
-    const api = await setup(); fill();
-    const toggle = document.querySelector("[data-password-toggle]"); toggle.click();
-    expect(document.querySelector("#auth-password").type).toBe("text"); toggle.click();
+    const api = await setup();
+    fill();
+    const toggle = document.querySelector("[data-password-toggle]");
+    toggle.click();
+    expect(document.querySelector("#auth-password").type).toBe("text");
+    toggle.click();
     expect(toggle.getAttribute("aria-pressed")).toBe("false");
-    let finish; api.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
-    submit(); submit(); expect(api).toHaveBeenCalledTimes(2);
-    finish({ usuario: admin, destino: "https://malicioso.test" }); await settle();
+    let finish;
+    api.mockImplementationOnce(() => new Promise((resolve) => {
+      finish = resolve;
+    }));
+    submit();
+    submit();
+    expect(api).toHaveBeenCalledTimes(2);
+    finish({ usuario: admin, destino: "https://malicioso.test" });
+    await settle();
     expect(AuthUI.navigate).toHaveBeenCalledWith("/admin/materias.html");
-    api.mockResolvedValueOnce({ usuario: aluno }); fill(); submit(); await settle();
+    api.mockResolvedValueOnce({ usuario: aluno });
+    fill();
+    submit();
+    await settle();
     expect(AuthUI.navigate).toHaveBeenCalledWith("/aluno/inicio.html");
   });
 
@@ -122,18 +166,26 @@ describe("cadastro e login", () => {
     expect(document.querySelector("#auth-terms").checked).toBe(false);
     expect(document.querySelector("#auth-terms").disabled).toBe(true);
     expect(document.querySelector('[type="submit"]').disabled).toBe(true);
-    document.querySelector("#auth-terms-retry").click(); await settle();
+    document.querySelector("#auth-terms-retry").click();
+    await settle();
     expect(document.querySelector("#auth-terms").disabled).toBe(false);
-    fill(true); document.querySelector("#auth-terms").checked = false; submit();
+    fill(true);
+    document.querySelector("#auth-terms").checked = false;
+    submit();
     expect(document.querySelector("#auth-terms").getAttribute("aria-invalid")).toBe("true");
     expect(api).toHaveBeenCalledTimes(1);
   });
 
   it("desmarca aceite após versão desatualizada, preserva nome/e-mail e não reenvia cadastro", async () => {
-    const termos = vi.fn().mockResolvedValueOnce(metadata()).mockResolvedValue({ ...metadata(), termos_uso: { ...metadata().termos_uso, versao: "2.0", url: "/legal/termo-de-uso-v2.html" } });
-    const api = await setup("cadastro.html", undefined, termos); fill(true);
+    const termos = vi.fn().mockResolvedValueOnce(metadata()).mockResolvedValue({
+      ...metadata(),
+      termos_uso: { ...metadata().termos_uso, versao: "2.0", url: "/legal/termo-de-uso-v2.html" }
+    });
+    const api = await setup("cadastro.html", undefined, termos);
+    fill(true);
     api.mockRejectedValueOnce(Object.assign(new Error("O documento mudou"), { code: "termo_desatualizado", status: 409 }));
-    submit(); await settle();
+    submit();
+    await settle();
     expect(document.querySelector("#auth-terms").checked).toBe(false);
     expect(document.querySelector("#auth-name").value).toBe(aluno.nome);
     expect(document.querySelector("#auth-email").value).toBe(aluno.email);
@@ -150,7 +202,12 @@ describe("cadastro e login", () => {
 });
 
 describe("sessao e preservacao administrativa", () => {
-  afterEach(() => { globalThis.AuthUI?.destroy?.(); delete globalThis.AuthUI; delete globalThis.apiRequest; vi.restoreAllMocks(); });
+  afterEach(() => {
+    globalThis.AuthUI?.destroy?.();
+    delete globalThis.AuthUI;
+    delete globalThis.apiRequest;
+    vi.restoreAllMocks();
+  });
 
   it("confere identidade administrativa sem bloquear o mesmo perfil e rejeita troca", async () => {
     const api = vi.fn().mockResolvedValue({ usuario: admin });
@@ -169,13 +226,18 @@ describe("sessao e preservacao administrativa", () => {
     await setup("aluno/inicio.html", api);
     expect(document.querySelector("[data-auth-name]").textContent).toBe(aluno.nome);
     expect(document.querySelector("#auth-content").hidden).toBe(false);
-    AuthUI.registerGuard(() => true); vi.spyOn(window, "confirm").mockReturnValue(false);
-    await AuthUI.logout(); expect(api).toHaveBeenCalledTimes(1);
+    AuthUI.registerGuard(() => true);
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    await AuthUI.logout();
+    expect(api).toHaveBeenCalledTimes(1);
     expect(AuthUI.navigate).not.toHaveBeenCalled();
-    window.confirm.mockReturnValue(true); api.mockRejectedValueOnce(new Error("Sem rede"));
-    await AuthUI.logout(); expect(document.querySelector("#auth-loading").textContent).toContain("Sem rede");
+    window.confirm.mockReturnValue(true);
+    api.mockRejectedValueOnce(new Error("Sem rede"));
+    await AuthUI.logout();
+    expect(document.querySelector("#auth-loading").textContent).toContain("Sem rede");
     expect(AuthUI.navigate).not.toHaveBeenCalled();
-    api.mockResolvedValueOnce(null); await AuthUI.logout();
+    api.mockResolvedValueOnce(null);
+    await AuthUI.logout();
     expect(AuthUI.navigate).toHaveBeenCalledWith("/login");
   });
 
@@ -197,7 +259,8 @@ describe("sessao e preservacao administrativa", () => {
   });
 
   it("nega aluno na gestao e nao executa consultas de conteudo", async () => {
-    const api = vi.fn().mockResolvedValue({ usuario: aluno }); await setup("admin/materias.html", api);
+    const api = vi.fn().mockResolvedValue({ usuario: aluno });
+    await setup("admin/materias.html", api);
     expect(AuthUI.blocked).toBe(true);
     expect(document.querySelector("#auth-loading").textContent).toContain("não tem acesso");
     expect(document.querySelector("#auth-content").hidden).toBe(true);
@@ -207,47 +270,66 @@ describe("sessao e preservacao administrativa", () => {
   it("aguarda recuperacao de rede no guard e depois libera conteudo", async () => {
     const api = vi.fn().mockRejectedValueOnce(new Error("Sem rede")).mockResolvedValue({ usuario: admin });
     await setup("admin/materias.html", api);
-    document.querySelector("#auth-loading button").click(); await settle();
+    document.querySelector("#auth-loading button").click();
+    await settle();
     expect(await AuthUI.ready).toBe(true);
     expect(document.querySelector("#auth-content").hidden).toBe(false);
   });
 
   it("reautentica no contexto sem repetir mutacao ou apagar campos", async () => {
-    const api = vi.fn().mockResolvedValue({ usuario: admin }); await setup("admin/materias.html", api);
-    const name = document.querySelector("#materia-nome"); name.value = "Edicao local";
+    const api = vi.fn().mockResolvedValue({ usuario: admin });
+    await setup("admin/materias.html", api);
+    const name = document.querySelector("#materia-nome");
+    name.value = "Edicao local";
     document.dispatchEvent(new CustomEvent("auth-required", { detail: "reautenticacao_necessaria" }));
     expect(AuthUI.blocked).toBe(true);
-    AuthUI.recover("reautenticacao_necessaria"); expect(document.querySelectorAll(".auth-dialog")).toHaveLength(1);
+    AuthUI.recover("reautenticacao_necessaria");
+    expect(document.querySelectorAll(".auth-dialog")).toHaveLength(1);
     document.querySelector("#auth-recovery-password").value = "senha correta";
     api.mockRejectedValueOnce(new Error("Senha incorreta"));
-    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true })); await settle();
+    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true }));
+    await settle();
     expect(document.querySelector("#auth-recovery-status").textContent).toBe("Senha incorreta");
-    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true })); await settle();
-    expect(AuthUI.blocked).toBe(false); expect(name.value).toBe("Edicao local");
+    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true }));
+    await settle();
+    expect(AuthUI.blocked).toBe(false);
+    expect(name.value).toBe("Edicao local");
     expect(api.mock.calls.filter(([route]) => !route.startsWith("/auth/"))).toHaveLength(0);
   });
 
   it("recupera login expirado e exige recarga para conta diferente", async () => {
-    const api = vi.fn().mockResolvedValue({ usuario: admin }); await setup("admin/materias.html", api);
-    AuthUI.recover("sessao_invalida"); document.querySelector("#auth-recovery-password").value = "senha correta";
+    const api = vi.fn().mockResolvedValue({ usuario: admin });
+    await setup("admin/materias.html", api);
+    AuthUI.recover("sessao_invalida");
+    document.querySelector("#auth-recovery-password").value = "senha correta";
     api.mockRejectedValueOnce(expired()).mockResolvedValueOnce({ usuario: admin }).mockResolvedValueOnce({ usuario: { ...admin, id: 2 } });
-    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true })); await settle();
-    expect(AuthUI.blocked).toBe(true); expect(AuthUI.changedAccount).toBe(true);
+    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true }));
+    await settle();
+    expect(AuthUI.blocked).toBe(true);
+    expect(AuthUI.changedAccount).toBe(true);
     expect(document.querySelector("#auth-recovery-status").textContent).toContain("A conta mudou");
-    document.querySelector("#auth-recovery-close").click(); expect(document.querySelector(".auth-dialog")).toBeNull();
-    AuthUI.recover("sessao_invalida"); expect(document.querySelector(".auth-dialog")).toBeNull();
+    document.querySelector("#auth-recovery-close").click();
+    expect(document.querySelector(".auth-dialog")).toBeNull();
+    AuthUI.recover("sessao_invalida");
+    expect(document.querySelector(".auth-dialog")).toBeNull();
   });
 
   it("trata troca somente de CSRF e fechamento do dialogo", async () => {
-    const api = vi.fn().mockResolvedValue({ usuario: admin }); await setup("admin/materias.html", api);
-    AuthUI.recover("csrf_invalido"); document.querySelector("#auth-recovery-password").value = "senha correta";
-    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true })); await settle();
-    expect(resetCsrf).toHaveBeenCalled(); expect(AuthUI.blocked).toBe(false);
+    const api = vi.fn().mockResolvedValue({ usuario: admin });
+    await setup("admin/materias.html", api);
+    AuthUI.recover("csrf_invalido");
+    document.querySelector("#auth-recovery-password").value = "senha correta";
+    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true }));
+    await settle();
+    expect(resetCsrf).toHaveBeenCalled();
+    expect(AuthUI.blocked).toBe(false);
     AuthUI.recover("sessao_invalida");
     document.querySelector(".auth-dialog").dispatchEvent(new Event("cancel", { cancelable: true }));
     expect(document.querySelector(".auth-dialog")).toBeNull();
-    AuthUI.recover("sessao_invalida"); api.mockRejectedValueOnce(new Error("Sem rede"));
-    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true })); await settle();
+    AuthUI.recover("sessao_invalida");
+    api.mockRejectedValueOnce(new Error("Sem rede"));
+    document.querySelector("#auth-recovery-form").dispatchEvent(new Event("submit", { cancelable: true }));
+    await settle();
     expect(document.querySelector("#auth-recovery-status").textContent).toBe("Sem rede");
   });
 });

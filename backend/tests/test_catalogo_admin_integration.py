@@ -66,11 +66,13 @@ class CatalogoAdminIntegrationTest(MySQLIntegrationTestCase):
 
     def test_materia_exige_area_e_listagem_admin_combina_filtros(self):
         self.assertEqual(
-            self.client.post("/api/materias", json={"nome": "Sem area"}).status_code, 400
+            self.client.post("/api/materias", json={"nome": "Sem area"}).status_code,
+            400
         )
         self.assertEqual(
             self.client.post(
-                "/api/materias", json={"nome": "Area ausente", "area_enem_id": 999}
+                "/api/materias",
+                json={"nome": "Area ausente", "area_enem_id": 999}
             ).status_code,
             404,
         )
@@ -93,7 +95,8 @@ class CatalogoAdminIntegrationTest(MySQLIntegrationTestCase):
         subject = self._subject(first["id"], "  Genética   Molecular  ")
         self.assertEqual(subject["nome_normalizado"], "genética molecular")
         duplicate = self.client.post(
-            "/api/assuntos", json={"nome": "GENETICA MOLECULAR", "materia_id": first["id"]}
+            "/api/assuntos",
+            json={"nome": "GENETICA MOLECULAR", "materia_id": first["id"]}
         )
         self.assertEqual(duplicate.status_code, 409, duplicate.get_json())
         self.assertEqual(
@@ -104,13 +107,15 @@ class CatalogoAdminIntegrationTest(MySQLIntegrationTestCase):
         )
         self.assertEqual(
             self.client.post(
-                "/api/assuntos", json={"nome": "genética molecular", "materia_id": first["id"]}
+                "/api/assuntos",
+                json={"nome": "genética molecular", "materia_id": first["id"]}
             ).status_code,
             409,
         )
         self.assertEqual(
             self.client.post(
-                "/api/assuntos", json={"nome": "genetica molecular", "materia_id": second["id"]}
+                "/api/assuntos",
+                json={"nome": "genetica molecular", "materia_id": second["id"]}
             ).status_code,
             201,
         )
@@ -121,17 +126,33 @@ class CatalogoAdminIntegrationTest(MySQLIntegrationTestCase):
         question = self._question(subject["id"])
         blocked = self.client.post(f"/api/materias/{matter['id']}/arquivar")
         self.assertEqual(blocked.status_code, 409, blocked.get_json())
-        self.assertEqual(self.client.post(f"/api/assuntos/{subject['id']}/arquivar").status_code, 200)
+        self.assertEqual(
+            self.client.post(f"/api/assuntos/{subject['id']}/arquivar").status_code,
+            200
+        )
         self.assertEqual(
             self.client.get(
-                "/api/questoes/por-assunto", query_string={"assunto_id": subject["id"]}
+                "/api/questoes/por-assunto",
+                query_string={"assunto_id": subject["id"]}
             ).get_json()[0]["id"],
             question["id"],
         )
-        self.assertEqual(self.client.post(f"/api/materias/{matter['id']}/arquivar").status_code, 200)
-        self.assertEqual(self.client.post(f"/api/assuntos/{subject['id']}/reativar").status_code, 409)
-        self.assertEqual(self.client.post(f"/api/materias/{matter['id']}/reativar").status_code, 200)
-        self.assertEqual(self.client.post(f"/api/assuntos/{subject['id']}/reativar").status_code, 200)
+        self.assertEqual(
+            self.client.post(f"/api/materias/{matter['id']}/arquivar").status_code,
+            200
+        )
+        self.assertEqual(
+            self.client.post(f"/api/assuntos/{subject['id']}/reativar").status_code,
+            409
+        )
+        self.assertEqual(
+            self.client.post(f"/api/materias/{matter['id']}/reativar").status_code,
+            200
+        )
+        self.assertEqual(
+            self.client.post(f"/api/assuntos/{subject['id']}/reativar").status_code,
+            200
+        )
         impact = self.client.get(f"/api/assuntos/{subject['id']}/impacto-exclusao").get_json()
         self.assertEqual(impact["impacto"]["questoes"], 1)
         self.assertEqual(self.client.delete(f"/api/assuntos/{subject['id']}").status_code, 409)
@@ -171,7 +192,8 @@ class CatalogoAdminIntegrationTest(MySQLIntegrationTestCase):
                 {"id": subject["id"]},
             ).mappings().one()
             self.assertEqual(
-                tuple(row.values()), (origin["id"], destination["id"], 1)
+                tuple(row.values()),
+                (origin["id"], destination["id"], 1)
             )
 
     def test_listagem_assuntos_retorna_resumos_indisponiveis(self):
@@ -189,25 +211,43 @@ class CatalogoAdminIntegrationTest(MySQLIntegrationTestCase):
     def test_listagem_ativa_filtra_status_materia_e_ordena_nome_id(self):
         matter = self._matter()
         other = self._matter()
-        suffix = uuid4().hex[:8]
+        suffix = uuid4().hex[: 8]
         last = self._subject(matter["id"], f"Zulu {suffix}")
         first = self._subject(matter["id"], f"Alfa {suffix}")
         inactive = self._subject(matter["id"])
         archived = self._subject(matter["id"])
         hidden = self._subject(other["id"])
         self.assertEqual(self.client.post(f"/api/materias/{other['id']}/inativar").status_code, 200)
-        self.assertEqual(self.client.post(f"/api/assuntos/{inactive['id']}/inativar").status_code, 200)
-        self.assertEqual(self.client.post(f"/api/assuntos/{archived['id']}/arquivar").status_code, 200)
+        self.assertEqual(
+            self.client.post(f"/api/assuntos/{inactive['id']}/inativar").status_code,
+            200
+        )
+        self.assertEqual(
+            self.client.post(f"/api/assuntos/{archived['id']}/arquivar").status_code,
+            200
+        )
 
         response = self.client.get("/api/assuntos", query_string={"materia_id": matter["id"]})
         self.assertEqual(response.status_code, 200)
         self.assertEqual([row["id"] for row in response.get_json()], [first["id"], last["id"]])
         all_active = self.client.get("/api/assuntos").get_json()
-        self.assertFalse({inactive["id"], archived["id"], hidden["id"]} & {row["id"] for row in all_active})
-        self.assertEqual(self.client.get("/api/assuntos", query_string={"materia_id": other["id"]}).get_json(), [])
+        self.assertFalse({
+            inactive["id"],
+            archived["id"],
+            hidden["id"]
+        } & {row["id"] for row in all_active})
+        self.assertEqual(
+            self.client.get(
+                "/api/assuntos",
+                query_string={"materia_id": other["id"]}
+            ).get_json(),
+            []
+        )
 
         from app.modules.conteudo.models.assunto import Assunto
         from app.modules.conteudo.repositories.catalogo_repository import CatalogoRepository
         with self.app.app_context():
-            self.assertEqual([row.id for row in Assunto.listar_ativos(matter["id"])],
-                [row.id for row in CatalogoRepository.listar_assuntos_ativos(matter["id"])])
+            self.assertEqual(
+                [row.id for row in Assunto.listar_ativos(matter["id"])],
+                [row.id for row in CatalogoRepository.listar_assuntos_ativos(matter["id"])]
+            )

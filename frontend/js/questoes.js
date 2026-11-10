@@ -4,7 +4,9 @@
   let persistedForm = "";
   const formSnapshot = () => JSON.stringify(Object.fromEntries(new FormData(form)));
   globalThis.AuthUI?.registerGuard(() => formSnapshot() !== persistedForm);
-  form.addEventListener("reset", () => queueMicrotask(() => { persistedForm = formSnapshot(); }));
+  form.addEventListener("reset", () => queueMicrotask(() => {
+    persistedForm = formSnapshot();
+  }));
   const assuntoSelect = document.querySelector("#questao-assunto-id");
   const enunciadoInput = document.querySelector("#questao-enunciado");
   const respostaSelect = document.querySelector("#resposta-correta");
@@ -45,8 +47,8 @@
     const opcaoInicial = document.createElement("option");
     opcaoInicial.value = "";
     opcaoInicial.textContent = assuntos.length
-      ? "Selecione um assunto"
-      : "Cadastre um assunto primeiro";
+    ? "Selecione um assunto"
+    : "Cadastre um assunto primeiro";
     select.appendChild(opcaoInicial);
 
     assuntos.forEach((assunto) => {
@@ -187,5 +189,7 @@
     atualizarAssuntos(evento.detail);
   });
 
-  carregarAssuntos().then(() => { persistedForm = formSnapshot(); });
+  carregarAssuntos().then(() => {
+    persistedForm = formSnapshot();
+  });
 })();

@@ -17,7 +17,7 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
 
     def setUp(self):
         super().setUp()
-        self.migrations = self.migrations[:16]
+        self.migrations = self.migrations[: 16]
 
     def seed_planos(self):
         self.seed()
@@ -32,14 +32,30 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
         self.apply_without_history('014')
         self.seed_planos()
         antes = self.rows(self.connection)
-        self.assertEqual(migrate.run_baseline(self.connection, self.settings, self.migrations, True), '014')
+        self.assertEqual(
+            migrate.run_baseline(
+                self.connection,
+                self.settings,
+                self.migrations,
+                True
+            ),
+            '014'
+        )
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 1)
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
         self.assertEqual(migrate.detect_legacy_prefix(self.connection), '015')
         self.assertEqual(self.rows(self.connection), antes)
         with self.second_schema() as (restaurada, settings):
             self.restore(restaurada)
-            self.assertEqual(migrate.run_baseline(restaurada, settings, self.migrations, True), '015')
+            self.assertEqual(
+                migrate.run_baseline(
+                    restaurada,
+                    settings,
+                    self.migrations,
+                    True
+                ),
+                '015'
+            )
             self.assertEqual(migrate.run_up(restaurada, settings, self.migrations), 0)
             self.assertEqual(self.rows(restaurada), antes)
 
@@ -52,11 +68,21 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
             sql = Path(migrate.__file__).with_name('create_database.sql').read_text(encoding='utf-8')
             comandos = [s for s in migrate.split_sql(sql) if not
                 migrate._without_leading_comments(s).upper().startswith(('CREATE DATABASE', 'USE '))
-                and not any(re.match(r'CREATE PROCEDURE '+nome+r'\b', migrate._without_leading_comments(s), re.I)
-                            for nome in sql_resources.PROCEDURES_016 | sql_resources.PROCEDURES_017)]
+                and not any(re.match(
+                    r'CREATE PROCEDURE '+nome+r'\b',
+                    migrate._without_leading_comments(s),
+                    re.I
+                )
+                    for nome in sql_resources.PROCEDURES_016 | sql_resources.PROCEDURES_017)]
             migrate.execute_statements(bootstrap, comandos)
             self.assertEqual(migrate.detect_legacy_prefix(bootstrap), '015')
-            self.assertEqual({n: sql_resources.assinatura(bootstrap, n) for n in recursos}, oficiais)
+            self.assertEqual(
+                {n: sql_resources.assinatura(
+                    bootstrap,
+                    n
+                ) for n in recursos},
+                oficiais
+            )
             self.assertEqual(self.rows(bootstrap), self.rows(self.connection))
 
     def alterar(self, tipo, nome):
@@ -83,17 +109,29 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
                 self.apply_without_history('015')
                 self.seed_planos()
                 antes = self.rows(self.connection)
-                self.alterar(tipo, 'sp_plano_itens' if tipo != 'dependencia' else 'sp_simulado_respostas')
+                self.alterar(
+                    tipo,
+                    'sp_plano_itens' if tipo != 'dependencia' else 'sp_simulado_respostas'
+                )
                 with self.assertRaises(migrate.MigrationError):
                     migrate.run_baseline(self.connection, self.settings, self.migrations, True)
                 self.assertEqual(migrate.fetch_history(self.connection), [])
                 self.assertEqual(self.rows(self.connection), antes)
 
     def test_upgrade_bloqueia_drift_014_antes_ddl_e_permite_reparacao(self):
-        for tipo in ('ausente', 'corpo', 'assinatura', 'seguranca', 'legada', 'tabela', 'parcial015', 'completo015'):
+        for tipo in (
+            'ausente',
+            'corpo',
+            'assinatura',
+            'seguranca',
+            'legada',
+            'tabela',
+            'parcial015',
+            'completo015'
+        ):
             with self.subTest(tipo=tipo):
                 self.recreate_schema()
-                migrate.run_up(self.connection, self.settings, self.migrations[:15])
+                migrate.run_up(self.connection, self.settings, self.migrations[: 15])
                 self.seed_planos()
                 with self.connection.cursor() as c:
                     c.execute('SHOW CREATE PROCEDURE sp_simulado_respostas')
@@ -103,9 +141,15 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
                         c.execute('ALTER TABLE planos_estudo ADD divergente INT NULL')
                 elif tipo in {'parcial015', 'completo015'}:
                     comandos = migrate.validate_statements(migrate.split_sql(self.migrations[15].sql))
-                    migrate.execute_statements(self.connection, comandos[:1] if tipo == 'parcial015' else comandos)
+                    migrate.execute_statements(
+                        self.connection,
+                        comandos[: 1] if tipo == 'parcial015' else comandos
+                    )
                 else:
-                    self.alterar(tipo, 'sp_questoes_por_assunto' if tipo == 'legada' else 'sp_simulado_respostas')
+                    self.alterar(
+                        tipo,
+                        'sp_questoes_por_assunto' if tipo == 'legada' else 'sp_simulado_respostas'
+                    )
                 antes, historico = self.rows(self.connection), migrate.fetch_history(self.connection)
                 recursos = sql_resources.inventariar(self.connection)
                 with self.assertRaises(migrate.MigrationError):
@@ -114,13 +158,32 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
                 self.assertEqual(migrate.fetch_history(self.connection), historico)
                 self.assertEqual(sql_resources.inventariar(self.connection), recursos)
                 with self.connection.cursor() as c:
-                    c.execute('SELECT IS_USED_LOCK(%s) AS dono', (migrate._lock_name(self.settings.name),))
+                    c.execute(
+                        'SELECT IS_USED_LOCK(%s) AS dono',
+                        (
+                            migrate._lock_name(self.settings.name),
+                        )
+                    )
                     self.assertIsNone(c.fetchone()['dono'])
                     if tipo == 'ausente':
                         c.execute(original)
                 if tipo == 'ausente':
-                    self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 1)
-                    self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
+                    self.assertEqual(
+                        migrate.run_up(
+                            self.connection,
+                            self.settings,
+                            self.migrations
+                        ),
+                        1
+                    )
+                    self.assertEqual(
+                        migrate.run_up(
+                            self.connection,
+                            self.settings,
+                            self.migrations
+                        ),
+                        0
+                    )
 
     def test_formatos_vazios_flags_contratos_e_conexao_reutilizavel(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
@@ -135,14 +198,21 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
                 while c.nextset():
                     pass
             for flag in (None, -1, 2):
-                for comando in ('CALL sp_plano_atual(1,%s)', 'CALL sp_pares_elegiveis_plano(JSON_ARRAY(),%s)'):
+                for comando in (
+                    'CALL sp_plano_atual(1,%s)',
+                    'CALL sp_pares_elegiveis_plano(JSON_ARRAY(),%s)'
+                ):
                     with self.assertRaises(pymysql.MySQLError):
                         c.execute(comando, (flag,))
                     while c.nextset():
                         pass
-            for comando in ('CALL sp_plano_atual(NULL,0)', 'CALL sp_plano_itens(0)',
-                            'CALL sp_plano_item_proprio(1,0)', 'CALL sp_eliminar_planos_proprios(0)',
-                            "CALL sp_plano_por_chave(1,'invalida')"):
+            for comando in (
+                'CALL sp_plano_atual(NULL,0)',
+                'CALL sp_plano_itens(0)',
+                'CALL sp_plano_item_proprio(1,0)',
+                'CALL sp_eliminar_planos_proprios(0)',
+                "CALL sp_plano_por_chave(1,'invalida')"
+            ):
                 with self.assertRaises(pymysql.MySQLError):
                     c.execute(comando)
                 while c.nextset():
@@ -159,5 +229,8 @@ class PlanoProceduresMigrationsIntegrationTest(MySQLMigrationTestCase):
             self.assertEqual(len(novas), 6)
             for r in novas:
                 self.assertEqual(r['SECURITY_TYPE'], 'INVOKER')
-                self.assertEqual(r['SQL_DATA_ACCESS'], 'MODIFIES SQL DATA' if
-                    r['ROUTINE_NAME']=='sp_eliminar_planos_proprios' else 'READS SQL DATA')
+                self.assertEqual(
+                    r['SQL_DATA_ACCESS'],
+                    'MODIFIES SQL DATA' if
+                    r['ROUTINE_NAME']=='sp_eliminar_planos_proprios' else 'READS SQL DATA'
+                )

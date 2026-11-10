@@ -20,14 +20,21 @@ class LimiteTutoria:
 
     @staticmethod
     def _negar(espera=1):
-        raise TutoriaError('Limite de tutoria atingido. Aguarde antes de enviar novamente.',
-                           429, 'limite_tutoria', max(1, ceil(espera)))
+        raise TutoriaError(
+            'Limite de tutoria atingido. Aguarde antes de enviar novamente.',
+            429,
+            'limite_tutoria',
+            max(1, ceil(espera))
+        )
 
     def reservar(self, conta):
         with self._lock:
             agora = self._relogio()
-            self._contas = {id_: j for id_, j in self._contas.items()
-                            if j.em_andamento or agora - j.inicio < 60}
+            self._contas = {
+                id_: j for id_,
+                j in self._contas.items()
+                if j.em_andamento or agora - j.inicio < 60
+            }
             janela = self._contas.get(conta)
             if janela is not None and janela.em_andamento:
                 self._negar()

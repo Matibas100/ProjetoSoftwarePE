@@ -34,17 +34,43 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         return client.post(path, json=dados, headers={"Origin": ORIGIN, "X-CSRF-Token": token})
 
     def cadastro(self, email=None, client=None):
-        return self.request("/api/auth/cadastro", {"nome": "Aluno teste", "email": email or self.email,
-            "senha": SENHA, "senha_confirmacao": SENHA, "termos_uso":{"versao":"2.0","aceito":True}}, client)
+        return self.request(
+            "/api/auth/cadastro",
+            {
+                "nome": "Aluno teste",
+                "email": email or self.email,
+                "senha": SENHA,
+                "senha_confirmacao": SENHA,
+                "termos_uso": {
+                    "versao": "2.0",
+                    "aceito": True
+                }
+            },
+            client
+        )
 
     def login(self, email=None, client=None, senha=SENHA):
-        return self.request("/api/auth/login", {"email": email or self.email, "senha": senha}, client)
+        return self.request(
+            "/api/auth/login",
+            {
+                "email": email or self.email,
+                "senha": senha
+            },
+            client
+        )
 
     def admin(self, client=None):
         email = f"admin-{uuid4().hex}@teste.local"
         with self.app.app_context():
-            CriarUsuarioService.executar({"nome": "Admin teste", "email": email,
-                "senha": SENHA, "senha_confirmacao": SENHA}, "administrador")
+            CriarUsuarioService.executar(
+                {
+                    "nome": "Admin teste",
+                    "email": email,
+                    "senha": SENHA,
+                    "senha_confirmacao": SENHA
+                },
+                "administrador"
+            )
         self.assertEqual(self.login(email, client).status_code, 200)
         return email
 
@@ -52,8 +78,14 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         # Coluna vem exclusivamente dos literais abaixo definidos pelo teste.
         self.assertIn(coluna, {"ultimo_acesso_em", "expira_em", "reautenticada_em"})
         with self.app.app_context():
-            db.session.execute(text(f"UPDATE sessoes s JOIN usuarios u ON u.id=s.usuario_id "
-                f"SET s.{coluna}=:data WHERE u.email=:email"), {"data": tempo, "email": email or self.email})
+            db.session.execute(
+                text(f"UPDATE sessoes s JOIN usuarios u ON u.id=s.usuario_id "
+                    f"SET s.{coluna}=:data WHERE u.email=:email"),
+                {
+                    "data": tempo,
+                    "email": email or self.email
+                }
+            )
             db.session.commit()
 
     def test_cadastro_login_cookie_identidade_logout(self):
@@ -76,11 +108,30 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         self.assertEqual(self.client.get("/api/materias").status_code, 401)
 
     def test_validacao_duplicidade_e_perfil(self):
-        dados = {"nome": "Teste", "email": self.email, "senha": SENHA, "senha_confirmacao": SENHA,
-            "termos_uso":{"versao":"2.0","aceito":True}}
-        for alteracao in ({"perfil": "administrador"}, {"nome": " "}, {"email": "a@b"},
-                          {"senha": "curta"}, {"senha_confirmacao": "outra"}):
-            self.assertEqual(self.request("/api/auth/cadastro", {**dados, **alteracao}).status_code, 400)
+        dados = {
+            "nome": "Teste",
+            "email": self.email,
+            "senha": SENHA,
+            "senha_confirmacao": SENHA,
+            "termos_uso": {"versao": "2.0", "aceito": True}
+        }
+        for alteracao in (
+            {"perfil": "administrador"},
+            {"nome": " "},
+            {"email": "a@b"},
+            {"senha": "curta"},
+            {"senha_confirmacao": "outra"}
+        ):
+            self.assertEqual(
+                self.request(
+                    "/api/auth/cadastro",
+                    {
+                        **dados,
+                        **alteracao
+                    }
+                ).status_code,
+                400
+            )
         self.assertEqual(self.request("/api/auth/cadastro", []).status_code, 400)
         self.assertEqual(self.cadastro().status_code, 201)
         self.assertEqual(self.cadastro("  " + self.email.upper() + "  ").status_code, 409)
@@ -89,7 +140,8 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         self.assertEqual(self.login().json["codigo"], "ja_autenticado")
 
     def test_autorizacao_todas_rotas_existentes(self):
-        self.cadastro(); self.login()
+        self.cadastro()
+        self.login()
         for rule in self.app.url_map.iter_rules():
             if not rule.rule.startswith("/api/") or rule.rule.startswith("/api/auth/"):
                 continue
@@ -98,15 +150,25 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
                 path = path.replace(f"<int:{argumento}>", "2147483647")
             for method in rule.methods - {"OPTIONS"}:
                 public = path in {"/api/health", "/api/termos"}
-                leitura = method in {"GET", "HEAD"} and path in {"/api/areas-enem", "/api/materias", "/api/assuntos"}
+                leitura = method in {
+                    "GET",
+                    "HEAD"
+                } and path in {
+                    "/api/areas-enem",
+                    "/api/materias",
+                    "/api/assuntos"
+                }
                 anonymous = self.app.test_client().open(path, method=method)
                 self.assertEqual(anonymous.status_code, 200 if public else 401, (path, method))
                 headers = {"Origin": ORIGIN}
                 esperado = 200 if public or leitura else 403
                 if path.startswith('/api/aluno/'):
                     headers['X-CSRF-Token'] = self.client.get('/api/auth/sessao').json['csrf_token']
-                    esperado = (404 if '/2147483647' in path else 200) if method in {'GET','HEAD'} else 400
-                    if path == '/api/aluno/plano' and method in {'GET','HEAD'}:
+                    esperado = (404 if '/2147483647' in path else 200) if method in {
+                        'GET',
+                        'HEAD'
+                    } else 400
+                    if path == '/api/aluno/plano' and method in {'GET', 'HEAD'}:
                         esperado = 403  # Conta nova ainda não autorizou o plano.
                 aluno = self.client.open(path, method=method, json={}, headers=headers)
                 self.assertEqual(aluno.status_code, esperado, (path, method))
@@ -114,8 +176,14 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
             self.assertEqual(self.client.get(path).status_code, 403)
         self.assertEqual(self.client.get("/api/inexistente").status_code, 404)
         self.assertEqual(self.client.post("/api/areas-enem").status_code, 405)
-        preflight = self.app.test_client().options("/api/materias", headers={"Origin": ORIGIN,
-            "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "X-CSRF-Token"})
+        preflight = self.app.test_client().options(
+            "/api/materias",
+            headers={
+                "Origin": ORIGIN,
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "X-CSRF-Token"
+            }
+        )
         self.assertEqual(preflight.status_code, 200)
         self.assertEqual(preflight.headers["Access-Control-Allow-Credentials"], "true")
 
@@ -123,38 +191,85 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         self.assertEqual(self.client.post("/api/auth/login", json={}).status_code, 403)
         self.assertEqual(self.request("/api/auth/login", {}, token="errado").status_code, 401)
         self.client.get("/api/auth/csrf")
-        self.assertEqual(self.request("/api/auth/login", {}, token="errado").json["codigo"], "csrf_invalido")
-        self.cadastro(); self.login()
+        self.assertEqual(
+            self.request(
+                "/api/auth/login",
+                {},
+                token="errado"
+            ).json["codigo"],
+            "csrf_invalido"
+        )
+        self.cadastro()
+        self.login()
         token = self.client.get("/api/auth/sessao").json["csrf_token"]
         for origin in (None, "null", "http://nao-permitido.test"):
             headers = {"X-CSRF-Token": token}
-            if origin is not None: headers["Origin"] = origin
+            if origin is not None:
+                headers["Origin"] = origin
             self.assertEqual(self.client.post("/api/auth/logout", headers=headers).status_code, 403)
         outro = self.app.test_client().get("/api/auth/csrf").json["csrf_token"]
         self.assertEqual(self.request("/api/auth/logout", token=outro).status_code, 403)
         self.assertEqual(self.client.get("/api/auth/sessao").status_code, 200)
         self.app.config["AUTH_COOKIE_SECURE"] = True
         try:
-            self.assertIn("Secure", self.app.test_client().get("/api/auth/csrf").headers["Set-Cookie"])
-        finally: self.app.config["AUTH_COOKIE_SECURE"] = False
+            self.assertIn(
+                "Secure",
+                self.app.test_client().get("/api/auth/csrf").headers["Set-Cookie"]
+            )
+        finally:
+            self.app.config["AUTH_COOKIE_SECURE"] = False
 
     def test_expiracao_absoluta_inatividade_e_reautenticacao(self):
         email = self.admin()
         self.datas("reautenticada_em", agora_utc() - timedelta(minutes=15), email)
         token = self.client.get("/api/auth/sessao").json["csrf_token"]
-        for method, path, body in (("DELETE", "/api/materias/1", {}),
-                ("POST", "/api/assuntos/1/transferir", {}), ("POST", "/api/materias/1/inativar", {}),
-                ("POST", "/api/assuntos/1/arquivar", {}), ("POST", "/api/assuntos/1/reativar", {}),
-                ("PUT", "/api/assuntos/1", {"materia_id": 1}),
-                ("PUT", "/api/materias/1", {"status": "ativa"}),
-                ("PUT", "/api/materias/1", {"area_enem_id": 4})):
-            response = self.client.open(path, method=method, json=body, headers={"Origin": ORIGIN, "X-CSRF-Token": token})
+        for method, path, body in (
+            ("DELETE", "/api/materias/1", {}),
+            (
+                "POST",
+                "/api/assuntos/1/transferir",
+                {}
+            ),
+            (
+                "POST",
+                "/api/materias/1/inativar",
+                {}
+            ),
+            ("POST", "/api/assuntos/1/arquivar", {}),
+            ("POST", "/api/assuntos/1/reativar", {}),
+            ("PUT", "/api/assuntos/1", {"materia_id": 1}),
+            ("PUT", "/api/materias/1", {"status": "ativa"}),
+            ("PUT", "/api/materias/1", {"area_enem_id": 4})
+        ):
+            response = self.client.open(
+                path,
+                method=method,
+                json=body,
+                headers={
+                    "Origin": ORIGIN,
+                    "X-CSRF-Token": token
+                }
+            )
             self.assertEqual(response.json["codigo"], "reautenticacao_necessaria")
-        self.assertEqual(self.request("/api/auth/reautenticar", {"senha": "incorreta"}).json["codigo"], "credenciais_invalidas")
+        self.assertEqual(
+            self.request(
+                "/api/auth/reautenticar",
+                {"senha": "incorreta"}
+            ).json["codigo"],
+            "credenciais_invalidas"
+        )
         self.assertEqual(self.client.get("/api/auth/sessao").status_code, 200)
         self.assertEqual(self.request("/api/auth/reautenticar", {"senha": SENHA}).status_code, 200)
-        self.assertEqual(self.client.delete("/api/materias/2147483647", headers={"Origin": ORIGIN,
-            "X-CSRF-Token": token}).status_code, 404)
+        self.assertEqual(
+            self.client.delete(
+                "/api/materias/2147483647",
+                headers={
+                    "Origin": ORIGIN,
+                    "X-CSRF-Token": token
+                }
+            ).status_code,
+            404
+        )
         self.datas("ultimo_acesso_em", agora_utc() - timedelta(minutes=30), email)
         self.assertEqual(self.client.get("/api/auth/sessao").status_code, 401)
         self.login(email)
@@ -169,8 +284,10 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         self.assertEqual(self.login().status_code, 429)
         self.assertIn("Retry-After", self.login().headers)
         with self.app.app_context():
-            db.session.execute(text("UPDATE auth_limites SET janela_inicio=:data, bloqueado_ate=:data"),
-                               {"data": agora_utc() - timedelta(minutes=16)})
+            db.session.execute(
+                text("UPDATE auth_limites SET janela_inicio=:data, bloqueado_ate=:data"),
+                {"data": agora_utc() - timedelta(minutes=16)}
+            )
             db.session.commit()
         self.assertEqual(self.login().status_code, 200)
         for attempt in range(5):
@@ -180,32 +297,52 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             Usuario.buscar_por_email(self.email).atualizar(ativo=False)
         self.assertEqual(self.login().json["erro"], "E-mail ou senha inválidos.")
-        self.assertEqual(self.login("naoexiste@teste.local").json["erro"], "E-mail ou senha inválidos.")
+        self.assertEqual(
+            self.login("naoexiste@teste.local").json["erro"],
+            "E-mail ou senha inválidos."
+        )
 
     def test_cli_conta_limpeza_e_revogacao(self):
         email = f"cli-{uuid4().hex}@teste.local"
         runner = self.app.test_cli_runner()
-        r = runner.invoke(args=["criar-administrador"], input=f"Teste CLI\n{email}\n{SENHA}\n{SENHA}\n")
+        r = runner.invoke(
+            args=["criar-administrador"],
+            input=f"Teste CLI\n{email}\n{SENHA}\n{SENHA}\n"
+        )
         self.assertEqual(r.exit_code, 0, r.output)
         self.assertNotIn(SENHA, r.output)
         self.assertEqual(self.login(email).json["usuario"]["perfil"], "administrador")
-        duplicate = runner.invoke(args=["criar-administrador"], input=f"Teste CLI\n{email}\n{SENHA}\n{SENHA}\n")
+        duplicate = runner.invoke(
+            args=["criar-administrador"],
+            input=f"Teste CLI\n{email}\n{SENHA}\n{SENHA}\n"
+        )
         self.assertNotEqual(duplicate.exit_code, 0)
-        mismatch = runner.invoke(args=["criar-administrador"], input=f"Teste CLI\n{email}\n{SENHA}\nerrada\n")
+        mismatch = runner.invoke(
+            args=["criar-administrador"],
+            input=f"Teste CLI\n{email}\n{SENHA}\nerrada\n"
+        )
         self.assertNotEqual(mismatch.exit_code, 0)
-        outro = self.app.test_client(); self.login(email, outro)
+        outro = self.app.test_client()
+        self.login(email, outro)
         self.request("/api/auth/logout")
         self.assertEqual(outro.get("/api/auth/sessao").status_code, 200)
         with self.app.app_context():
             user = Usuario.buscar_por_email(email)
-            TransactionManager.executar(lambda: AutenticacaoRepository.revogar_usuario(user.id, agora_utc()))
+            TransactionManager.executar(lambda: AutenticacaoRepository.revogar_usuario(
+                user.id,
+                agora_utc()
+            ))
         self.assertEqual(outro.get("/api/auth/sessao").status_code, 401)
         self.login(email)
         with self.app.app_context():
-            db.session.execute(text("UPDATE sessoes SET revogada_em=:data WHERE revogada_em IS NOT NULL"),
-                               {"data": agora_utc() - timedelta(days=2)})
-            db.session.execute(text("UPDATE auth_limites SET janela_inicio=:data, bloqueado_ate=NULL"),
-                               {"data": agora_utc() - timedelta(days=2)})
+            db.session.execute(
+                text("UPDATE sessoes SET revogada_em=:data WHERE revogada_em IS NOT NULL"),
+                {"data": agora_utc() - timedelta(days=2)}
+            )
+            db.session.execute(
+                text("UPDATE auth_limites SET janela_inicio=:data, bloqueado_ate=NULL"),
+                {"data": agora_utc() - timedelta(days=2)}
+            )
             db.session.commit()
         clean = runner.invoke(args=["limpar-autenticacao"])
         self.assertEqual(clean.exit_code, 0, clean.output)
@@ -216,6 +353,7 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
             return self.cadastro(client=self.app.test_client()).status_code
         with ThreadPoolExecutor(max_workers=2) as pool:
             self.assertEqual(sorted(pool.map(criar, range(2))), [201, 409])
+
         def falhar(_):
             return self.login(client=self.app.test_client(), senha="errada").status_code
         with ThreadPoolExecutor(max_workers=5) as pool:
@@ -228,7 +366,10 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
             antes = {t: db.session.execute(text(f"SELECT COUNT(*) FROM {t}")).scalar_one()
                 for t in ("usuarios", "materias", "assuntos", "questoes", "assunto_transferencias")}
         runner = self.app.test_cli_runner()
-        duplicate = runner.invoke(args=["criar-administrador"], input=f"Outro nome\n{self.email}\nOutra senha 123\nOutra senha 123\n")
+        duplicate = runner.invoke(
+            args=["criar-administrador"],
+            input=f"Outro nome\n{self.email}\nOutra senha 123\nOutra senha 123\n"
+        )
         self.assertNotEqual(duplicate.exit_code, 0)
         self.assertEqual(self.login().json["usuario"]["perfil"], "aluno")
         clean = runner.invoke(args=["limpar-autenticacao"])
@@ -239,14 +380,17 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
             self.assertEqual(antes, depois)
 
     def test_revogacao_concorrente_nao_ressuscita_sessao(self):
-        self.cadastro(); self.login()
+        self.cadastro()
+        self.login()
         identificador = self.client.get_cookie("enem_session", path="/api").value
         with self.app.app_context():
             sessao_id = AutenticacaoRepository.consultar_sessao(hash_identificador(identificador)).id
         barrier = Barrier(2)
+
         def operar(revogar):
             with self.app.app_context():
                 barrier.wait(timeout=10)
+
                 def transacao():
                     if revogar:
                         AutenticacaoRepository.revogar(sessao_id, agora_utc())
@@ -263,9 +407,12 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
         with self.app.app_context():
             anterior = AutenticacaoRepository.consultar_sessao(hash_identificador(identificador)).id
             # Falha MySQL real na segunda escrita: a primeira tambem deve ser revertida.
-            db.session.execute(text("CREATE TRIGGER auth_test_rotation BEFORE UPDATE ON sessoes "
-                "FOR EACH ROW BEGIN IF OLD.id = :id THEN "
-                "SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='falha de teste'; END IF; END"), {"id": anterior})
+            db.session.execute(
+                text("CREATE TRIGGER auth_test_rotation BEFORE UPDATE ON sessoes "
+                    "FOR EACH ROW BEGIN IF OLD.id = :id THEN "
+                    "SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='falha de teste'; END IF; END"),
+                {"id": anterior}
+            )
             db.session.commit()
         try:
             response = self.login()
@@ -274,9 +421,16 @@ class AutenticacaoIntegrationTest(MySQLIntegrationTestCase):
             with self.app.app_context():
                 sessao = AutenticacaoRepository.consultar_sessao(hash_identificador(identificador))
                 self.assertIsNone(sessao.revogada_em)
-                self.assertEqual(db.session.execute(text("SELECT COUNT(*) FROM sessoes s JOIN usuarios u "
-                    "ON u.id=s.usuario_id WHERE u.email=:email"), {"email": self.email}).scalar_one(), 0)
+                self.assertEqual(
+                    db.session.execute(
+                        text("SELECT COUNT(*) FROM sessoes s JOIN usuarios u "
+                            "ON u.id=s.usuario_id WHERE u.email=:email"),
+                        {"email": self.email}
+                    ).scalar_one(),
+                    0
+                )
         finally:
             with self.app.app_context():
-                db.session.execute(text("DROP TRIGGER auth_test_rotation")); db.session.commit()
+                db.session.execute(text("DROP TRIGGER auth_test_rotation"))
+                db.session.commit()
         self.assertEqual(self.login().status_code, 200)

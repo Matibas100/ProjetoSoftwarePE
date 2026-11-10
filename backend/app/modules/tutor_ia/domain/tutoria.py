@@ -4,8 +4,12 @@ import unicodedata
 from app.exceptions import ErroAplicacao
 
 
-TITULOS = ('1. Explicação simples', '2. Exemplo',
-           '3. Verifique sua compreensão', '4. Exercício curto')
+TITULOS = (
+    '1. Explicação simples',
+    '2. Exemplo',
+    '3. Verifique sua compreensão',
+    '4. Exercício curto'
+)
 
 
 class TutoriaError(ErroAplicacao):
@@ -18,16 +22,23 @@ class TutoriaError(ErroAplicacao):
 
 
 def resposta_invalida():
-    return TutoriaError('O Tutor retornou uma resposta inválida. Tente novamente por ação própria.',
-                       502, 'tutor_resposta_invalida')
+    return TutoriaError(
+        'O Tutor retornou uma resposta inválida. Tente novamente por ação própria.',
+        502,
+        'tutor_resposta_invalida'
+    )
 
 
 def validar_entrada(dados):
     if not isinstance(dados, dict) or set(dados) != {'disciplina', 'nivel', 'assunto', 'duvida'}:
         raise TutoriaError('Informe somente disciplina, nivel, assunto e duvida.')
     entrada = {}
-    for campo, minimo, maximo in (('disciplina', 1, 100), ('nivel', 1, 20),
-                                   ('assunto', 1, 150), ('duvida', 10, 2000)):
+    for campo, minimo, maximo in (
+        ('disciplina', 1, 100),
+        ('nivel', 1, 20),
+        ('assunto', 1, 150),
+        ('duvida', 10, 2000)
+    ):
         valor = dados[campo]
         if not isinstance(valor, str):
             raise TutoriaError(f'O campo {campo} deve ser texto.')
@@ -60,6 +71,6 @@ def validar_resposta(texto):
         raise resposta_invalida()
     for i, posicao in enumerate(posicoes):
         fim = posicoes[i + 1].start() if i < 3 else len(texto)
-        if not texto[posicao.end():fim].strip():
+        if not texto[posicao.end(): fim].strip():
             raise resposta_invalida()
     return texto

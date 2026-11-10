@@ -35,37 +35,109 @@ class CatalogoProceduresIntegrationTest(MySQLIntegrationTestCase):
         url = f"/api/questoes/{questao['id']}"
         confirmacao = {'revisao': 1, 'confirmar': True, 'motivo': 'Versão para histórico'}
         antiga = self.client.post(url+'/publicar', json=confirmacao).json['versao_publicada_id']
-        self.assertEqual(self.client.put(url, json={'revisao': 1, 'enunciado': 'Outra versão'}).status_code, 200)
-        atual = self.client.post(url+'/publicar', json={**confirmacao, 'revisao': 2}).json['versao_publicada_id']
+        self.assertEqual(
+            self.client.put(
+                url,
+                json={
+                    'revisao': 1,
+                    'enunciado': 'Outra versão'
+                }
+            ).status_code,
+            200
+        )
+        atual = self.client.post(
+            url+'/publicar',
+            json={
+                **confirmacao,
+                'revisao': 2
+            }
+        ).json['versao_publicada_id']
         with self.app.app_context():
             versoes = QuestaoRepository.versoes(questao['id'])
             self.assertEqual([v.numero for v in versoes], sorted(v.numero for v in versoes))
             self.assertTrue(all(inspect(v).persistent for v in versoes))
-            self.assertEqual([v.id for v in QuestaoRepository.versoes_elegiveis([atual, atual, 2**31+1])], [atual])
-            self.assertEqual({v.id for v in QuestaoRepository.versoes_historicas([antiga, antiga, atual])}, {antiga, atual})
-            for consulta in [QuestaoRepository.versoes_elegiveis, QuestaoRepository.versoes_historicas]:
+            self.assertEqual(
+                [v.id for v in QuestaoRepository.versoes_elegiveis([
+                    atual,
+                    atual,
+                    2**31+1
+                ])],
+                [atual]
+            )
+            self.assertEqual(
+                {v.id for v in QuestaoRepository.versoes_historicas([
+                    antiga,
+                    antiga,
+                    atual
+                ])},
+                {
+                    antiga,
+                    atual
+                }
+            )
+            for consulta in [
+                QuestaoRepository.versoes_elegiveis,
+                QuestaoRepository.versoes_historicas
+            ]:
                 self.assertEqual(consulta([]), [])
-            linhas, total = QuestaoRepository.listar_elegiveis({'assunto_id': assunto['id']}, 2**31+1, 20)
+            linhas, total = QuestaoRepository.listar_elegiveis(
+                {'assunto_id': assunto['id']},
+                2**31+1,
+                20
+            )
             self.assertEqual((linhas, total), ([], 1))
-            seguros, total = ConsultaQuestoesElegiveisMySQL().listar({'assunto_id': assunto['id']}, 1, 20)
+            seguros, total = ConsultaQuestoesElegiveisMySQL().listar(
+                {'assunto_id': assunto['id']},
+                1,
+                20
+            )
             self.assertEqual(total, 1)
             self.assertEqual(seguros[0]['questao_versao_id'], atual)
             self.assertNotIn('resposta_correta', seguros[0])
             self.assertNotIn('explicacao', seguros[0])
-            self.assertIs(QuestaoRepository.versao_elegivel(atual, bloquear=True), db.session.get(QuestaoVersao, atual))
+            self.assertIs(
+                QuestaoRepository.versao_elegivel(
+                    atual,
+                    bloquear=True
+                ),
+                db.session.get(
+                    QuestaoVersao,
+                    atual
+                )
+            )
             db.session.rollback()
-        self.assertEqual(self.client.post(url+'/arquivar', json={**confirmacao, 'revisao': 2}).status_code, 200)
+        self.assertEqual(
+            self.client.post(
+                url+'/arquivar',
+                json={
+                    **confirmacao,
+                    'revisao': 2
+                }
+            ).status_code,
+            200
+        )
         with self.app.app_context():
             self.assertIsNone(QuestaoRepository.versao_elegivel(atual))
             self.assertEqual(QuestaoRepository.versoes_elegiveis([antiga, atual]), [])
-            self.assertEqual({v.id for v in QuestaoRepository.versoes_historicas([antiga, atual])}, {antiga, atual})
+            self.assertEqual(
+                {v.id for v in QuestaoRepository.versoes_historicas([
+                    antiga,
+                    atual
+                ])},
+                {
+                    antiga,
+                    atual
+                }
+            )
 
     def test_rotinas_013_ausentes_geram_erro_seguro_sem_fallback(self):
         materia = self._matter()
         assunto = self._subject(materia['id'])
         questao = self._question(assunto['id'])
-        for rotina, url in [('sp_areas_enem_ordenadas', '/api/areas-enem'),
-                            ('sp_versoes_questao', f"/api/questoes/{questao['id']}")]:
+        for rotina, url in [
+            ('sp_areas_enem_ordenadas', '/api/areas-enem'),
+            ('sp_versoes_questao', f"/api/questoes/{questao['id']}")
+        ]:
             with self.subTest(rotina=rotina), self.app.app_context():
                 with db.engine.connect() as con:
                     ddl = con.exec_driver_sql('SHOW CREATE PROCEDURE '+rotina).mappings().one()['Create Procedure']
@@ -92,19 +164,29 @@ class CatalogoProceduresIntegrationTest(MySQLIntegrationTestCase):
             m = db.session.get(Materia, origem['id'])
             q = db.session.get(Questao, questao['id'])
             with db.engine.begin() as outra:
-                outra.execute(text('UPDATE assuntos SET materia_id=:id WHERE id=:s'),
-                    {'id': destino['id'], 's': s.id})
-                outra.execute(text("UPDATE materias SET descricao='Estado corrente' WHERE id=:id"), {'id': m.id})
+                outra.execute(
+                    text('UPDATE assuntos SET materia_id=:id WHERE id=:s'),
+                    {'id': destino['id'], 's': s.id}
+                )
+                outra.execute(
+                    text("UPDATE materias SET descricao='Estado corrente' WHERE id=:id"),
+                    {'id': m.id}
+                )
                 outra.execute(text('UPDATE questoes SET revisao=7 WHERE id=:id'), {'id': q.id})
             self.assertIs(CatalogoRepository.buscar_assunto_para_atualizacao(s.id), s)
             self.assertEqual(s.materia_id, destino['id'])
-            materias = CatalogoRepository.buscar_materias_para_atualizacao([destino['id'], origem['id'], destino['id']])
+            materias = CatalogoRepository.buscar_materias_para_atualizacao([
+                destino['id'],
+                origem['id'],
+                destino['id']
+            ])
             self.assertEqual([r.id for r in materias], sorted([origem['id'], destino['id']]))
             self.assertIs(next(r for r in materias if r.id == m.id), m)
             self.assertEqual(m.descricao, 'Estado corrente')
             self.assertIs(QuestaoRepository.bloquear(q.id), q)
             self.assertEqual(q.revisao, 7)
             chamadas = []
+
             def observar(conexao, cursor, comando, parametros, contexto, executemany):
                 if comando.startswith('CALL sp_bloquear'):
                     chamadas.append(comando.split('(')[0])
@@ -130,21 +212,28 @@ class CatalogoProceduresIntegrationTest(MySQLIntegrationTestCase):
             chegou = Event()
             principal = get_ident()
             engine = db.engine
+
             def observar(conexao, cursor, comando, parametros, contexto, executemany):
                 if get_ident() != principal and comando.startswith('CALL sp_bloquear_assunto'):
                     chegou.set()
+
             def publicar():
                 with self.app.app_context():
-                    return PublicarQuestaoService.executar(questao['id'],
-                        {'revisao': 1, 'confirmar': True, 'motivo': 'Publicação concorrente'}, ator)
+                    return PublicarQuestaoService.executar(
+                        questao['id'],
+                        {'revisao': 1, 'confirmar': True, 'motivo': 'Publicação concorrente'},
+                        ator
+                    )
             pool = ThreadPoolExecutor(max_workers=1)
             event.listen(engine, 'before_cursor_execute', observar)
             try:
                 futuro = pool.submit(publicar)
                 self.assertTrue(chegou.wait(timeout=10))
                 self.assertFalse(futuro.done())
-                movido = TransferirAssuntoService.executar(assunto['id'],
-                    {'materia_destino_id': destino['id'], 'impacto_esperado': {'questoes': 1}})
+                movido = TransferirAssuntoService.executar(
+                    assunto['id'],
+                    {'materia_destino_id': destino['id'], 'impacto_esperado': {'questoes': 1}}
+                )
                 self.assertEqual(movido['materia_id'], destino['id'])
                 publicado = futuro.result(timeout=10)
                 versao = db.session.get(QuestaoVersao, publicado['versao_publicada_id'])
@@ -164,8 +253,10 @@ class CatalogoProceduresIntegrationTest(MySQLIntegrationTestCase):
                     "SET MESSAGE_TEXT='Falha sintética no histórico'")
             try:
                 with self.assertRaises(DBAPIError):
-                    TransferirAssuntoService.executar(assunto['id'],
-                        {'materia_destino_id': destino['id'], 'impacto_esperado': {'questoes': 0}})
+                    TransferirAssuntoService.executar(
+                        assunto['id'],
+                        {'materia_destino_id': destino['id'], 'impacto_esperado': {'questoes': 0}}
+                    )
                 s = db.session.get(Assunto, assunto['id'])
                 self.assertEqual(s.materia_id, origem['id'])
                 self.assertEqual(CatalogoRepository.impacto_assunto(s.id)['transferencias'], 0)
@@ -190,17 +281,25 @@ class CatalogoProceduresIntegrationTest(MySQLIntegrationTestCase):
                 atual = db.session.get(Assunto, assunto['id'])
                 antiga = db.session.get(Materia, materia['id'])
                 with db.engine.begin() as outra:
-                    outra.execute(text('UPDATE materias SET descricao=:valor WHERE id=:id'),
-                        {'valor': 'Leitura corrente', 'id': materia['id']})
+                    outra.execute(
+                        text('UPDATE materias SET descricao=:valor WHERE id=:id'),
+                        {'valor': 'Leitura corrente', 'id': materia['id']}
+                    )
                 dados = column('dados', JSON)
                 flag = column('flag', Boolean)
                 comando = text('CALL sp_teste_orm(:id)').columns(
-                    *Assunto.__table__.columns, *Materia.__table__.columns, dados, flag)
+                    *Assunto.__table__.columns,
+                    *Materia.__table__.columns,
+                    dados,
+                    flag
+                )
 
                 def operacao():
-                    resultado = db.session.execute(select(Assunto, Materia, dados, flag)
+                    resultado = db.session.execute(
+                        select(Assunto, Materia, dados, flag)
                         .from_statement(comando).execution_options(populate_existing=True),
-                        {'id': assunto['id']})
+                        {'id': assunto['id']}
+                    )
                     try:
                         s, m, json_, booleano = resultado.one()
                     finally:
@@ -219,10 +318,29 @@ class CatalogoProceduresIntegrationTest(MySQLIntegrationTestCase):
 
                 with self.assertRaisesRegex(RuntimeError, 'posterior'):
                     TransactionManager.executar(operacao)
-                self.assertEqual(db.session.get(Assunto, assunto['id']).descricao, assunto['descricao'])
-                self.assertEqual(db.session.get(Materia, materia['id']).descricao, 'Leitura corrente')
-                vazio = db.session.execute(select(Assunto, Materia, dados, flag).from_statement(comando),
-                    {'id': 2**31+1})
+                self.assertEqual(
+                    db.session.get(
+                        Assunto,
+                        assunto['id']
+                    ).descricao,
+                    assunto['descricao']
+                )
+                self.assertEqual(
+                    db.session.get(
+                        Materia,
+                        materia['id']
+                    ).descricao,
+                    'Leitura corrente'
+                )
+                vazio = db.session.execute(
+                    select(
+                        Assunto,
+                        Materia,
+                        dados,
+                        flag
+                    ).from_statement(comando),
+                    {'id': 2**31+1}
+                )
                 try:
                     self.assertEqual(vazio.all(), [])
                 finally:
@@ -236,26 +354,61 @@ class CatalogoProceduresIntegrationTest(MySQLIntegrationTestCase):
     def test_caracterizacao_seletores_impactos_equivalencia_e_entidades(self):
         materia = self._matter()
         outra = self._matter()
-        assunto = self._subject(materia['id'], '  Genética '+uuid4().hex[:8])
+        assunto = self._subject(materia['id'], '  Genética '+uuid4().hex[: 8])
         self._question(assunto['id'])
         self._question(assunto['id'])
         with self.app.app_context():
             self.assertEqual([a.id for a in AreaEnem.listar_ordenadas()], [1, 2, 3, 4])
             materias = Materia.listar_ativos()
-            self.assertEqual([(m.nome, m.id) for m in materias], sorted((m.nome, m.id) for m in materias))
-            self.assertEqual(CatalogoRepository.impacto_materia(materia['id']),
-                {'assuntos': 1, 'questoes': 2, 'transferencias': 0})
-            self.assertEqual(CatalogoRepository.impacto_assunto(assunto['id']),
-                {'questoes': 2, 'transferencias': 0})
+            self.assertEqual(
+                [(
+                    m.nome,
+                    m.id
+                ) for m in materias],
+                sorted((
+                    m.nome,
+                    m.id
+                ) for m in materias)
+            )
+            self.assertEqual(
+                CatalogoRepository.impacto_materia(materia['id']),
+                {'assuntos': 1, 'questoes': 2, 'transferencias': 0}
+            )
+            self.assertEqual(
+                CatalogoRepository.impacto_assunto(assunto['id']),
+                {'questoes': 2, 'transferencias': 0}
+            )
             s = db.session.get(Assunto, assunto['id'])
-            self.assertTrue(CatalogoRepository.existe_assunto_equivalente(materia['id'], s.nome_normalizado.upper()))
-            self.assertFalse(CatalogoRepository.existe_assunto_equivalente(materia['id'], s.nome_normalizado, s.id))
-            self.assertFalse(CatalogoRepository.existe_assunto_equivalente(outra['id'], s.nome_normalizado))
+            self.assertTrue(CatalogoRepository.existe_assunto_equivalente(
+                materia['id'],
+                s.nome_normalizado.upper()
+            ))
+            self.assertFalse(CatalogoRepository.existe_assunto_equivalente(
+                materia['id'],
+                s.nome_normalizado,
+                s.id
+            ))
+            self.assertFalse(CatalogoRepository.existe_assunto_equivalente(
+                outra['id'],
+                s.nome_normalizado
+            ))
             self.assertEqual(CatalogoRepository.contar_assuntos_nao_arquivados(materia['id']), 1)
-            self.assertEqual(CatalogoRepository.impacto_assunto(2**31+1), {'questoes': 0, 'transferencias': 0})
+            self.assertEqual(
+                CatalogoRepository.impacto_assunto(2**31+1),
+                {
+                    'questoes': 0,
+                    'transferencias': 0
+                }
+            )
             self.assertTrue(all(inspect(m).persistent for m in materias))
-        self.assertEqual(self.client.post(f"/api/assuntos/{assunto['id']}/arquivar").status_code, 200)
+        self.assertEqual(
+            self.client.post(f"/api/assuntos/{assunto['id']}/arquivar").status_code,
+            200
+        )
         with self.app.app_context():
             self.assertEqual(CatalogoRepository.listar_assuntos_ativos(materia['id']), [])
             self.assertEqual(CatalogoRepository.contar_assuntos_nao_arquivados(materia['id']), 0)
-            self.assertTrue(CatalogoRepository.existe_assunto_equivalente(materia['id'], assunto['nome_normalizado']))
+            self.assertTrue(CatalogoRepository.existe_assunto_equivalente(
+                materia['id'],
+                assunto['nome_normalizado']
+            ))

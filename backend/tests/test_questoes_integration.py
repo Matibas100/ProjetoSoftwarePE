@@ -38,7 +38,7 @@ class QuestoesApiIntegrationTest(MySQLIntegrationTestCase):
         return assunto
 
     def _dados_questao(self, assunto_id):
-        identificador = uuid4().hex[:12]
+        identificador = uuid4().hex[: 12]
         return {
             "enunciado": f"Enunciado temporario {identificador}",
             "alternativa_a": "Alternativa A",
@@ -67,7 +67,10 @@ class QuestoesApiIntegrationTest(MySQLIntegrationTestCase):
             questao = Questao.buscar_por_id(questao_id)
             if questao is not None:
                 # Limpeza somente da fixture descartável; não é fluxo de produção.
-                db.session.execute(text("DELETE FROM questao_eventos WHERE questao_id=:id"), {"id": questao_id})
+                db.session.execute(
+                    text("DELETE FROM questao_eventos WHERE questao_id=:id"),
+                    {"id": questao_id}
+                )
                 questao.deletar()
 
     def test_post_questao_valida(self):

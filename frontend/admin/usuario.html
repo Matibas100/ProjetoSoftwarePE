@@ -37,25 +37,49 @@
           </header>
           <main class="main-content">
 
-            <header class="page-heading"><div><h1 id="usuario-titulo">Adicionar usuário</h1><p>Contas de Aluno · perfil definido pelo sistema.</p></div><a id="usuario-voltar" href="usuarios.html" class="button button--outline">Voltar à listagem</a></header>
+            <header class="page-heading"><div>
+                <h1 id="usuario-titulo">Adicionar usuário</h1>
+                <p>Contas de Aluno · perfil definido pelo sistema.</p>
+              </div><a id="usuario-voltar" href="usuarios.html" class="button button--outline">Voltar à listagem</a></header>
             <p id="usuario-carregando" role="status" hidden>Carregando usuário...</p><button id="usuario-recarregar" class="button button--outline" type="button" hidden>Atualizar detalhe</button>
             <div id="usuarios-mensagem" class="notice" role="status" aria-live="polite" hidden></div>
             <div class="editor-grid">
-              <section class="card editor-card"><h2>Identificação <span id="usuario-unsaved" class="unsaved" hidden>Alterações não salvas</span></h2>
+              <section class="card editor-card">
+                <h2>Identificação <span id="usuario-unsaved" class="unsaved" hidden>Alterações não salvas</span></h2>
                 <form id="usuario-form">
                   <div class="editor-fields">
                     <div class="field"><label for="usuario-nome">Nome</label><input id="usuario-nome" name="nome" minlength="2" maxlength="100" required autocomplete="name"></div>
                     <div class="field"><label for="usuario-email">E-mail</label><input id="usuario-email" name="email" type="email" maxlength="254" required autocomplete="email"></div>
                     <div id="usuario-senhas" class="field--wide editor-fields">
-                      <div class="field"><label for="usuario-senha">Senha inicial</label><input id="usuario-senha" name="senha" type="password" minlength="8" maxlength="128" required autocomplete="new-password"></div>
-                      <div class="field"><label for="usuario-confirmacao">Confirme a senha inicial</label><input id="usuario-confirmacao" name="senha_confirmacao" type="password" minlength="8" maxlength="128" required autocomplete="new-password"></div>
+                      <div class="field"><label for="usuario-senha">Senha inicial</label><input
+                          id="usuario-senha"
+                          name="senha"
+                          type="password"
+                          minlength="8"
+                          maxlength="128"
+                          required
+                          autocomplete="new-password"></div>
+                      <div class="field"><label for="usuario-confirmacao">Confirme a senha inicial</label><input
+                          id="usuario-confirmacao"
+                          name="senha_confirmacao"
+                          type="password"
+                          minlength="8"
+                          maxlength="128"
+                          required
+                          autocomplete="new-password"></div>
                     </div>
                   </div>
                   <p id="usuario-aviso-criacao">A conta será criada sem sessão ou aceite automático. O titular deverá registrar suas próprias decisões de termos na área de privacidade.</p>
                   <div class="form-actions"><button id="usuario-cancelar" class="button button--outline" type="button">Cancelar</button><button id="usuario-salvar" class="button button--primary" type="submit">Salvar usuário</button></div>
                 </form>
               </section>
-              <aside class="card state-card"><h2>Conta e histórico</h2><p>Perfil: Aluno</p><p id="usuario-status">Nova conta ativa</p><p id="usuario-criado"></p><p>Trocar o e-mail encerra todas as sessões do Aluno. Alterar somente o nome preserva as sessões.</p><p>Desativar impede o acesso e preserva histórico e decisões. Reativar exige novo login. A exclusão só é permitida sem vínculos.</p>
+              <aside class="card state-card">
+                <h2>Conta e histórico</h2>
+                <p>Perfil: Aluno</p>
+                <p id="usuario-status">Nova conta ativa</p>
+                <p id="usuario-criado"></p>
+                <p>Trocar o e-mail encerra todas as sessões do Aluno. Alterar somente o nome preserva as sessões.</p>
+                <p>Desativar impede o acesso e preserva histórico e decisões. Reativar exige novo login. A exclusão só é permitida sem vínculos.</p>
                 <div id="usuario-acoes" hidden><button id="usuario-status-acao" class="button button--outline" type="button">Desativar conta</button><button id="usuario-excluir" class="button button--danger" type="button">Excluir conta</button></div>
               </aside>
             </div>

@@ -7,12 +7,13 @@ from app.modules.contas.services.gestao_alunos_validacao import confirmar_acao, 
 
 class DesativarAlunoService:
     @staticmethod
-    def executar(usuario_id,dados):
+    def executar(usuario_id, dados):
         validar_id(usuario_id)
+
         def desativar():
             usuario = exigir_aluno(UsuarioRepository.bloquear(usuario_id))
             confirmar_acao(dados)
-            usuario.atualizar(confirmar=False,ativo=False)
-            AutenticacaoRepository.revogar_usuario(usuario_id,agora_utc())
+            usuario.atualizar(confirmar=False, ativo=False)
+            AutenticacaoRepository.revogar_usuario(usuario_id, agora_utc())
             return apresentar_usuario(usuario)
         return executar_mutacao(desativar)

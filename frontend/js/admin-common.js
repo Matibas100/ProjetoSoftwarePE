@@ -83,8 +83,13 @@
     const snapshot = () => JSON.stringify(Object.fromEntries(new FormData(form)));
     const dirty = () => snapshot() !== persisted;
     globalThis.AuthUI?.registerGuard(dirty);
-    const update = () => { indicator.hidden = !dirty(); };
-    const markPersisted = () => { persisted = snapshot(); update(); };
+    const update = () => {
+      indicator.hidden = !dirty();
+    };
+    const markPersisted = () => {
+      persisted = snapshot();
+      update();
+    };
     form.addEventListener("input", update);
     form.addEventListener("change", update);
     window.addEventListener("beforeunload", (event) => {
@@ -107,8 +112,8 @@
         text.textContent = options.text;
         confirm.textContent = options.confirmLabel || "Confirmar";
         confirm.className = options.danger
-          ? "button button--danger"
-          : "button button--primary";
+        ? "button button--danger"
+        : "button button--primary";
         dialog.showModal();
         return new Promise((resolve) => {
           const finish = (result) => {

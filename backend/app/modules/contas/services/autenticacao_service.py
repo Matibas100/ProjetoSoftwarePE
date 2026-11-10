@@ -9,7 +9,15 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.core.relogio import agora_utc
-from app.modules.contas.domain.autenticacao import AutenticacaoError, hash_identificador, token_assinado, validar_cadastro, validar_dados, validar_email, validar_senha
+from app.modules.contas.domain.autenticacao import (
+    AutenticacaoError,
+    hash_identificador,
+    token_assinado,
+    validar_cadastro,
+    validar_dados,
+    validar_email,
+    validar_senha,
+)
 from app.modules.contas.models.sessao import Sessao
 from app.modules.contas.models.usuario import Usuario
 from app.modules.contas.models.registro_privacidade import RegistroPrivacidade
@@ -32,15 +40,18 @@ def destino(usuario):
 class ConsultarSessaoService:
     @staticmethod
     def executar(identificador, autenticada=True):
-        if not isinstance(identificador, str) or len(identificador) != 43 or not identificador.isascii():
+        if not isinstance(
+            identificador,
+            str
+        ) or len(identificador) != 43 or not identificador.isascii():
             raise sessao_invalida()
         sessao = Repo.consultar_sessao(hash_identificador(identificador))
         agora = agora_utc()
         if (sessao is None or sessao.revogada_em is not None or agora >= sessao.expira_em
-                or (sessao.usuario_id is not None and (
-                    agora >= sessao.ultimo_acesso_em + timedelta(minutes=30)
-                    or not sessao.usuario.ativo))
-                or (autenticada and sessao.usuario_id is None)):
+            or (sessao.usuario_id is not None and (
+                agora >= sessao.ultimo_acesso_em + timedelta(minutes=30)
+                or not sessao.usuario.ativo))
+            or (autenticada and sessao.usuario_id is None)):
             raise sessao_invalida()
         return sessao
 
@@ -65,17 +76,25 @@ class CriarSessaoService:
     def executar(usuario, anterior=None, email_esperado=None):
         identificador = secrets.token_urlsafe(32)
         agora = agora_utc()
-        sessao = Sessao(usuario_id=usuario.id if usuario else None,
-            identificador_hash=hash_identificador(identificador), criada_em=agora,
-            ultimo_acesso_em=agora, expira_em=agora + (
+        sessao = Sessao(
+            usuario_id=usuario.id if usuario else None,
+            identificador_hash=hash_identificador(identificador),
+            criada_em=agora,
+            ultimo_acesso_em=agora,
+            expira_em=agora + (
                 timedelta(hours=8) if usuario else timedelta(minutes=10)),
-            reautenticada_em=agora if usuario else None)
+            reautenticada_em=agora if usuario else None
+        )
 
         def persistir():
             if usuario is not None:
                 atual = Repo.usuario_ativo_bloqueado(usuario.id)
                 if email_esperado is not None and (atual is None or atual.email != email_esperado):
-                    raise AutenticacaoError("E-mail ou senha inválidos.",401,"credenciais_invalidas")
+                    raise AutenticacaoError(
+                        "E-mail ou senha inválidos.",
+                        401,
+                        "credenciais_invalidas"
+                    )
                 if atual is None:
                     raise sessao_invalida()
             sessao.salvar(confirmar=False)
@@ -95,10 +114,18 @@ class CadastrarAlunoService:
             raise AutenticacaoError("Confirme explicitamente o Termo de Uso.")
         doc = validar_versao("uso", termos["versao"])
         usuario = preparar_usuario({k: v for k, v in dados.items() if k != "termos_uso"}, "aluno")
+
         def cadastrar():
             usuario.salvar(confirmar=False)
-            RegistroPrivacidade(usuario_id=usuario.id, tipo="uso", acao="aceitar", versao=doc["versao"],
-                documento_sha256=doc["sha256"], chave_envio=str(uuid4()), revisao_base=0).salvar(confirmar=False)
+            RegistroPrivacidade(
+                usuario_id=usuario.id,
+                tipo="uso",
+                acao="aceitar",
+                versao=doc["versao"],
+                documento_sha256=doc["sha256"],
+                chave_envio=str(uuid4()),
+                revisao_base=0
+            ).salvar(confirmar=False)
             return usuario.to_dict()
         return persistir_usuario(cadastrar)
 
@@ -107,8 +134,14 @@ def preparar_usuario(dados, perfil):
     nome, email, senha = validar_cadastro(dados)
     if perfil not in {"aluno", "administrador"}:
         raise AutenticacaoError("Perfil inválido.")
-    return Usuario(nome=nome, email=email, perfil=perfil, ativo=True,
-        senha_hash=generate_password_hash(senha, method="scrypt:32768:8:1"), criado_em=agora_utc())
+    return Usuario(
+        nome=nome,
+        email=email,
+        perfil=perfil,
+        ativo=True,
+        senha_hash=generate_password_hash(senha, method="scrypt:32768:8:1"),
+        criado_em=agora_utc()
+    )
 
 
 def persistir_usuario(operacao):
@@ -117,7 +150,11 @@ def persistir_usuario(operacao):
     except IntegrityError as erro:
         # Só uma violação da chave do e-mail é duplicidade de cadastro.
         if "uq_usuarios_email" in str(erro.orig):
-            raise AutenticacaoError("Este e-mail já está cadastrado. Entre na sua conta.", 409, "email_em_uso") from None
+            raise AutenticacaoError(
+                "Este e-mail já está cadastrado. Entre na sua conta.",
+                409,
+                "email_em_uso"
+            ) from None
         raise
 
 
@@ -143,7 +180,7 @@ class ValidarSenhaService:
                 limite.atualizar(confirmar=False, falhas=0, janela_inicio=agora, bloqueado_ate=None)
             atual = Repo.usuario_ativo_bloqueado(usuario.id) if usuario else None
             if (correta and atual is not None and atual.senha_hash == hash_anterior
-                    and (email_esperado is None or atual.email == email_esperado)):
+                and (email_esperado is None or atual.email == email_esperado)):
                 limite.atualizar(confirmar=False, falhas=0, janela_inicio=agora, bloqueado_ate=None)
                 return atual, None
             falhas = limite.falhas + 1
@@ -152,8 +189,12 @@ class ValidarSenhaService:
             return None, 900 if bloqueio else None
         atual, espera = TransactionManager.executar(verificar)
         if espera is not None:
-            raise AutenticacaoError("Muitas tentativas. Aguarde e tente novamente.", 429,
-                                   "tentativas_excedidas", espera)
+            raise AutenticacaoError(
+                "Muitas tentativas. Aguarde e tente novamente.",
+                429,
+                "tentativas_excedidas",
+                espera
+            )
         if atual is None:
             raise AutenticacaoError("E-mail ou senha inválidos.", 401, "credenciais_invalidas")
         return atual
@@ -165,11 +206,18 @@ class LoginService:
         validar_dados(dados, {"email", "senha"})
         email = validar_email(dados["email"])
         senha = validar_senha(dados["senha"], minimo=1)
-        usuario = ValidarSenhaService.executar(Usuario.buscar_por_email(email), senha,
-            token_assinado(chave, email, "login-limite"), email_esperado=email)
+        usuario = ValidarSenhaService.executar(
+            Usuario.buscar_por_email(email),
+            senha,
+            token_assinado(chave, email, "login-limite"),
+            email_esperado=email
+        )
         identificador, sessao = CriarSessaoService.executar(usuario, anterior, email_esperado=email)
-        return identificador, sessao, {"usuario": usuario.to_dict(),
-            "csrf_token": token_assinado(chave, identificador), "destino": destino(usuario)}
+        return identificador, sessao, {
+            "usuario": usuario.to_dict(),
+            "csrf_token": token_assinado(chave, identificador),
+            "destino": destino(usuario)
+        }
 
 
 class LogoutService:
@@ -183,8 +231,12 @@ class ReautenticarService:
     @staticmethod
     def executar(dados, sessao, chave):
         validar_dados(dados, {"senha"})
-        ValidarSenhaService.executar(sessao.usuario, validar_senha(dados["senha"], minimo=1),
-            token_assinado(chave, str(sessao.usuario_id), "reauth-limite"))
+        ValidarSenhaService.executar(
+            sessao.usuario,
+            validar_senha(dados["senha"], minimo=1),
+            token_assinado(chave, str(sessao.usuario_id), "reauth-limite")
+        )
+
         def renovar():
             if not Repo.renovar_acesso(sessao.id, agora_utc()):
                 raise sessao_invalida()
@@ -194,16 +246,28 @@ class ReautenticarService:
 
 class AutorizarService:
     @staticmethod
-    def executar(identificador, perfil_admin=False, mutacao=False, origem=None,
-                 origens=(), csrf=None, chave=b"", sensivel=False):
+    def executar(
+        identificador,
+        perfil_admin=False,
+        mutacao=False,
+        origem=None,
+        origens=(),
+        csrf=None,
+        chave=b"",
+        sensivel=False
+    ):
         sessao = ConsultarSessaoService.executar(identificador)
         if perfil_admin and sessao.usuario.perfil != "administrador":
             raise AutenticacaoError("Você não tem acesso a esta operação.", 403, "acesso_negado")
         if mutacao:
             ValidarCsrfService.executar(identificador, origem, origens, csrf, chave)
         if sensivel and (sessao.reautenticada_em is None
-                         or agora_utc() >= sessao.reautenticada_em + timedelta(minutes=15)):
-            raise AutenticacaoError("Confirme sua senha para continuar.", 403, "reautenticacao_necessaria")
+            or agora_utc() >= sessao.reautenticada_em + timedelta(minutes=15)):
+            raise AutenticacaoError(
+                "Confirme sua senha para continuar.",
+                403,
+                "reautenticacao_necessaria"
+            )
         ConsultarSessaoService.renovar(sessao)
         return sessao
 
@@ -214,8 +278,21 @@ class ValidarCsrfService:
         if origem not in origens:
             raise AutenticacaoError("Origem não autorizada.", 403, "origem_nao_permitida")
         ConsultarSessaoService.executar(identificador, autenticada=False)
-        if not isinstance(csrf, str) or not csrf.isascii() or not hmac.compare_digest(csrf, token_assinado(chave, identificador)):
-            raise AutenticacaoError("Atualize sua sessão e confirme a ação novamente.", 403, "csrf_invalido")
+        if not isinstance(
+            csrf,
+            str
+        ) or not csrf.isascii() or not hmac.compare_digest(
+            csrf,
+            token_assinado(
+                chave,
+                identificador
+            )
+        ):
+            raise AutenticacaoError(
+                "Atualize sua sessão e confirme a ação novamente.",
+                403,
+                "csrf_invalido"
+            )
 
 
 class LimparAutenticacaoService:

@@ -10,7 +10,12 @@ from sqlalchemy import Boolean, JSON, column, event, inspect, select, text
 from app.extensions import db
 from app.modules.praticas.repositories.pratica_repository import PraticaRepository as Praticas
 from app.modules.simulados.repositories.simulado_repository import SimuladoRepository as Simulados
-from app.modules.simulados.models.simulado import Simulado, SimuladoResposta, SimuladoVersaoItem, SimuladoTentativa
+from app.modules.simulados.models.simulado import (
+    Simulado,
+    SimuladoResposta,
+    SimuladoVersaoItem,
+    SimuladoTentativa,
+)
 from app.modules.praticas.models.pratica_tentativa import PraticaTentativa
 from app.modules.praticas.services.responder_pratica_service import ResponderPraticaService
 from app.modules.simulados.services.iniciar_simulado_service import IniciarSimuladoService
@@ -33,8 +38,13 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
         from tests.test_praticas_integration import PraticasIntegrationTest
         chave = str(uuid4())
         pratica = PraticasIntegrationTest.iniciar(self, chave).json
-        alheia = self.outro.post('/api/aluno/praticas', json={
-            'questao_versao_id': self.versao, 'chave_envio': chave}).json
+        alheia = self.outro.post(
+            '/api/aluno/praticas',
+            json={
+                'questao_versao_id': self.versao,
+                'chave_envio': chave
+            }
+        ).json
         ids = [pratica['id'], PraticasIntegrationTest.iniciar(self).json['id']]
         for id_ in ids:
             self.assertEqual(PraticasIntegrationTest.responder(self, id_).status_code, 200)
@@ -45,29 +55,53 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
             self.assertEqual(self.finalizar(t).status_code, 200)
             tentativas.append(t['id'])
         self.iniciar()  # Aberta também fica fora do histórico do Simulado.
-        rascunho = self.criar(questao_versao_ids=self.versoes[::-1]).json
+        rascunho = self.criar(questao_versao_ids=self.versoes[:: -1]).json
         with self.app.app_context():
             from app.core.relogio import agora_utc
             instante = agora_utc()
-            db.session.execute(text('UPDATE pratica_tentativas SET respondida_em=:agora '
-                'WHERE usuario_id=:dono AND estado=\'respondida\''), {'agora': instante, 'dono': self.usuario})
-            db.session.execute(text('UPDATE simulado_tentativas SET finalizada_em=:agora '
-                'WHERE usuario_id=:dono AND estado=\'finalizada\''), {'agora': instante, 'dono': self.usuario})
+            db.session.execute(
+                text('UPDATE pratica_tentativas SET respondida_em=:agora '
+                    'WHERE usuario_id=:dono AND estado=\'respondida\''),
+                {
+                    'agora': instante,
+                    'dono': self.usuario
+                }
+            )
+            db.session.execute(
+                text('UPDATE simulado_tentativas SET finalizada_em=:agora '
+                    'WHERE usuario_id=:dono AND estado=\'finalizada\''),
+                {
+                    'agora': instante,
+                    'dono': self.usuario
+                }
+            )
             db.session.commit()
             linhas, total = Praticas.historico(self.usuario, None, 1, 100)
-            self.assertEqual(([r.id for r in linhas], total), (ids[::-1], 2))
+            self.assertEqual(([r.id for r in linhas], total), (ids[:: -1], 2))
             self.assertEqual(Praticas.historico(self.usuario, 2**31+1, 1, 20), ([], 0))
             self.assertEqual(Praticas.historico(self.outro_id, None, 1, 20), ([], 0))
             self.assertEqual(Praticas.por_chave(self.outro_id, chave).id, alheia['id'])
             self.assertEqual(Praticas.por_chave(self.usuario, chave).id, pratica['id'])
             linhas, total = Simulados.historico(self.usuario, 1, 100)
-            self.assertEqual(([r.id for r in linhas], total), (tentativas[::-1], 2))
+            self.assertEqual(([r.id for r in linhas], total), (tentativas[:: -1], 2))
             self.assertEqual(Simulados.historico(self.outro_id, 1, 20), ([], 0))
             self.assertEqual(Simulados.historico(self.usuario, 2, 1)[0][0].id, tentativas[0])
-            self.assertEqual([i.questao_versao_id for i in Simulados.itens(simulado_id=rascunho['id'])], self.versoes[::-1])
-            self.assertEqual([i.questao_versao_id for i in Simulados.itens(simulado_id=rascunho['id'], versao_id=self.v)], self.versoes)
+            self.assertEqual(
+                [i.questao_versao_id for i in Simulados.itens(simulado_id=rascunho['id'])],
+                self.versoes[:: -1]
+            )
+            self.assertEqual(
+                [i.questao_versao_id for i in Simulados.itens(
+                    simulado_id=rascunho['id'],
+                    versao_id=self.v
+                )],
+                self.versoes
+            )
             lote = Simulados.itens_em_lote(simulado_ids=[rascunho['id'], rascunho['id']])
-            self.assertEqual([i.questao_versao_id for i in lote[rascunho['id']]], self.versoes[::-1])
+            self.assertEqual(
+                [i.questao_versao_id for i in lote[rascunho['id']]],
+                self.versoes[:: -1]
+            )
             self.assertEqual(Simulados.itens(), [])
             self.assertEqual(Simulados.itens(versao_id=2**31+1), [])
             self.assertEqual(Simulados.respostas(2**31+1), [])
@@ -85,10 +119,22 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
             t = db.session.get(SimuladoTentativa, tentativa['id'])
             r, i = Simulados.respostas(t.id)[0]
             with db.engine.begin() as outra:
-                outra.execute(text("UPDATE pratica_tentativas SET materia_nome='Nome corrente' WHERE id=:id"), {'id': pratica.id})
-                outra.execute(text('UPDATE simulados SET revisao=7 WHERE id=:id'), {'id': simulado.id})
-                outra.execute(text('UPDATE simulado_tentativas SET revisao=7 WHERE id=:id'), {'id': t.id})
-                outra.execute(text("UPDATE simulado_respostas SET alternativa='B' WHERE id=:id"), {'id': r.id})
+                outra.execute(
+                    text("UPDATE pratica_tentativas SET materia_nome='Nome corrente' WHERE id=:id"),
+                    {'id': pratica.id}
+                )
+                outra.execute(
+                    text('UPDATE simulados SET revisao=7 WHERE id=:id'),
+                    {'id': simulado.id}
+                )
+                outra.execute(
+                    text('UPDATE simulado_tentativas SET revisao=7 WHERE id=:id'),
+                    {'id': t.id}
+                )
+                outra.execute(
+                    text("UPDATE simulado_respostas SET alternativa='B' WHERE id=:id"),
+                    {'id': r.id}
+                )
             self.assertIs(Praticas.propria(self.usuario, pratica.id, True), pratica)
             self.assertIs(Praticas.por_chave(self.usuario, pratica.chave_envio, True), pratica)
             self.assertEqual(pratica.materia_nome, 'Nome corrente')
@@ -120,12 +166,18 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
             pratica = Praticas.propria(self.usuario, p['id'], True)
             chegou = Event()
             principal = get_ident()
+
             def observar(conexao, cursor, comando, parametros, contexto, executemany):
                 if get_ident()!=principal and comando.startswith('CALL sp_pratica_propria'):
                     chegou.set()
+
             def responder():
                 with self.app.app_context():
-                    return ResponderPraticaService.executar(self.usuario, p['id'], {'alternativa': 'A'})
+                    return ResponderPraticaService.executar(
+                        self.usuario,
+                        p['id'],
+                        {'alternativa': 'A'}
+                    )
             pool = ThreadPoolExecutor(max_workers=1)
             event.listen(db.engine, 'before_cursor_execute', observar)
             try:
@@ -138,7 +190,14 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
                 db.session.rollback()
                 self.assertTrue(futuro.result(timeout=10)['correta'])
                 db.session.expire_all()
-                self.assertEqual(Praticas.propria(self.usuario, p['id'], True).materia_nome, self.materia['nome'])
+                self.assertEqual(
+                    Praticas.propria(
+                        self.usuario,
+                        p['id'],
+                        True
+                    ).materia_nome,
+                    self.materia['nome']
+                )
             finally:
                 db.session.rollback()
                 pool.shutdown(wait=True)
@@ -146,11 +205,14 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
 
     def test_inicio_concorrente_chaves_distintas_tem_um_andamento(self):
         barreira = Barrier(2)
+
         def iniciar(_):
             with self.app.app_context():
                 barreira.wait(timeout=10)
-                return IniciarSimuladoService.executar(self.usuario,
-                    {'simulado_versao_id': self.v, 'chave_envio': str(uuid4())})
+                return IniciarSimuladoService.executar(
+                    self.usuario,
+                    {'simulado_versao_id': self.v, 'chave_envio': str(uuid4())}
+                )
         with ThreadPoolExecutor(max_workers=2) as pool:
             resultados = list(pool.map(iniciar, range(2)))
         self.assertEqual(sorted(r[1] for r in resultados), [200, 201])
@@ -170,7 +232,10 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
             try:
                 self.assertEqual(self.finalizar(tentativa, revisao=3).status_code, 500)
                 db.session.remove()
-                self.assertTrue(all(r.correta is None for r, _ in Simulados.respostas(tentativa['id'])))
+                self.assertTrue(all(
+                    r.correta is None for r,
+                    _ in Simulados.respostas(tentativa['id'])
+                ))
                 t = Simulados.propria(self.usuario, tentativa['id'])
                 self.assertEqual((t.estado, t.revisao, t.total), ('em_andamento', 3, None))
             finally:
@@ -187,7 +252,11 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
             ('sp_pratica_propria', self.aluno, f"/api/aluno/praticas/{pratica['id']}"),
             ('sp_praticas_historico', self.aluno, '/api/aluno/praticas'),
             ('sp_simulados_listar', self.client, '/api/admin/simulados'),
-            ('sp_simulado_respostas', self.aluno, f"/api/aluno/tentativas-simulado/{tentativa['id']}"),
+            (
+                'sp_simulado_respostas',
+                self.aluno,
+                f"/api/aluno/tentativas-simulado/{tentativa['id']}"
+            ),
         ]
         for nome, cliente, url in casos:
             with self.subTest(nome=nome), self.app.app_context():
@@ -218,10 +287,34 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
             p = Praticas.propria(self.usuario, pratica['id'])
             self.assertIsInstance(p.correta, bool)
             self.assertIsInstance(p.respondida_em, datetime)
-            self.assertEqual(Praticas.historico(self.usuario, self.assunto['id'], 2**31+1, 20), ([], 1))
-            self.assertEqual([r.id for r in Praticas.fatos(self.usuario, p.respondida_em,
-                p.respondida_em+timedelta(microseconds=1))], [p.id])
-            self.assertEqual(Praticas.fatos(self.usuario, p.respondida_em-timedelta(seconds=1), p.respondida_em), [])
+            self.assertEqual(
+                Praticas.historico(
+                    self.usuario,
+                    self.assunto['id'],
+                    2**31+1,
+                    20
+                ),
+                (
+                    [],
+                    1
+                )
+            )
+            self.assertEqual(
+                [r.id for r in Praticas.fatos(
+                    self.usuario,
+                    p.respondida_em,
+                    p.respondida_em+timedelta(microseconds=1)
+                )],
+                [p.id]
+            )
+            self.assertEqual(
+                Praticas.fatos(
+                    self.usuario,
+                    p.respondida_em-timedelta(seconds=1),
+                    p.respondida_em
+                ),
+                []
+            )
             self.assertIsNone(Praticas.propria(self.outro_id, p.id))
             self.assertEqual(Simulados.historico(self.usuario, 2**31+1, 20), ([], 1))
             self.assertEqual(Simulados.listar(2**31+1, 20, 'publicado')[0], [])
@@ -230,22 +323,49 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
             self.assertEqual(Simulados.itens_em_lote(versao_ids=[]), {})
             self.assertEqual(Simulados.andamentos_em_lote(self.usuario, []), {})
             self.assertEqual(Simulados.titulos_em_lote([]), {})
-            self.assertEqual(Simulados.titulos_em_lote([self.v, self.v]), {self.v: self.s['titulo']})
+            self.assertEqual(
+                Simulados.titulos_em_lote([
+                    self.v,
+                    self.v
+                ]),
+                {self.v: self.s['titulo']}
+            )
             t = Simulados.propria(self.usuario, tentativa['id'])
             self.assertIsInstance(t.percentual_acerto, Decimal)
-            fatos = Simulados.fatos(self.usuario, t.finalizada_em, t.finalizada_em+timedelta(microseconds=1))
+            fatos = Simulados.fatos(
+                self.usuario,
+                t.finalizada_em,
+                t.finalizada_em+timedelta(microseconds=1)
+            )
             self.assertEqual(len(fatos), 1)
             self.assertIs(fatos[0][2], t)
             self.assertEqual(Simulados.fatos(self.usuario, t.iniciada_em, t.finalizada_em), [])
             self.assertIsNone(Simulados.propria(self.outro_id, t.id))
-            self.assertEqual(Simulados.fatos(self.outro_id, t.iniciada_em, t.finalizada_em+timedelta(seconds=1)), [])
+            self.assertEqual(
+                Simulados.fatos(
+                    self.outro_id,
+                    t.iniciada_em,
+                    t.finalizada_em+timedelta(seconds=1)
+                ),
+                []
+            )
 
     def test_call_tripla_tipos_identidade_leitura_corrente_rollback_e_drenagem(self):
         tentativa = self.iniciar().json
         with self.app.app_context():
             entidades = (SimuladoResposta, SimuladoVersaoItem, SimuladoTentativa)
-            campos = ','.join(f'{alias}.{c.name} AS {alias}_{c.name}'
-                for alias, entidade in zip(('r', 'i', 't'), entidades) for c in entidade.__table__.columns)
+            campos = ','.join(
+                f'{alias}.{c.name} AS {alias}_{c.name}'
+                for alias,
+                entidade in zip(
+                    (
+                        'r',
+                        'i',
+                        't'
+                    ),
+                    entidades
+                ) for c in entidade.__table__.columns
+            )
             with db.engine.begin() as instalacao:
                 instalacao.exec_driver_sql('CREATE PROCEDURE sp_teste_tripla_014(IN p_id BIGINT UNSIGNED) '
                     'READS SQL DATA SQL SECURITY INVOKER BEGIN SELECT '+campos+
@@ -257,17 +377,47 @@ class PraticasSimuladosProceduresIntegrationTest(MySQLIntegrationTestCase):
                 antiga = db.session.get(SimuladoTentativa, tentativa['id'])
                 resposta = Simulados.respostas(antiga.id)[0][0]
                 with db.engine.begin() as outra:
-                    outra.execute(text('UPDATE simulado_tentativas SET revisao=7 WHERE id=:id'), {'id': antiga.id})
-                    outra.execute(text("UPDATE simulado_respostas SET alternativa='B' WHERE id=:id"), {'id': resposta.id})
+                    outra.execute(
+                        text('UPDATE simulado_tentativas SET revisao=7 WHERE id=:id'),
+                        {'id': antiga.id}
+                    )
+                    outra.execute(
+                        text("UPDATE simulado_respostas SET alternativa='B' WHERE id=:id"),
+                        {'id': resposta.id}
+                    )
                 comando = text('CALL sp_teste_tripla_014(:id)').columns(
-                    *(c for e in entidades for c in e.__table__.columns), column('dados', JSON), column('flag', Boolean))
+                    *(c for e in entidades for c in e.__table__.columns),
+                    column(
+                        'dados',
+                        JSON
+                    ),
+                    column(
+                        'flag',
+                        Boolean
+                    )
+                )
+
                 def ler(id_):
-                    resultado = db.session.execute(select(*entidades, column('dados', JSON), column('flag', Boolean))
-                        .from_statement(comando).execution_options(populate_existing=True), {'id': id_})
+                    resultado = db.session.execute(
+                        select(
+                            *entidades,
+                            column(
+                                'dados',
+                                JSON
+                            ),
+                            column(
+                                'flag',
+                                Boolean
+                            )
+                        )
+                        .from_statement(comando).execution_options(populate_existing=True),
+                        {'id': id_}
+                    )
                     try:
                         return resultado.all()
                     finally:
                         resultado.close()
+
                 def operacao():
                     linhas = ler(antiga.id)
                     r, i, t, dados, flag = linhas[0]

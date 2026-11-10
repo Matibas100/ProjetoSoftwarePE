@@ -15,9 +15,16 @@ class E2ERunnerTest(unittest.TestCase):
             conectar.assert_not_called()
 
     def test_schema_recusa_nomes_operacionais_e_injecao(self):
-        for name in (None, '', 'plataforma_enem', runner.PREFIX + 'a'*11,
-                     runner.PREFIX + 'a'*13, runner.PREFIX+'A'*12,
-                     runner.PREFIX+'a'*12+'; DROP DATABASE x', runner.PREFIX+'a'*12+'\n'):
+        for name in (
+            None,
+            '',
+            'plataforma_enem',
+            runner.PREFIX + 'a'*11,
+            runner.PREFIX + 'a'*13,
+            runner.PREFIX+'A'*12,
+            runner.PREFIX+'a'*12+'; DROP DATABASE x',
+            runner.PREFIX+'a'*12+'\n'
+        ):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 runner.validar_schema(name)
         self.assertEqual(runner.validar_schema(runner.PREFIX+'a'*12), runner.PREFIX+'a'*12)
@@ -31,14 +38,30 @@ class E2ERunnerTest(unittest.TestCase):
              patch.object(runner.migrate, 'connect') as conectar, \
              patch.object(runner.migrate, 'run_up', side_effect=falha), \
              patch.object(runner.subprocess, 'Popen', return_value=processo), \
-             patch.object(runner.subprocess, 'run', side_effect=[MagicMock(returncode=0), MagicMock(returncode=retorno)]) as executar, \
+             patch.object(
+                 runner.subprocess,
+                 'run',
+                 side_effect=[
+                     MagicMock(returncode=0),
+                     MagicMock(returncode=retorno)
+                 ]
+             ) as executar, \
              patch.object(runner, 'aguardar_http'):
             if falha:
                 with self.assertRaises(RuntimeError):
-                    runner.executar_suite(base, {'RUN_MYSQL_E2E':'1'})
+                    runner.executar_suite(base, {'RUN_MYSQL_E2E': '1'})
             else:
-                self.assertEqual(runner.executar_suite(base, {'RUN_MYSQL_E2E':'1',
-                    'GEMINI_API_KEY':'chave-sentinela-unitaria', 'TUTOR_IA_ENABLED':'true'}), retorno)
+                self.assertEqual(
+                    runner.executar_suite(
+                        base,
+                        {
+                            'RUN_MYSQL_E2E': '1',
+                            'GEMINI_API_KEY': 'chave-sentinela-unitaria',
+                            'TUTOR_IA_ENABLED': 'true'
+                        }
+                    ),
+                    retorno
+                )
                 for chamada in executar.call_args_list:
                     self.assertNotIn('GEMINI_API_KEY', chamada.kwargs['env'])
                     self.assertEqual(chamada.kwargs['env']['TUTOR_IA_ENABLED'], 'false')

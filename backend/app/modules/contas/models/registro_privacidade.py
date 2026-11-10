@@ -19,7 +19,15 @@ class RegistroPrivacidade(ModeloBase):
         db.CheckConstraint("revisao_base >= 0", name="ck_privacidade_revisao"),
     )
     id = db.Column(db.BigInteger, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id", ondelete="RESTRICT", onupdate="RESTRICT"), nullable=False)
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "usuarios.id",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT"
+        ),
+        nullable=False
+    )
     tipo = db.Column(db.String(8), nullable=False)
     acao = db.Column(db.String(8), nullable=False)
     versao = db.Column(db.String(20), nullable=False)

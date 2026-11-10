@@ -42,8 +42,11 @@ class RestauracaoProceduresIntegrationTest(MySQLIntegrationTestCase):
                 self.assertEqual(ddl.exec_driver_sql('SELECT 1').scalar_one(), 1)
             finally:
                 ddl.exec_driver_sql('DROP PROCEDURE IF EXISTS ' + nome)
-            self.assertEqual(ddl.exec_driver_sql(
-                'SELECT COUNT(*) FROM information_schema.ROUTINES '
-                'WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_NAME = %s',
-                (nome,),
-            ).scalar_one(), 0)
+            self.assertEqual(
+                ddl.exec_driver_sql(
+                    'SELECT COUNT(*) FROM information_schema.ROUTINES '
+                    'WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_NAME = %s',
+                    (nome,),
+                ).scalar_one(),
+                0
+            )

@@ -40,7 +40,9 @@ async function filter(page, resource, name) {
 }
 
 test("Editar consulta Matéria e Assunto atuais após alterações em segunda aba", async ({ page, context }, info) => {
-  await context.addInitScript(url => { window.ENEM_API_URL = url; }, process.env.E2E_API_URL);
+  await context.addInitScript(url => {
+    window.ENEM_API_URL = url;
+  }, process.env.E2E_API_URL);
   await page.goto("/login");
   await page.locator("#auth-email").fill(process.env.E2E_ADMIN_EMAIL);
   await page.locator("#auth-password").fill(process.env.E2E_ADMIN_PASSWORD);
@@ -122,5 +124,7 @@ test("Editar consulta Matéria e Assunto atuais após alterações em segunda ab
       expect(writes.slice(before).some(path => path.includes("transferir"))).toBe(false);
       await expect(page.locator("#admin-modal")).not.toBeVisible();
     });
-  } finally { await second.close(); }
+  } finally {
+    await second.close();
+  }
 });

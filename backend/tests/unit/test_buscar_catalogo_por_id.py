@@ -14,12 +14,20 @@ from app.modules.conteudo.services.buscar_assunto_por_id_service import BuscarAs
 
 
 CASOS = (
-    (BuscarMateriaPorIdService, Materia, MateriaController,
-     "app.modules.conteudo.controllers.materia_controller.BuscarMateriaPorIdService",
-     {"area_enem_id": 4}),
-    (BuscarAssuntoPorIdService, Assunto, AssuntoController,
-     "app.modules.conteudo.controllers.assunto_controller.BuscarAssuntoPorIdService",
-     {"materia_id": 9, "nome_normalizado": "álgebra"}),
+    (
+        BuscarMateriaPorIdService,
+        Materia,
+        MateriaController,
+        "app.modules.conteudo.controllers.materia_controller.BuscarMateriaPorIdService",
+        {"area_enem_id": 4}
+    ),
+    (
+        BuscarAssuntoPorIdService,
+        Assunto,
+        AssuntoController,
+        "app.modules.conteudo.controllers.assunto_controller.BuscarAssuntoPorIdService",
+        {"materia_id": 9, "nome_normalizado": "álgebra"}
+    ),
 )
 
 
@@ -28,17 +36,27 @@ class BuscarCatalogoPorIdTest(unittest.TestCase):
         for service, model, *_ in CASOS:
             with patch.object(model, "buscar_por_id") as buscar:
                 for valor in (None, True, False, "1", 1.0, -1, 0, 2147483648, 10**100):
-                    with self.subTest(service=service, valor=valor), self.assertRaises(DadosInvalidosError):
+                    with self.subTest(
+                        service=service,
+                        valor=valor
+                    ), self.assertRaises(DadosInvalidosError):
                         service.executar(valor)
                 buscar.assert_not_called()
 
     def test_serializa_campos_basicos_tres_estados_e_id_maximo(self):
         for service, model, _, _, vinculo in CASOS:
             for status in ("ativa", "inativa", "arquivada"):
-                registro = model(id=2147483647, nome="Álgebra", descricao=None,
-                                 status=status, **vinculo)
+                registro = model(
+                    id=2147483647,
+                    nome="Álgebra",
+                    descricao=None,
+                    status=status,
+                    **vinculo
+                )
                 with self.subTest(model=model, status=status), patch.object(
-                    model, "buscar_por_id", return_value=registro
+                    model,
+                    "buscar_por_id",
+                    return_value=registro
                 ) as buscar:
                     self.assertEqual(service.executar(2147483647), registro.to_dict())
                     buscar.assert_called_once_with(2147483647)
@@ -56,11 +74,16 @@ class BuscarCatalogoPorIdTest(unittest.TestCase):
                 response, status = controller.buscar_por_id(7)
                 self.assertEqual((status, response.json), (200, {"id": 7}))
                 caso.executar.assert_called_once_with(7)
-                for erro, esperado in ((DadosInvalidosError("invalido"), 400),
-                                       (RecursoNaoEncontradoError("ausente"), 404),
-                                       (RuntimeError("SELECT senha segredo"), 500)):
+                for erro, esperado in (
+                    (DadosInvalidosError("invalido"), 400),
+                    (RecursoNaoEncontradoError("ausente"), 404),
+                    (RuntimeError("SELECT senha segredo"), 500)
+                ):
                     caso.executar.side_effect = erro
                     response, status = controller.buscar_por_id(7)
                     self.assertEqual(status, esperado)
                     if esperado == 500:
-                        self.assertEqual(response.json, {"erro": "Ocorreu um erro interno no servidor."})
+                        self.assertEqual(
+                            response.json,
+                            {"erro": "Ocorreu um erro interno no servidor."}
+                        )

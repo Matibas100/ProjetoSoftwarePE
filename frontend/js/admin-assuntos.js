@@ -41,10 +41,10 @@
 
   function validDetail(item, id) {
     return item && !Array.isArray(item) && typeof item === "object" && item.id === id
-      && typeof item.nome === "string" && item.nome.trim()
-      && ["ativa", "inativa", "arquivada"].includes(item.status)
-      && Number.isInteger(item.materia_id) && item.materia_id > 0
-      && (item.descricao === null || typeof item.descricao === "string");
+    && typeof item.nome === "string" && item.nome.trim()
+    && ["ativa", "inativa", "arquivada"].includes(item.status)
+    && Number.isInteger(item.materia_id) && item.materia_id > 0
+    && (item.descricao === null || typeof item.descricao === "string");
   }
 
   async function selectDetail(id) {
@@ -60,15 +60,16 @@
     ui.showMessage(message, "Carregando assunto...", "info");
     try {
       const [item] = await Promise.all([
-        apiRequest(`/assuntos/${id}`, { signal: controller.signal }), optionsReady,
+        apiRequest(`/assuntos/${id}`, { signal: controller.signal }),
+        optionsReady,
       ]);
       if (!current()) return;
       if (!validDetail(item, id)) throw new Error("Resposta inválida do servidor. Selecione Editar para tentar novamente.");
       const matters = await apiRequest("/materias?status=todos", { signal: controller.signal });
       if (!current()) return;
       if (!Array.isArray(matters) || !matters.every((matter) => matter && Number.isInteger(matter.id)
-          && typeof matter.nome === "string" && ["ativa", "inativa", "arquivada"].includes(matter.status))
-          || !matters.some((matter) => matter.id === item.materia_id)) {
+        && typeof matter.nome === "string" && ["ativa", "inativa", "arquivada"].includes(matter.status))
+        || !matters.some((matter) => matter.id === item.materia_id)) {
         throw new Error("Matérias indisponíveis. Atualize a página e selecione Editar novamente.");
       }
       if (!current() || !await AuthUI.checkIdentity() || !current()) return;
@@ -111,8 +112,8 @@
     if (areaFilter.value) labels.push(state.areas.find((area) => area.id === areaId)?.nome);
     if (matterFilter.value) labels.push(state.matters.find((item) => item.id === Number(matterFilter.value))?.nome);
     document.querySelector("#assuntos-filtros-aplicados").textContent = labels.length
-      ? `Filtros aplicados: ${labels.filter(Boolean).join(" · ")}`
-      : "Nenhum filtro aplicado";
+    ? `Filtros aplicados: ${labels.filter(Boolean).join(" · ")}`
+    : "Nenhum filtro aplicado";
   }
 
   function resetForm(focus = false) {
@@ -184,8 +185,8 @@
     });
     tableState.hidden = state.items.length > 0;
     tableState.textContent = state.items.length ? "" : search.value.trim() || areaFilter.value || matterFilter.value || statusFilter.value
-      ? "Nenhum assunto encontrado para os filtros aplicados."
-      : "Nenhum assunto cadastrado. Use Novo assunto para começar.";
+    ? "Nenhum assunto encontrado para os filtros aplicados."
+    : "Nenhum assunto cadastrado. Use Novo assunto para começar.";
     document.querySelector("#assuntos-total").textContent = `${state.total || 0} ${state.total === 1 ? "assunto" : "assuntos"}`;
     document.querySelector("#assuntos-pagina").textContent = `Página ${state.page}${state.pages ? ` de ${state.pages}` : ""}`;
     document.querySelector("#assuntos-anterior").disabled = state.page <= 1;
@@ -358,25 +359,57 @@
   form.addEventListener("submit", save);
   document.querySelector("#novo-assunto").addEventListener("click", () => startForm(true));
   document.querySelector("#assunto-cancelar").addEventListener("click", () => startForm(false));
-  document.querySelector("#assuntos-limpar").addEventListener("click", () => { search.value = ""; areaFilter.value = ""; matterFilter.value = ""; statusFilter.value = ""; refreshMatterFilters(); state.page = 1; load(); });
-  areaFilter.addEventListener("change", () => { matterFilter.value = ""; refreshMatterFilters(); state.page = 1; load(); });
-  matterFilter.addEventListener("change", () => { refreshMatterFilters(); state.page = 1; load(); });
-  statusFilter.addEventListener("change", () => { state.page = 1; load(); });
-  search.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => {
-  if (globalThis.AuthUI && !(await globalThis.AuthUI.ready)) return; state.page = 1; load(); }, 250); });
-  document.querySelector("#assuntos-anterior").addEventListener("click", () => { state.page -= 1; load(); });
-  document.querySelector("#assuntos-proxima").addEventListener("click", () => { state.page += 1; load(); });
+  document.querySelector("#assuntos-limpar").addEventListener("click", () => {
+    search.value = "";
+    areaFilter.value = "";
+    matterFilter.value = "";
+    statusFilter.value = "";
+    refreshMatterFilters();
+    state.page = 1;
+    load();
+  });
+  areaFilter.addEventListener("change", () => {
+    matterFilter.value = "";
+    refreshMatterFilters();
+    state.page = 1;
+    load();
+  });
+  matterFilter.addEventListener("change", () => {
+    refreshMatterFilters();
+    state.page = 1;
+    load();
+  });
+  statusFilter.addEventListener("change", () => {
+    state.page = 1;
+    load();
+  });
+  search.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(async () => {
+      if (globalThis.AuthUI && !(await globalThis.AuthUI.ready)) return;
+      state.page = 1;
+      load();
+    }, 250);
+  });
+  document.querySelector("#assuntos-anterior").addEventListener("click", () => {
+    state.page -= 1;
+    load();
+  });
+  document.querySelector("#assuntos-proxima").addEventListener("click", () => {
+    state.page += 1;
+    load();
+  });
 
   const optionsReady = Promise.all([apiRequest("/areas-enem"), apiRequest("/materias?status=todos")])
-    .then(([areas, matters]) => {
-      const pristine = !guard.dirty();
-      state.areas = areas;
-      state.matters = matters;
-      ui.fillSelect(areaFilter, areas, "Todas", areaFilter.value);
-      refreshMatterFilters();
-      ui.fillSelect(matterSelect, activeMatters(), "Selecione", matterSelect.value);
-      if (pristine) guard.markPersisted();
-    });
+  .then(([areas, matters]) => {
+    const pristine = !guard.dirty();
+    state.areas = areas;
+    state.matters = matters;
+    ui.fillSelect(areaFilter, areas, "Todas", areaFilter.value);
+    refreshMatterFilters();
+    ui.fillSelect(matterSelect, activeMatters(), "Selecione", matterSelect.value);
+    if (pristine) guard.markPersisted();
+  });
   optionsReady.catch((error) => ui.showMessage(message, error.message, "error"));
   load();
 })();

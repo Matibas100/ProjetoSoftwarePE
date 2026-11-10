@@ -5,7 +5,11 @@ from app.modules.simulados.services.simulado_validacao import paginacao
 
 
 class ListarSimuladosAlunoService:
-    def __init__(self, consulta: ConsultaCatalogoSimulados, elegibilidade: ConsultaElegibilidadeVersoes):
+    def __init__(
+        self,
+        consulta: ConsultaCatalogoSimulados,
+        elegibilidade: ConsultaElegibilidadeVersoes
+    ):
         self._consulta = consulta
         self._elegibilidade = elegibilidade
 
@@ -20,6 +24,10 @@ class ListarSimuladosAlunoService:
         for s in linhas:
             composicao = composicoes.get(s['simulado_versao_id'], [])
             disponivel = bool(composicao) and all(id_ in elegiveis for id_ in composicao)
-            itens.append({**s, 'total_questoes': len(composicao), 'disponivel': disponivel,
-                          'tentativa_em_andamento_id': andamentos.get(s['simulado_versao_id'])})
+            itens.append({
+                **s,
+                'total_questoes': len(composicao),
+                'disponivel': disponivel,
+                'tentativa_em_andamento_id': andamentos.get(s['simulado_versao_id'])
+            })
         return envelope_paginado(itens, valores['pagina'], valores['por_pagina'], total)

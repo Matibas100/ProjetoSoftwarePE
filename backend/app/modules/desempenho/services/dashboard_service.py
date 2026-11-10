@@ -1,10 +1,20 @@
 from app.exceptions import DadosInvalidosError
-from app.contracts.desempenho import DiagnosticoAluno, ConsultaAtividadesAluno, ConsultaContagensAdmin, EscoposLeitura
+from app.contracts.desempenho import (
+    DiagnosticoAluno,
+    ConsultaAtividadesAluno,
+    ConsultaContagensAdmin,
+    EscoposLeitura,
+)
 from app.modules.desempenho.services.desempenho_validacao import periodo
 
 
 class ConsultarDashboardAlunoService:
-    def __init__(self, diagnostico: DiagnosticoAluno, atividades: ConsultaAtividadesAluno, escopos: EscoposLeitura):
+    def __init__(
+        self,
+        diagnostico: DiagnosticoAluno,
+        atividades: ConsultaAtividadesAluno,
+        escopos: EscoposLeitura
+    ):
         self._diagnostico = diagnostico
         self._atividades = atividades
         self._escopos = escopos
@@ -30,4 +40,7 @@ class ConsultarDashboardAdminService:
         if filtros:
             raise DadosInvalidosError("O dashboard administrativo não aceita filtros.")
         with self._escopos.usar() as leitura:
-            return {"calculado_em": leitura.instante.isoformat() + "Z", **self._contagens.administrativo(leitura)}
+            return {
+                "calculado_em": leitura.instante.isoformat() + "Z",
+                **self._contagens.administrativo(leitura)
+            }

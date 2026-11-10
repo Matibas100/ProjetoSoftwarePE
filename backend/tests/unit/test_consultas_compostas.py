@@ -10,7 +10,10 @@ from app.modules.praticas.services.listar_questoes_aluno_service import ListarQu
 from app.modules.simulados.services.listar_simulados_aluno_service import ListarSimuladosAlunoService
 from app.modules.simulados.services.listar_historico_simulados_service import ListarHistoricoSimuladosService
 from app.modules.desempenho.services.consultar_desempenho_service import ConsultarDesempenhoService
-from app.modules.desempenho.services.dashboard_service import ConsultarDashboardAlunoService, ConsultarDashboardAdminService
+from app.modules.desempenho.services.dashboard_service import (
+    ConsultarDashboardAlunoService,
+    ConsultarDashboardAdminService,
+)
 from app.exceptions import DadosInvalidosError
 
 
@@ -39,9 +42,16 @@ class MetricasPrecalculadas:
 class MetricasPorFatos:
     def agregar(self, contexto, usuario_id, inicio, fim):
         fatos = [('pratica', True), ('pratica', False), ('simulado', False)]
-        return ({'total_respostas': len(fatos), 'acertos': sum(c for _, c in fatos),
-                 'pratica': sum(t == 'pratica' for t, _ in fatos),
-                 'simulado': sum(t == 'simulado' for t, _ in fatos)}, [], [])
+        return (
+            {
+                'total_respostas': len(fatos),
+                'acertos': sum(c for _, c in fatos),
+                'pratica': sum(t == 'pratica' for t, _ in fatos),
+                'simulado': sum(t == 'simulado' for t, _ in fatos)
+            },
+            [],
+            []
+        )
 
 
 class ConsultasCompostasTest(unittest.TestCase):
@@ -49,7 +59,11 @@ class ConsultasCompostasTest(unittest.TestCase):
         consulta = Mock()
         dados = [{'questao_versao_id': 8, 'enunciado': 'Texto'}]
         consulta.listar.return_value = dados, 3
-        r = ListarQuestoesAlunoService(consulta).executar({'pagina': '2', 'por_pagina': '2', 'assunto_id': '7'})
+        r = ListarQuestoesAlunoService(consulta).executar({
+            'pagina': '2',
+            'por_pagina': '2',
+            'assunto_id': '7'
+        })
         self.assertEqual(r['itens'], dados)
         self.assertEqual(r['total_paginas'], 2)
         consulta.listar.assert_called_once_with({'assunto_id': 7, 'materia_id': None}, 2, 2)
@@ -57,7 +71,14 @@ class ConsultasCompostasTest(unittest.TestCase):
 
     def test_catalogo_simulados_decide_disponibilidade_e_usa_lotes(self):
         consulta, elegibilidade = Mock(), Mock()
-        consulta.listar.return_value = ([{'id': i, 'simulado_versao_id': i + 10, 'titulo': str(i)} for i in range(3)], 3)
+        consulta.listar.return_value = (
+            [{
+                'id': i,
+                'simulado_versao_id': i + 10,
+                'titulo': str(i)
+            } for i in range(3)],
+            3
+        )
         consulta.composicoes.return_value = {10: [1, 2], 11: [1, 3]}
         consulta.andamentos.return_value = {10: 99}
         elegibilidade.executar.return_value = {1: {}, 2: {}}
@@ -70,8 +91,12 @@ class ConsultasCompostasTest(unittest.TestCase):
 
     def test_historico_proprio_recebe_resultado_persistido(self):
         consulta = Mock()
-        dados = [{'id': 8, 'simulado_versao_id': 10, 'titulo': 'Título histórico',
-                  'resultado': {'finalizada_em': '2026-11-06T10:00:00Z', 'acertos': 1}}]
+        dados = [{
+            'id': 8,
+            'simulado_versao_id': 10,
+            'titulo': 'Título histórico',
+            'resultado': {'finalizada_em': '2026-11-06T10:00:00Z', 'acertos': 1}
+        }]
         consulta.listar.return_value = dados, 1
         r = ListarHistoricoSimuladosService(consulta).executar(7, {})
         self.assertEqual(r['itens'], dados)
@@ -93,8 +118,20 @@ class ConsultasCompostasTest(unittest.TestCase):
     def test_dashboard_compartilha_contexto_relogio_e_falha_completa(self):
         escopos, atividades = EscoposMemoria(), Mock()
         diagnostico = ConsultarDesempenhoService(MetricasPorFatos(), escopos)
-        atividades.atividades.return_value = [dict(id=1, tipo='pratica', titulo='Assunto', ocorrido_em=escopos.contexto.instante),
-                                             dict(id=2, tipo='simulado', titulo='Título', ocorrido_em=escopos.contexto.instante)]
+        atividades.atividades.return_value = [
+            dict(
+                id=1,
+                tipo='pratica',
+                titulo='Assunto',
+                ocorrido_em=escopos.contexto.instante
+            ),
+            dict(
+                id=2,
+                tipo='simulado',
+                titulo='Título',
+                ocorrido_em=escopos.contexto.instante
+            )
+        ]
         dashboard = ConsultarDashboardAlunoService(diagnostico, atividades, escopos)
         r = dashboard.executar(7, {})
         self.assertEqual((escopos.abertos, escopos.fechados), (1, 1))
@@ -102,14 +139,21 @@ class ConsultasCompostasTest(unittest.TestCase):
         self.assertEqual(r['ultimas_atividades'][1]['url'], '/aluno/simulado.html?tentativa_id=2')
         self.assertIs(atividades.atividades.call_args.args[0], escopos.contexto)
         atividades.atividades.side_effect = RuntimeError('Indisponível')
-        with self.assertRaises(RuntimeError): dashboard.executar(7, {})
+        with self.assertRaises(RuntimeError):
+            dashboard.executar(7, {})
         self.assertEqual((escopos.abertos, escopos.fechados), (2, 2))
 
     def test_dashboard_admin_so_consulta_contagens_sem_identidade(self):
         escopos, contagens = EscoposMemoria(), Mock()
-        contagens.administrativo.return_value = {'catalogo': {}, 'questoes': {}, 'simulados': {}, 'tentativas_simulado_finalizadas': 0}
+        contagens.administrativo.return_value = {
+            'catalogo': {},
+            'questoes': {},
+            'simulados': {},
+            'tentativas_simulado_finalizadas': 0
+        }
         service = ConsultarDashboardAdminService(contagens, escopos)
-        with self.assertRaises(DadosInvalidosError): service.executar({'usuario_id': 7})
+        with self.assertRaises(DadosInvalidosError):
+            service.executar({'usuario_id': 7})
         self.assertEqual(escopos.abertos, 0)
         r = service.executar({})
         self.assertEqual(r['tentativas_simulado_finalizadas'], 0)

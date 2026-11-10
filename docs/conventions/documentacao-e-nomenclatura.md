@@ -27,3 +27,12 @@
 - Use Conventional Commits em português quando um commit for autorizado.
 - Não misture mudanças sem relação no mesmo commit.
 - Arquivos temporários, caches, `.env` e credenciais não são versionados.
+
+## Formatação do código
+
+- Python usa 4 espaços; JavaScript, CSS, HTML e SVG usam 2 espaços. Receitas do Makefile preservam tabulações.
+- Separe instruções e blocos para facilitar a leitura; use uma declaração CSS por linha e linhas em branco entre regras, métodos e declarações de topo.
+- Prefira linhas de aproximadamente 100 caracteres quando a quebra for segura. Não há obrigação de reduzir linhas nem de reescrever arquivos já legíveis.
+- Preserve nomes, imports, comentários, diretivas, aspas, literais e ordem de operações, atributos e propriedades. Formatar não autoriza refatorar.
+- Preserve espaços significativos em HTML, conteúdo de `pre`/`textarea`, scripts, templates, regexes, URLs, SQL embutido e valores CSS; esses trechos podem permanecer longos.
+- Preserve UTF-8 e os finais de linha existentes. Este padrão não exige ferramenta, dependência, configuração ou gate novo.

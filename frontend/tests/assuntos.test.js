@@ -102,11 +102,14 @@ describe("tela de assuntos", () => {
     app.document.querySelector('[data-acao="editar"]').click();
     expect(dirty()).toBe(false);
     const name = app.document.querySelector("#assunto-nome");
-    name.value = "Algebra editada"; expect(dirty()).toBe(true);
-    name.value = assuntos[0].nome; expect(dirty()).toBe(false);
+    name.value = "Algebra editada";
+    expect(dirty()).toBe(true);
+    name.value = assuntos[0].nome;
+    expect(dirty()).toBe(false);
     app.document.querySelector("#assunto-descricao").value = "Descricao editada";
     expect(dirty()).toBe(true);
-    app.document.querySelector("#assunto-cancelar-button").click(); await settle();
+    app.document.querySelector("#assunto-cancelar-button").click();
+    await settle();
     expect(dirty()).toBe(false);
   });
 

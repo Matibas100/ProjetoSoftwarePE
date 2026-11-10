@@ -7,7 +7,10 @@ from uuid import uuid4
 from sqlalchemy import inspect, select, text
 
 from app.extensions import db
-from app.modules.plano_estudos.models.plano_estudo import PlanoEstudo as Plano, PlanoEstudoItem as Item
+from app.modules.plano_estudos.models.plano_estudo import (
+    PlanoEstudo as Plano,
+    PlanoEstudoItem as Item,
+)
 from app.modules.plano_estudos.repositories.plano_estudo_repository import PlanoEstudoRepository as Planos
 from app.modules.conteudo.repositories.questao_repository import QuestaoRepository as Questoes
 from tests.integration_support import MySQLIntegrationTestCase
@@ -54,8 +57,10 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
             db.session.rollback()
             self.assertEqual(Planos.itens(p['id'])[0].estado, 'pendente')
             self.assertEqual(Questoes.pares_elegiveis_plano([]), set())
-            self.assertEqual(Questoes.pares_elegiveis_plano([self.assunto['id']]*2, True),
-                {(self.assunto['id'], self.materia['id'])})
+            self.assertEqual(
+                Questoes.pares_elegiveis_plano([self.assunto['id']]*2, True),
+                {(self.assunto['id'], self.materia['id'])}
+            )
         self.assertEqual(self.gerar(chave).json, resposta.json)
         self.assertEqual(self.concluir(p['itens'][0]['id'], self.outro).status_code, 404)
 
@@ -78,13 +83,20 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
                 item = db.session.get(Item, p['itens'][0]['id'])
                 plano = db.session.get(Plano, p['id'])
                 with engine.begin() as outra:
-                    outra.execute(text("UPDATE plano_estudo_itens SET snapshot=JSON_OBJECT('corrente', true) WHERE id=:id"),
-                        {'id': item.id})
+                    outra.execute(
+                        text("UPDATE plano_estudo_itens SET snapshot=JSON_OBJECT('corrente', true) WHERE id=:id"),
+                        {'id': item.id}
+                    )
                 comando = text('CALL sp_teste_plano_join_015(:id)').columns(
-                    *Item.__table__.columns, *Plano.__table__.columns)
+                    *Item.__table__.columns,
+                    *Plano.__table__.columns
+                )
                 for id_, vazio in [(item.id, False), (2**31+1, True), (item.id, False)]:
-                    resultado = db.session.execute(select(Item, Plano).from_statement(comando)
-                        .execution_options(populate_existing=True), {'id': id_})
+                    resultado = db.session.execute(
+                        select(Item, Plano).from_statement(comando)
+                        .execution_options(populate_existing=True),
+                        {'id': id_}
+                    )
                     try:
                         linha = resultado.one_or_none()
                     finally:
@@ -114,8 +126,10 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
             plano = db.session.get(Plano, p['id'])
             item = db.session.get(Item, p['itens'][0]['id'])
             with db.engine.begin() as outra:
-                outra.execute(text("UPDATE plano_estudo_itens SET snapshot=JSON_OBJECT('corrente',true) WHERE id=:id"),
-                    {'id': item.id})
+                outra.execute(
+                    text("UPDATE plano_estudo_itens SET snapshot=JSON_OBJECT('corrente',true) WHERE id=:id"),
+                    {'id': item.id}
+                )
             corrente, mesmo = Planos.item_proprio(self.usuario, item.id)
             self.assertIs(corrente, item)
             self.assertIs(mesmo, plano)
@@ -135,13 +149,23 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
         self.concluir(p['itens'][0]['id'])
         novo = self.recalcular(p).json['plano']
         with self.app.app_context():
-            outro = Plano(usuario_id=self.outro_id, geracao=1, atual=True, periodo={}, gerado_em=agora_utc(),
-                chave_envio=str(uuid4()), operacao='gerar').salvar()
+            outro = Plano(
+                usuario_id=self.outro_id,
+                geracao=1,
+                atual=True,
+                periodo={},
+                gerado_em=agora_utc(),
+                chave_envio=str(uuid4()),
+                operacao='gerar'
+            ).salvar()
             plano = db.session.get(Plano, novo['id'])
             item = db.session.get(Item, p['itens'][0]['id'])
             Planos.bloquear_usuario(self.usuario)
-            contagens, = executar_resultados(db.session.connection(),
-                'CALL sp_eliminar_planos_proprios(%s)', (self.usuario,))
+            contagens, = executar_resultados(
+                db.session.connection(),
+                'CALL sp_eliminar_planos_proprios(%s)',
+                (self.usuario,)
+            )
             self.assertEqual(contagens, [{'planos_eliminados': 2, 'itens_eliminados': 2}])
             db.session.rollback()
             self.assertEqual(Planos.itens(p['id'])[0].estado, 'concluido')
@@ -173,7 +197,11 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
             ('sp_plano_itens', self.url, None),
             ('sp_pares_elegiveis_plano', self.url, None),
             ('sp_plano_por_chave', self.url+'/gerar', {'chave_envio': str(uuid4())}),
-            ('sp_plano_item_proprio', self.url+f"/itens/{p['itens'][0]['id']}/concluir", {'confirmar': True}),
+            (
+                'sp_plano_item_proprio',
+                self.url+f"/itens/{p['itens'][0]['id']}/concluir",
+                {'confirmar': True}
+            ),
         ]:
             with self.subTest(nome=nome), self.app.app_context():
                 engine = db.engine
@@ -194,13 +222,22 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
         self.assertEqual(r.status_code, 201)
         with self.app.app_context():
             comandos = []
+
             def observar(con, cursor, comando, parametros, contexto, executemany):
                 comandos.append(comando)
             sql_observer.listen(db.engine, 'before_cursor_execute', observar)
             try:
                 for path, body in [
-                    (self.url, None), (self.url+'/gerar', {'chave_envio': str(uuid4())}),
-                    (self.url+'/recalcular', {'chave_envio': str(uuid4()), 'plano_atual_id': p['id'], 'confirmar': True}),
+                    (self.url, None),
+                    (self.url+'/gerar', {'chave_envio': str(uuid4())}),
+                    (
+                        self.url+'/recalcular',
+                        {
+                            'chave_envio': str(uuid4()),
+                            'plano_atual_id': p['id'],
+                            'confirmar': True
+                        }
+                    ),
                     (self.url+f"/itens/{p['itens'][0]['id']}/concluir", {'confirmar': True}),
                 ]:
                     r = self.aluno.get(path) if body is None else self.aluno.post(path, json=body)
@@ -213,25 +250,56 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
     def test_elegibilidade_for_share_serializa_publicacao_e_transferencia(self):
         from app.modules.conteudo.services.gestao_questao_service import PublicarQuestaoService
         from app.modules.conteudo.services.transferir_assunto_service import TransferirAssuntoService
-        self.assertEqual(self.client.put(self.qpath, json={'revisao': 1, 'enunciado': 'Nova publicação'}).status_code, 200)
-        destino = self.client.post('/api/materias', json={'nome': 'Destino '+uuid4().hex, 'area_enem_id': 4}).json
+        self.assertEqual(
+            self.client.put(
+                self.qpath,
+                json={
+                    'revisao': 1,
+                    'enunciado': 'Nova publicação'
+                }
+            ).status_code,
+            200
+        )
+        destino = self.client.post(
+            '/api/materias',
+            json={
+                'nome': 'Destino '+uuid4().hex,
+                'area_enem_id': 4
+            }
+        ).json
         ator = self.client.get('/api/auth/sessao').json['usuario']['id']
         for tipo in ('publicar', 'transferir'):
             with self.subTest(tipo=tipo), self.app.app_context():
-                self.assertEqual(Questoes.pares_elegiveis_plano([self.assunto['id']], True),
-                    {(self.assunto['id'], self.materia['id'])})
+                self.assertEqual(
+                    Questoes.pares_elegiveis_plano([self.assunto['id']], True),
+                    {(self.assunto['id'], self.materia['id'])}
+                )
                 chegou, principal, engine = Event(), get_ident(), db.engine
+
                 def observar(con, cursor, comando, parametros, contexto, executemany):
                     alvo = 'CALL sp_bloquear_questao' if tipo=='publicar' else 'CALL sp_bloquear_assunto'
                     if get_ident()!=principal and comando.startswith(alvo):
                         chegou.set()
+
                 def executar():
                     with self.app.app_context():
                         if tipo=='publicar':
-                            return PublicarQuestaoService.executar(self.questao['id'],
-                                {'revisao': 2, 'confirmar': True, 'motivo': 'Publicação concorrente'}, ator)
-                        return TransferirAssuntoService.executar(self.assunto['id'],
-                            {'materia_destino_id': destino['id'], 'impacto_esperado': {'questoes': 1}})
+                            return PublicarQuestaoService.executar(
+                                self.questao['id'],
+                                {
+                                    'revisao': 2,
+                                    'confirmar': True,
+                                    'motivo': 'Publicação concorrente'
+                                },
+                                ator
+                            )
+                        return TransferirAssuntoService.executar(
+                            self.assunto['id'],
+                            {
+                                'materia_destino_id': destino['id'],
+                                'impacto_esperado': {'questoes': 1}
+                            }
+                        )
                 pool = ThreadPoolExecutor(1)
                 sql_observer.listen(engine, 'before_cursor_execute', observar)
                 try:
@@ -261,31 +329,53 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
             p = self.gerar().json['plano']
             revisao = self.aluno.get(self.privacy).json['consentimento_plano']['registro']['id']
             barreira = Barrier(2)
+
             def agir():
                 with self.app.app_context():
                     db.session.get(Usuario, self.usuario)
                     barreira.wait(timeout=10)
                     try:
                         if tipo=='concluir':
-                            ConcluirPlanoItemService.executar(self.usuario, p['itens'][0]['id'], {'confirmar': True})
+                            ConcluirPlanoItemService.executar(
+                                self.usuario,
+                                p['itens'][0]['id'],
+                                {'confirmar': True}
+                            )
                             return 200
-                        return servicos().recalcular_plano.executar(self.usuario,
-                            {'chave_envio': str(uuid4()), 'plano_atual_id': p['id'], 'confirmar': True})[1]
+                        return servicos().recalcular_plano.executar(
+                            self.usuario,
+                            {
+                                'chave_envio': str(uuid4()),
+                                'plano_atual_id': p['id'],
+                                'confirmar': True
+                            }
+                        )[1]
                     except AutenticacaoError as erro:
                         return erro.status_code
+
             def revogar():
                 with self.app.app_context():
                     db.session.get(Usuario, self.usuario)
                     barreira.wait(timeout=10)
-                    return servicos().revogar_consentimento_plano.executar(self.usuario,
-                        {'versao': '1.0', 'revisao': revisao, 'chave_envio': str(uuid4()), 'confirmar': True})[1]
+                    return servicos().revogar_consentimento_plano.executar(
+                        self.usuario,
+                        {
+                            'versao': '1.0',
+                            'revisao': revisao,
+                            'chave_envio': str(uuid4()),
+                            'confirmar': True
+                        }
+                    )[1]
             with ThreadPoolExecutor(2) as pool:
                 acao, negativa = pool.submit(agir), pool.submit(revogar)
                 self.assertIn(acao.result(timeout=20), (200 if tipo=='concluir' else 201, 403))
                 self.assertEqual(negativa.result(timeout=20), 201)
             with self.app.app_context():
                 self.assertIsNone(Planos.atual(self.usuario))
-                self.assertEqual(db.session.execute(select(Plano).where(Plano.usuario_id==self.usuario)).scalars().all(), [])
+                self.assertEqual(
+                    db.session.execute(select(Plano).where(Plano.usuario_id==self.usuario)).scalars().all(),
+                    []
+                )
 
     def test_falha_mysql_apos_troca_de_geracao_reverte_toda_escrita(self):
         self.base()
@@ -301,8 +391,11 @@ class PlanoProceduresIntegrationTest(MySQLIntegrationTestCase):
                 self.assertEqual(set(resposta.json), {'erro'})
                 self.assertNotIn('sintética', str(resposta.json))
                 self.assertEqual(self.aluno.get(self.url).json['plano'], p)
-                self.assertEqual(len(db.session.execute(select(Plano).where(Plano.usuario_id==self.usuario))
-                    .scalars().all()), 1)
+                self.assertEqual(
+                    len(db.session.execute(select(Plano).where(Plano.usuario_id==self.usuario))
+                        .scalars().all()),
+                    1
+                )
             finally:
                 db.session.remove()
                 with engine.begin() as ddl:

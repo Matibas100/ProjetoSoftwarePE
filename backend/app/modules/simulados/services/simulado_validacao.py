@@ -20,7 +20,10 @@ def composicao(dados, editar=False):
     titulo, ids = dados["titulo"], dados["questao_versao_ids"]
     if not isinstance(titulo, str) or not 3 <= len(titulo.strip()) <= 150:
         raise DadosInvalidosError("Título deve ter de 3 a 150 caracteres.")
-    if not isinstance(ids, list) or not 1 <= len(ids) <= 180 or any(type(i) is not int or not 1 <= i <= 2147483647 for i in ids):
+    if not isinstance(
+        ids,
+        list
+    ) or not 1 <= len(ids) <= 180 or any(type(i) is not int or not 1 <= i <= 2147483647 for i in ids):
         raise DadosInvalidosError("Selecione de 1 a 180 versões de Questões.")
     if len(set(ids)) != len(ids):
         raise DadosInvalidosError("Não repita Questões na composição.")

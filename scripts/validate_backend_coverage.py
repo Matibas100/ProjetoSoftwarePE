@@ -39,7 +39,8 @@ def has_executable_statements(path: Path) -> bool:
 def _normalized_files(report: dict) -> dict[str, dict]:
     return {
         Path(name).as_posix().lower(): details
-        for name, details in report.get("files", {}).items()
+        for name,
+        details in report.get("files", {}).items()
     }
 
 

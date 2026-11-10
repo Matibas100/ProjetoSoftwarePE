@@ -4,7 +4,11 @@ from flask import current_app, g, request
 from app.modules.contas.controllers.autenticacao_controller import COOKIE, resposta_erro
 from app.modules.contas.domain.autenticacao import AutenticacaoError
 from app.http_response import registrar_falha
-from app.modules.contas.services.autenticacao_service import AutorizarService, ConsultarSessaoService, ValidarCsrfService
+from app.modules.contas.services.autenticacao_service import (
+    AutorizarService,
+    ConsultarSessaoService,
+    ValidarCsrfService,
+)
 
 
 def proteger_api():
@@ -35,7 +39,10 @@ def proteger_api():
                     raise AutenticacaoError("Você já está autenticado.", 409, "ja_autenticado")
             return None
         leitura_catalogo = request.method in {"GET", "HEAD"} and request.path in {
-            "/api/areas-enem", "/api/materias", "/api/assuntos"}
+            "/api/areas-enem",
+            "/api/materias",
+            "/api/assuntos"
+        }
         rota_auth = request.path.startswith("/api/auth/")
         rota_tutoria = request.path == "/api/tutoria"
         rota_aluno = request.path.startswith("/api/aluno/") or rota_tutoria
@@ -44,25 +51,62 @@ def proteger_api():
         gestao_usuarios = request.path == "/api/admin/usuarios" or request.path.startswith("/api/admin/usuarios/")
         dados = None if rota_tutoria or gestao_usuarios else request.get_json(silent=True)
         sensivel = (gestao_usuarios and mutacao) or not rota_auth and (request.method == "DELETE" or
-            request.path.rsplit("/", 1)[-1] in {"inativar", "arquivar", "reativar", "transferir", "publicar"} or
+            request.path.rsplit(
+                "/",
+                1
+            )[-1] in {
+                "inativar",
+                "arquivar",
+                "reativar",
+                "transferir",
+                "publicar"
+            } or
             (request.method == "PUT" and isinstance(dados, dict) and (
-                ("/materias/" in request.path and bool({"status", "area_enem_id"} & dados.keys())) or
+                ("/materias/" in request.path and bool({
+                    "status",
+                    "area_enem_id"
+                } & dados.keys())) or
                 ("/assuntos/" in request.path and "materia_id" in dados))))
-        g.auth_sessao = AutorizarService.executar(identificador, admin, mutacao, origem,
-            origens, csrf, chave, sensivel)
+        g.auth_sessao = AutorizarService.executar(
+            identificador,
+            admin,
+            mutacao,
+            origem,
+            origens,
+            csrf,
+            chave,
+            sensivel
+        )
         if rota_aluno and g.auth_sessao.usuario.perfil != "aluno":
             raise AutenticacaoError("Você não tem acesso a esta operação.", 403, "acesso_negado")
     except AutenticacaoError as erro:
         return resposta_erro(erro)
     except Exception as erro:
         registrar_falha("Falha interna ao verificar identidade.", erro)
-        return resposta_erro(AutenticacaoError("Não foi possível verificar sua sessão.", 500, "erro_interno"))
+        return resposta_erro(AutenticacaoError(
+            "Não foi possível verificar sua sessão.",
+            500,
+            "erro_interno"
+        ))
     return None
 
 
 def sem_cache_auth(resposta):
     detalhe_catalogo = request.endpoint in {
-        "api.conteudo.buscar_materia_por_id", "api.conteudo.buscar_assunto_por_id"}
-    if detalhe_catalogo or request.path in {"/api/termos", "/api/tutoria"} or request.path.startswith(("/api/auth/", "/api/aluno/", "/api/admin/")) or getattr(g, "auth_sessao", None) is not None:
+        "api.conteudo.buscar_materia_por_id",
+        "api.conteudo.buscar_assunto_por_id"
+    }
+    if detalhe_catalogo or request.path in {
+        "/api/termos",
+        "/api/tutoria"
+    } or request.path.startswith((
+        "/api/auth/",
+        "/api/aluno/",
+        "/api/admin/"
+    )) or getattr(
+        g,
+        "auth_sessao",
+        None
+    ) is not None:
         resposta.headers["Cache-Control"] = "no-store"
     return resposta

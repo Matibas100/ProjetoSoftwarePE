@@ -4,8 +4,11 @@ from app.http_response import responder_http, resposta_json
 from app.http_composition import servicos
 from app.modules.conteudo.services.criar_questao_service import CriarQuestaoService
 from app.modules.conteudo.services.gestao_questao_service import (
-    ListarQuestoesAdminService, ConsultarQuestaoService, EditarQuestaoService,
-    PublicarQuestaoService, ArquivarQuestaoService,
+    ListarQuestoesAdminService,
+    ConsultarQuestaoService,
+    EditarQuestaoService,
+    PublicarQuestaoService,
+    ArquivarQuestaoService,
 )
 
 
@@ -38,20 +41,32 @@ class QuestaoController:
     @staticmethod
     def editar(questao_id):
         return QuestaoController._responder(lambda: EditarQuestaoService.executar(
-            questao_id, request.get_json(silent=True), g.auth_sessao.usuario_id))
+            questao_id,
+            request.get_json(silent=True),
+            g.auth_sessao.usuario_id
+        ))
 
     @staticmethod
     def publicar(questao_id):
         return QuestaoController._responder(lambda: PublicarQuestaoService.executar(
-            questao_id, request.get_json(silent=True), g.auth_sessao.usuario_id))
+            questao_id,
+            request.get_json(silent=True),
+            g.auth_sessao.usuario_id
+        ))
 
     @staticmethod
     def arquivar(questao_id):
         return QuestaoController._responder(lambda: ArquivarQuestaoService.executar(
-            questao_id, request.get_json(silent=True), g.auth_sessao.usuario_id))
+            questao_id,
+            request.get_json(silent=True),
+            g.auth_sessao.usuario_id
+        ))
 
     @staticmethod
     def _responder(operacao, status_sucesso=200):
-        return responder_http(operacao, contexto="Falha interna: questao.",
+        return responder_http(
+            operacao,
+            contexto="Falha interna: questao.",
             adaptar_sucesso=lambda dados: resposta_json(dados, status_sucesso),
-            adaptar_erro=lambda erro: (jsonify({"erro": str(erro)}), erro.status_code))
+            adaptar_erro=lambda erro: (jsonify({"erro": str(erro)}), erro.status_code)
+        )

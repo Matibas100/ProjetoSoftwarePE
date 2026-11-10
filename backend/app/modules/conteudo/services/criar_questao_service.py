@@ -86,11 +86,21 @@ class CriarQuestaoService:
 
         def operacao():
             instante = agora_utc()
-            questao = Questao(**valores, status="rascunho", revisao=1,
-                criado_em=instante, atualizado_em=instante)
+            questao = Questao(
+                **valores,
+                status="rascunho",
+                revisao=1,
+                criado_em=instante,
+                atualizado_em=instante
+            )
             questao.salvar(confirmar=False)
-            QuestaoEvento(questao_id=questao.id, ator_id=ator_id, acao="cadastro",
-                motivo="Cadastro manual de rascunho.", criado_em=instante).salvar(confirmar=False)
+            QuestaoEvento(
+                questao_id=questao.id,
+                ator_id=ator_id,
+                acao="cadastro",
+                motivo="Cadastro manual de rascunho.",
+                criado_em=instante
+            ).salvar(confirmar=False)
             return questao.to_dict()
 
         try:

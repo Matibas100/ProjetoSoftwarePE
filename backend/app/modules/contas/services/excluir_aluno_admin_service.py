@@ -5,8 +5,9 @@ from app.modules.contas.services.gestao_alunos_validacao import confirmar_acao, 
 
 class ExcluirAlunoAdminService:
     @staticmethod
-    def executar(usuario_id,dados):
+    def executar(usuario_id, dados):
         validar_id(usuario_id)
+
         def excluir():
             usuario = exigir_aluno(UsuarioRepository.bloquear(usuario_id))
             confirmar_acao(dados)

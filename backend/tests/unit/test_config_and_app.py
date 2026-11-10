@@ -103,7 +103,8 @@ class ApplicationFactoryTest(unittest.TestCase):
 
     def test_health_e_cors(self):
         response = self.app.test_client().get(
-            "/api/health", headers={"Origin": "http://frontend.test"}
+            "/api/health",
+            headers={"Origin": "http://frontend.test"}
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -111,7 +112,8 @@ class ApplicationFactoryTest(unittest.TestCase):
             {"aplicacao": "Plataforma ENEM", "status": "online"},
         )
         self.assertEqual(
-            response.headers["Access-Control-Allow-Origin"], "http://frontend.test"
+            response.headers["Access-Control-Allow-Origin"],
+            "http://frontend.test"
         )
 
     def test_run_py_configura_host_port_e_debug(self):

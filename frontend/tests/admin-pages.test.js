@@ -90,7 +90,8 @@ describe("contratos das telas administrativas", () => {
     await settle();
     expect(app.document.querySelector("#materia-nome").value).toBe("Alterada");
     const escaped = ui.modalController(app.document.querySelector("#admin-modal")).confirm({
-      title: "Descartar alterações?", text: "Continuar editando ao pressionar Esc",
+      title: "Descartar alterações?",
+      text: "Continuar editando ao pressionar Esc",
     });
     const modalElement = app.document.querySelector("#admin-modal");
     const cancelButton = app.document.querySelector("#admin-modal-cancelar");
@@ -114,7 +115,8 @@ describe("contratos das telas administrativas", () => {
     expect(app.document.querySelector("#admin-modal").open).toBe(false);
     expect(app.document.querySelector("#materia-nome").value).toBe("Alterada");
     const confirmation = ui.modalController(app.document.querySelector("#admin-modal")).confirm({
-      title: "Confirmar", text: "Continuar",
+      title: "Confirmar",
+      text: "Continuar",
     });
     app.document.querySelector("#admin-modal-confirmar").click();
     await expect(confirmation).resolves.toBe(true);
@@ -143,9 +145,36 @@ describe("contratos das telas administrativas", () => {
 
   it("cobre estados, validacao, filtros e exclusao sem vinculos", async () => {
     const subjectItems = [
-      { id: 6, nome: "Brasil Colonia", descricao: null, materia_id: 11, materia: matters[1], area_enem: areas[0], status: "inativa", questoes: 0 },
-      { id: 7, nome: "Termologia", descricao: "", materia_id: 10, materia: matters[0], area_enem: areas[1], status: "arquivada", questoes: 0 },
-      { id: 8, nome: "Ondulatoria", descricao: "Som", materia_id: 10, materia: matters[0], area_enem: areas[1], status: "ativa", questoes: 0 },
+      {
+        id: 6,
+        nome: "Brasil Colonia",
+        descricao: null,
+        materia_id: 11,
+        materia: matters[1],
+        area_enem: areas[0],
+        status: "inativa",
+        questoes: 0
+      },
+      {
+        id: 7,
+        nome: "Termologia",
+        descricao: "",
+        materia_id: 10,
+        materia: matters[0],
+        area_enem: areas[1],
+        status: "arquivada",
+        questoes: 0
+      },
+      {
+        id: 8,
+        nome: "Ondulatoria",
+        descricao: "Som",
+        materia_id: 10,
+        materia: matters[0],
+        area_enem: areas[1],
+        status: "ativa",
+        questoes: 0
+      },
     ];
     let failList = false;
     const api = vi.fn(async (path, options = {}) => {
@@ -171,7 +200,8 @@ describe("contratos das telas administrativas", () => {
     app.document.querySelector("#assunto-nome").value = "Mecanica";
     app.document.querySelector("#assunto-materia").value = "10";
     app.document.querySelector("#assunto-form").dispatchEvent(new app.window.Event("submit", { bubbles: true, cancelable: true }));
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(api).toHaveBeenCalledWith("/assuntos", expect.objectContaining({ method: "POST" }));
 
     app.document.querySelector('[data-id="6"][data-action="reativar"]').click();
@@ -181,13 +211,15 @@ describe("contratos das telas administrativas", () => {
     app.document.querySelector('[data-id="6"][data-action="reativar"]').click();
     await settle();
     app.document.querySelector("#admin-modal-confirmar").click();
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(api.mock.calls.some(([path]) => path === "/assuntos/6/reativar")).toBe(true);
 
     app.document.querySelector('[data-id="6"][data-action="arquivar"]').click();
     await settle();
     app.document.querySelector("#admin-modal-confirmar").click();
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(app.document.querySelector("#assunto-contexto").textContent).toContain("Falha");
 
     app.document.querySelector('[data-id="8"][data-action="delete"]').click();
@@ -197,7 +229,8 @@ describe("contratos das telas administrativas", () => {
     app.document.querySelector('[data-id="8"][data-action="delete"]').click();
     await settle();
     app.document.querySelector("#admin-modal-confirmar").click();
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(api).toHaveBeenCalledWith("/assuntos/8", { method: "DELETE" });
 
     app.document.querySelector("#assuntos-area-filtro").value = "3";
@@ -222,8 +255,14 @@ describe("contratos das telas administrativas", () => {
 describe("ADM-CON-001", () => {
   it("lista, filtra, edita, cria e apresenta bloqueio de exclusao", async () => {
     const items = [{
-      id: 1, nome: "<Matemática>", descricao: "Raciocínio", area_enem_id: 3,
-      area_enem: areas[1], status: "ativa", assuntos: 2, questoes: 7,
+      id: 1,
+      nome: "<Matemática>",
+      descricao: "Raciocínio",
+      area_enem_id: 3,
+      area_enem: areas[1],
+      status: "ativa",
+      assuntos: 2,
+      questoes: 7,
       atualizado_em: "2026-09-08T12:00:00",
     }];
     const api = vi.fn(async (path, options = {}) => {
@@ -284,9 +323,39 @@ describe("ADM-CON-001", () => {
   });
   it("cobre estados, criacao, descarte e exclusao sem vinculos", async () => {
     const items = [
-      { id: 2, nome: "Historia", descricao: null, area_enem_id: 2, area_enem: areas[0], status: "inativa", assuntos: 0, questoes: 0, atualizado_em: null },
-      { id: 3, nome: "Quimica", descricao: "", area_enem_id: 3, area_enem: areas[1], status: "arquivada", assuntos: 0, questoes: 0, atualizado_em: null },
-      { id: 4, nome: "Biologia", descricao: "Vida", area_enem_id: 3, area_enem: areas[1], status: "ativa", assuntos: 0, questoes: 0, atualizado_em: null },
+      {
+        id: 2,
+        nome: "Historia",
+        descricao: null,
+        area_enem_id: 2,
+        area_enem: areas[0],
+        status: "inativa",
+        assuntos: 0,
+        questoes: 0,
+        atualizado_em: null
+      },
+      {
+        id: 3,
+        nome: "Quimica",
+        descricao: "",
+        area_enem_id: 3,
+        area_enem: areas[1],
+        status: "arquivada",
+        assuntos: 0,
+        questoes: 0,
+        atualizado_em: null
+      },
+      {
+        id: 4,
+        nome: "Biologia",
+        descricao: "Vida",
+        area_enem_id: 3,
+        area_enem: areas[1],
+        status: "ativa",
+        assuntos: 0,
+        questoes: 0,
+        atualizado_em: null
+      },
     ];
     let failList = false;
     const api = vi.fn(async (path, options = {}) => {
@@ -314,7 +383,8 @@ describe("ADM-CON-001", () => {
     app.document.querySelector("#materia-nome").value = "Geografia";
     app.document.querySelector("#materia-area").value = "2";
     app.document.querySelector("#materia-form").dispatchEvent(new app.window.Event("submit", { bubbles: true, cancelable: true }));
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(api).toHaveBeenCalledWith("/materias", expect.objectContaining({ method: "POST" }));
 
     app.document.querySelector('[data-id="2"][data-action="reativar"]').click();
@@ -325,13 +395,15 @@ describe("ADM-CON-001", () => {
     app.document.querySelector('[data-id="2"][data-action="reativar"]').click();
     await settle();
     app.document.querySelector("#admin-modal-confirmar").click();
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(api.mock.calls.some(([path]) => path === "/materias/2/reativar")).toBe(true);
 
     app.document.querySelector('[data-id="2"][data-action="arquivar"]').click();
     await settle();
     app.document.querySelector("#admin-modal-confirmar").click();
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(app.document.querySelector("#materia-contexto").textContent).toContain("indisponivel");
 
     app.document.querySelector('[data-id="4"][data-action="delete"]').click();
@@ -341,7 +413,8 @@ describe("ADM-CON-001", () => {
     app.document.querySelector('[data-id="4"][data-action="delete"]').click();
     await settle();
     app.document.querySelector("#admin-modal-confirmar").click();
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(api).toHaveBeenCalledWith("/materias/4", { method: "DELETE" });
 
     app.document.querySelector("#materias-anterior").click();
@@ -360,11 +433,20 @@ describe("ADM-CON-001", () => {
 describe("ADM-CON-002", () => {
   it("combina filtros, marca resumos e transfere somente apos confirmacao", async () => {
     const subject = {
-      id: 5, nome: "Eletricidade", descricao: "Circuitos", materia_id: 10,
-      materia: matters[0], area_enem: areas[1], status: "ativa", questoes: 38, resumos: null,
+      id: 5,
+      nome: "Eletricidade",
+      descricao: "Circuitos",
+      materia_id: 10,
+      materia: matters[0],
+      area_enem: areas[1],
+      status: "ativa",
+      questoes: 38,
+      resumos: null,
     };
     const preview = {
-      assunto_id: 5, materia_origem: matters[0], materia_destino: { ...matters[1], status: "ativa" },
+      assunto_id: 5,
+      materia_origem: matters[0],
+      materia_destino: { ...matters[1], status: "ativa" },
       impacto: { questoes: 38 },
     };
     let transferAttempts = 0;
@@ -428,11 +510,13 @@ describe("ADM-CON-002", () => {
     app.document.querySelector("#assunto-form").dispatchEvent(new app.window.Event("submit", { bubbles: true, cancelable: true }));
     await settle();
     app.document.querySelector("#admin-modal-confirmar").click();
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(app.document.querySelector("#admin-modal").open).toBe(true);
     expect(app.document.querySelector("#admin-modal-texto").textContent).toContain("39");
     app.document.querySelector("#admin-modal-confirmar").click();
-    await settle(); await settle();
+    await settle();
+    await settle();
     expect(api).toHaveBeenCalledWith("/assuntos/5/transferir", expect.objectContaining({ method: "POST" }));
     expect(transferAttempts).toBe(2);
 

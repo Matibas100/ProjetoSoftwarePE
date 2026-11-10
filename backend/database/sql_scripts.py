@@ -78,7 +78,7 @@ def split_sql(sql: str) -> list[str]:
             line_end = sql.find("\n", index)
             if line_end == -1:
                 line_end = len(sql)
-            line = sql[index:line_end]
+            line = sql[index: line_end]
             directive = re.fullmatch(r"\s*DELIMITER\s+(\S+)\s*", line, re.IGNORECASE)
             if directive:
                 if "".join(buffer).strip():

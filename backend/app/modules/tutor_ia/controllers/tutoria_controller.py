@@ -27,7 +27,10 @@ class TutoriaController:
                 raise TutoriaError('Envie um objeto JSON válido.') from None
             return jsonify(servicos().gerar_tutoria.executar(usuario_id, dados)), 200
         except RequestEntityTooLarge:
-            return jsonify({'erro': 'O corpo deve ter no máximo 16 KiB.', 'codigo': 'corpo_muito_grande'}), 413
+            return jsonify({
+                'erro': 'O corpo deve ter no máximo 16 KiB.',
+                'codigo': 'corpo_muito_grande'
+            }), 413
         except ErroAplicacao as erro:
             resposta = jsonify(erro.to_dict())
             if getattr(erro, 'retry_after', None) is not None:
@@ -35,4 +38,7 @@ class TutoriaController:
             return resposta, erro.status_code
         except Exception as erro:
             registrar_falha('Falha interna: tutoria.', erro)
-            return jsonify({'erro': 'Não foi possível gerar a tutoria.', 'codigo': 'erro_interno'}), 500
+            return jsonify({
+                'erro': 'Não foi possível gerar a tutoria.',
+                'codigo': 'erro_interno'
+            }), 500

@@ -23,7 +23,8 @@ def main() -> int:
         return 2
     sys.path.insert(0, str(BACKEND_ROOT))
     suite = unittest.defaultTestLoader.discover(
-        str(BACKEND_ROOT / "tests"), pattern="*_integration.py"
+        str(BACKEND_ROOT / "tests"),
+        pattern="*_integration.py"
     )
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     return 0 if result.wasSuccessful() else 1

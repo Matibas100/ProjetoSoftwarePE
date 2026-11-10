@@ -33,6 +33,8 @@ class ClienteAutenticado(FlaskClient):
             headers.setdefault("X-CSRF-Token", self.csrf)
             kwargs["headers"] = headers
         return super().open(*args, **kwargs)
+
+
 SAFE_API_TEST_SCHEMA = re.compile(rf"^{API_TEST_PREFIX}[a-f0-9]{{12}}$")
 
 
@@ -46,7 +48,11 @@ class MySQLIntegrationTestCase(unittest.TestCase):
     autenticar_administrador = True
     cors_origins = ["http://frontend.test"]
     required_tables = {
-        "areas_enem", "materias", "assuntos", "questoes", "assunto_transferencias"
+        "areas_enem",
+        "materias",
+        "assuntos",
+        "questoes",
+        "assunto_transferencias"
     }
 
     @classmethod
@@ -58,7 +64,7 @@ class MySQLIntegrationTestCase(unittest.TestCase):
                 "somente no processo de teste para autorizar conexao e escrita."
             )
         base = migrate.load_database_settings()
-        cls.schema_name = validate_api_test_schema(API_TEST_PREFIX + uuid4().hex[:12])
+        cls.schema_name = validate_api_test_schema(API_TEST_PREFIX + uuid4().hex[: 12])
         cls.admin_connection = pymysql.connect(
             host=base.host,
             port=base.port,
@@ -108,11 +114,24 @@ class MySQLIntegrationTestCase(unittest.TestCase):
                     from app.modules.contas.services.autenticacao_service import CriarUsuarioService
                     senha = secrets.token_urlsafe(18)
                     email = f"admin-{uuid4().hex[:8]}@teste.local"
-                    CriarUsuarioService.executar({"nome": "Administrador teste", "email": email,
-                        "senha": senha, "senha_confirmacao": senha}, "administrador")
+                    CriarUsuarioService.executar(
+                        {
+                            "nome": "Administrador teste",
+                            "email": email,
+                            "senha": senha,
+                            "senha_confirmacao": senha
+                        },
+                        "administrador"
+                    )
                     token = cls.client.get("/api/auth/csrf").get_json()["csrf_token"]
-                    response = cls.client.post("/api/auth/login", json={"email": email, "senha": senha},
-                        headers={"Origin": "http://frontend.test", "X-CSRF-Token": token})
+                    response = cls.client.post(
+                        "/api/auth/login",
+                        json={
+                            "email": email,
+                            "senha": senha
+                        },
+                        headers={"Origin": "http://frontend.test", "X-CSRF-Token": token}
+                    )
                     if response.status_code != 200:
                         raise RuntimeError("Autenticacao real da fixture falhou.")
                     cls.client.csrf = response.get_json()["csrf_token"]

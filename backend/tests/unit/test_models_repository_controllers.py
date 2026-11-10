@@ -23,8 +23,12 @@ class ModelSerializationTest(unittest.TestCase):
 
     def test_assunto_to_dict(self):
         assunto = Assunto(
-            id=2, nome="Algebra", nome_normalizado="algebra", descricao="Basica",
-            materia_id=1, status="ativa"
+            id=2,
+            nome="Algebra",
+            nome_normalizado="algebra",
+            descricao="Basica",
+            materia_id=1,
+            status="ativa"
         )
         result = assunto.to_dict()
         self.assertEqual(result["nome_normalizado"], "algebra")
@@ -74,7 +78,8 @@ class CrudMixinTest(unittest.TestCase):
     def test_atualizar_filtra_campos_commit_e_rollback(self, session):
         materia = Materia(nome="Antiga", descricao=None)
         self.assertIs(
-            materia.atualizar(nome="Nova", descricao="Texto", inexistente=True), materia
+            materia.atualizar(nome="Nova", descricao="Texto", inexistente=True),
+            materia
         )
         self.assertEqual(materia.nome, "Nova")
         self.assertFalse(hasattr(materia, "inexistente"))
@@ -150,7 +155,8 @@ class ControllerResponseTest(unittest.TestCase):
             )
             self.assertEqual(status, 500)
             self.assertEqual(
-                response.get_json(), {"erro": "Ocorreu um erro interno no servidor."}
+                response.get_json(),
+                {"erro": "Ocorreu um erro interno no servidor."}
             )
 
     def test_materia_respostas_inclusive_204(self):

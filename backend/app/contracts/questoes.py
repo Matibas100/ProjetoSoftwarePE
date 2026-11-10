@@ -28,12 +28,23 @@ class QuestaoSegura(TextoQuestao):
 
 
 class ConsultaQuestoesPorAssunto(Protocol):
-    def buscar_por_assunto(self, assunto_id: int) -> list[QuestaoAdministrativa]: ...
+    def buscar_por_assunto(self, assunto_id: int) -> list[QuestaoAdministrativa]:
+        ...
 
 
 class ConsultaQuestoesElegiveis(Protocol):
-    def listar(self, filtros: FiltrosCatalogo, pagina: int, limite: int) -> tuple[list[QuestaoSegura], int]: ...
+    def listar(
+        self,
+        filtros: FiltrosCatalogo,
+        pagina: int,
+        limite: int
+    ) -> tuple[
+        list[QuestaoSegura],
+        int
+    ]:
+        ...
 
 
 class ConsultaElegibilidadeVersoes(Protocol):
-    def executar(self, ids: Iterable[int]) -> dict[int, QuestaoSegura]: ...
+    def executar(self, ids: Iterable[int]) -> dict[int, QuestaoSegura]:
+        ...

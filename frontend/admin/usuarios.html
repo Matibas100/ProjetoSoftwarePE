@@ -37,7 +37,10 @@
           </header>
           <main class="main-content">
 
-            <header class="page-heading"><div><h1>Gestão de Usuários</h1><p>Gerencie contas de Aluno e preserve seu histórico.</p></div><a href="usuario.html" class="button button--primary">Adicionar usuário</a></header>
+            <header class="page-heading"><div>
+                <h1>Gestão de Usuários</h1>
+                <p>Gerencie contas de Aluno e preserve seu histórico.</p>
+              </div><a href="usuario.html" class="button button--primary">Adicionar usuário</a></header>
             <form id="usuarios-filtros" class="card filters" role="search">
               <div class="field"><label for="usuarios-busca">Buscar por nome ou e-mail</label><input id="usuarios-busca" maxlength="254" type="search"></div>
               <div class="field"><label for="usuarios-status">Status</label><select id="usuarios-status"><option value="">Todos</option><option value="ativo">Ativos</option><option value="inativo">Inativos</option></select></div>
@@ -46,7 +49,21 @@
             <p class="screen-note">Perfil: Aluno. A listagem apresenta o e-mail mascarado; abra o detalhe para editar.</p>
             <div id="usuarios-mensagem" class="notice" role="status" aria-live="polite" hidden></div>
             <section class="card table-card" aria-label="Contas de Aluno">
-              <div class="table-scroll"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Criação</th><th>Ações</th></tr></thead><tbody id="usuarios-corpo"></tbody></table></div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>E-mail</th>
+                      <th>Perfil</th>
+                      <th>Status</th>
+                      <th>Criação</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usuarios-corpo"></tbody>
+                </table>
+              </div>
               <p id="usuarios-estado" class="table-state" role="status">Carregando usuários...</p>
               <nav class="pagination" aria-label="Paginação de usuários"><span id="usuarios-total"></span><span><button id="usuarios-anterior" class="button button--text" type="button">Anterior</button><span id="usuarios-pagina"></span><button id="usuarios-proxima" class="button button--text" type="button">Próxima</button></span></nav>
             </section><button id="usuarios-recarregar" class="button button--outline" type="button">Atualizar lista</button>

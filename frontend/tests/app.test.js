@@ -81,11 +81,14 @@ describe("tela de materias", () => {
     app.document.querySelector('[data-acao="editar"]').click();
     expect(dirty()).toBe(false);
     const name = app.document.querySelector("#nome");
-    name.value = "Fisica editada"; expect(dirty()).toBe(true);
-    name.value = materias[0].nome; expect(dirty()).toBe(false);
+    name.value = "Fisica editada";
+    expect(dirty()).toBe(true);
+    name.value = materias[0].nome;
+    expect(dirty()).toBe(false);
     app.document.querySelector("#descricao").value = "Descricao editada";
     expect(dirty()).toBe(true);
-    app.document.querySelector("#cancelar-button").click(); await settle();
+    app.document.querySelector("#cancelar-button").click();
+    await settle();
     expect(dirty()).toBe(false);
   });
 

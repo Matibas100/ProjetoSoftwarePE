@@ -1,6 +1,11 @@
 """Coordena validação, permissão curta, limite e uma geração independente."""
 from app.contracts.tutoria import GeradorTutoria, RespostaTutoria
-from app.modules.tutor_ia.domain.tutoria import TITULOS, TutoriaError, validar_entrada, validar_resposta
+from app.modules.tutor_ia.domain.tutoria import (
+    TITULOS,
+    TutoriaError,
+    validar_entrada,
+    validar_resposta,
+)
 
 
 INSTRUCAO = (
@@ -26,6 +31,10 @@ class GerarTutoriaService:
         self._limite.reservar(usuario_id)
         try:
             texto = validar_resposta(self._gerador.gerar(entrada, INSTRUCAO))
-            return {'disciplina': entrada['disciplina'], 'assunto': entrada['assunto'], 'resposta': texto}
+            return {
+                'disciplina': entrada['disciplina'],
+                'assunto': entrada['assunto'],
+                'resposta': texto
+            }
         finally:
             self._limite.liberar(usuario_id)

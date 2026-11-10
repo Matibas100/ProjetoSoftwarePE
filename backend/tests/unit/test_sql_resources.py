@@ -19,8 +19,10 @@ class RecursosSQLTest(unittest.TestCase):
     def test_normaliza_so_schema_identificador_local(self):
         sql = "SELECT `origem`.`id`, `externo`.`id`, '`origem`.literal', 'A\\'B' FROM `origem`.`t`"
         normalizado = recursos.normalizar_schema(sql, 'origem')
-        self.assertEqual(normalizado,
-            "SELECT `<local>`.`id`, `externo`.`id`, '`origem`.literal', 'A\\'B' FROM `<local>`.`t`")
+        self.assertEqual(
+            normalizado,
+            "SELECT `<local>`.`id`, `externo`.`id`, '`origem`.literal', 'A\\'B' FROM `<local>`.`t`"
+        )
         for valor in ['', None]:
             with self.assertRaises(ValueError):
                 recursos.normalizar_schema(valor, 'origem')
@@ -58,13 +60,24 @@ class RecursosSQLTest(unittest.TestCase):
             cursor = conexao.cursor.return_value.__enter__.return_value
             cursor.fetchone.side_effect = [
                 {'nome': 'origem'},
-                {'VIEW_DEFINITION': f'SELECT `{schema_referenciado}`.`t`.`id` FROM `{schema_referenciado}`.`t`',
-                 'CHECK_OPTION': 'NONE', 'IS_UPDATABLE': 'YES', 'SECURITY_TYPE': 'INVOKER',
-                 'CHARACTER_SET_CLIENT': 'utf8mb4', 'COLLATION_CONNECTION': 'utf8mb4_unicode_ci'},
+                {
+                    'VIEW_DEFINITION': f'SELECT `{schema_referenciado}`.`t`.`id` FROM `{schema_referenciado}`.`t`',
+                    'CHECK_OPTION': 'NONE',
+                    'IS_UPDATABLE': 'YES',
+                    'SECURITY_TYPE': 'INVOKER',
+                    'CHARACTER_SET_CLIENT': 'utf8mb4',
+                    'COLLATION_CONNECTION': 'utf8mb4_unicode_ci'
+                },
             ]
             cursor.fetchall.side_effect = [
-                [{'ORDINAL_POSITION': 1, 'COLUMN_NAME': 'id', 'COLUMN_TYPE': 'int',
-                  'IS_NULLABLE': 'NO', 'CHARACTER_SET_NAME': None, 'COLLATION_NAME': None}],
+                [{
+                    'ORDINAL_POSITION': 1,
+                    'COLUMN_NAME': 'id',
+                    'COLUMN_TYPE': 'int',
+                    'IS_NULLABLE': 'NO',
+                    'CHARACTER_SET_NAME': None,
+                    'COLLATION_NAME': None
+                }],
                 [{'TABLE_SCHEMA': schema_referenciado, 'TABLE_NAME': 't'}],
             ]
             return recursos.assinatura(conexao, 'vw_conteudo_classificacao_historica')

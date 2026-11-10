@@ -10,7 +10,9 @@ class AreaEnem(CrudMixin):
     nome = db.Column(db.String(100), nullable=False, unique=True)
     ordem = db.Column(db.SmallInteger, nullable=False, unique=True)
     materias = db.relationship(
-        "Materia", back_populates="area_enem", passive_deletes="all"
+        "Materia",
+        back_populates="area_enem",
+        passive_deletes="all"
     )
     campos_atualizaveis = frozenset()
 

@@ -11,8 +11,15 @@ from tests.unit.test_config_and_app import TestConfig
 
 
 APP = Path(__file__).resolve().parents[2] / 'app'
-MODULOS = {'contas': 4, 'conteudo': 7, 'praticas': 1, 'simulados': 7,
-           'desempenho': 0, 'plano_estudos': 2, 'tutor_ia': 0}
+MODULOS = {
+    'contas': 4,
+    'conteudo': 7,
+    'praticas': 1,
+    'simulados': 7,
+    'desempenho': 0,
+    'plano_estudos': 2,
+    'tutor_ia': 0
+}
 # Sete proprietários; Tutor acrescenta zero mappers.
 MIGRADOS = tuple(MODULOS)
 
@@ -32,7 +39,7 @@ def importacoes(tree):
         elif isinstance(node, ast.Call):
             fn = node.func
             if (isinstance(fn, ast.Name) and fn.id == '__import__') or (
-                    isinstance(fn, ast.Attribute) and fn.attr == 'import_module'):
+                isinstance(fn, ast.Attribute) and fn.attr == 'import_module'):
                 yield '<dinamico>'
         elif isinstance(node, ast.Name) and node.id == '__import__':
             yield '<dinamico>'
@@ -46,27 +53,37 @@ def violacoes_fronteira(owner, tree):
             yield name
         if name.startswith('importlib'):
             yield name
-        if name.startswith(('app.models', 'app.services', 'app.repositories',
-                            'app.controllers', 'app.domain')):
+        if name.startswith((
+            'app.models',
+            'app.services',
+            'app.repositories',
+            'app.controllers',
+            'app.domain'
+        )):
             yield name
         if name.startswith('app.modules.'):
             parts = name.split('.')
             if len(parts) >= 3 and parts[2] != owner and (
-                    len(parts) < 4 or parts[3] != 'api'):
+                len(parts) < 4 or parts[3] != 'api'):
                 yield name
 
 
 class ArquiteturaModularTest(unittest.TestCase):
     def test_detecta_imports_privados_inclusive_locais_e_dinamicos(self):
-        for source in ('from app.modules.contas.models.usuario import Usuario',
-                       'def executar():\n from app.modules.contas import repositories',
-                       'import app.modules.contas.services as apelido',
-                       'import importlib\nimportlib.import_module("app.modules.contas.models")',
-                       'from importlib import import_module as carregar\ncarregar("app.modules.contas.models")',
-                       '__import__("app.modules.contas.models")'):
+        for source in (
+            'from app.modules.contas.models.usuario import Usuario',
+            'def executar():\n from app.modules.contas import repositories',
+            'import app.modules.contas.services as apelido',
+            'import importlib\nimportlib.import_module("app.modules.contas.models")',
+            'from importlib import import_module as carregar\ncarregar("app.modules.contas.models")',
+            '__import__("app.modules.contas.models")'
+        ):
             self.assertTrue(list(violacoes_fronteira('praticas', ast.parse(source))), source)
-        self.assertFalse(list(violacoes_fronteira('praticas', ast.parse(
-            'from app.modules.conteudo.api import ConsultarVersaoElegivelService'))))
+        self.assertFalse(list(violacoes_fronteira(
+            'praticas',
+            ast.parse(
+                'from app.modules.conteudo.api import ConsultarVersaoElegivelService')
+        )))
 
     def test_fronteiras_dos_modulos_concluidos(self):
         for owner in MIGRADOS:
@@ -77,7 +94,10 @@ class ArquiteturaModularTest(unittest.TestCase):
                     self.assertEqual(list(violacoes_fronteira(owner, tree)), [])
                     names = list(importacoes(tree))
                     for node in ast.walk(tree):
-                        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith('app.modules.'):
+                        if isinstance(
+                            node,
+                            ast.ImportFrom
+                        ) and node.module and node.module.startswith('app.modules.'):
                             parts = node.module.split('.')
                             if len(parts) == 4 and parts[2] != owner and parts[3] == 'api':
                                 public = importlib.import_module(node.module).__all__
@@ -85,21 +105,48 @@ class ArquiteturaModularTest(unittest.TestCase):
                     if 'services' in path.parts or 'controllers' in path.parts:
                         self.assertFalse(any(n.startswith(('pymysql', 'app.extensions')) or (
                             n.startswith('sqlalchemy') and not n.startswith('sqlalchemy.exc')) for n in names))
-                        self.assertFalse(any(isinstance(n, ast.Attribute) and n.attr == 'session' for n in ast.walk(tree)))
+                        self.assertFalse(any(isinstance(
+                            n,
+                            ast.Attribute
+                        ) and n.attr == 'session' for n in ast.walk(tree)))
                     if 'controllers' in path.parts:
                         self.assertFalse(any('.models.' in n or '.repositories.' in n for n in names))
                         self.assertFalse(any(n.startswith('sqlalchemy') for n in names))
                     if 'services' in path.parts:
-                        self.assertFalse(any(n.startswith(('flask', 'app.composition', 'app.http_composition')) for n in names))
-                        self.assertFalse(any(isinstance(n, ast.Name) and n.id == 'db' for n in ast.walk(tree)))
+                        self.assertFalse(any(n.startswith((
+                            'flask',
+                            'app.composition',
+                            'app.http_composition'
+                        )) for n in names))
+                        self.assertFalse(any(isinstance(
+                            n,
+                            ast.Name
+                        ) and n.id == 'db' for n in ast.walk(tree)))
                         self.assertFalse(any(isinstance(n, ast.Attribute) and n.attr in {
-                            'execute', 'exec_driver_sql', 'query', 'commit', 'rollback', 'flush'
+                            'execute',
+                            'exec_driver_sql',
+                            'query',
+                            'commit',
+                            'rollback',
+                            'flush'
                         } for n in ast.walk(tree)))
                     if 'domain' in path.parts:
-                        self.assertFalse(any(n.startswith(('flask', 'app.composition', 'app.extensions', 'sqlalchemy')) for n in names))
+                        self.assertFalse(any(n.startswith((
+                            'flask',
+                            'app.composition',
+                            'app.extensions',
+                            'sqlalchemy'
+                        )) for n in names))
                     if path.name == 'routes.py':
                         self.assertFalse(any('.repositories' in n or '.models' in n or '.services' in n for n in names))
-                        self.assertFalse(any(isinstance(n, (ast.FunctionDef, ast.Lambda, ast.If)) for n in ast.walk(tree)))
+                        self.assertFalse(any(isinstance(
+                            n,
+                            (
+                                ast.FunctionDef,
+                                ast.Lambda,
+                                ast.If
+                            )
+                        ) for n in ast.walk(tree)))
                         for node in ast.walk(tree):
                             if isinstance(node, ast.ImportFrom):
                                 self.assertTrue(node.module == 'flask' or node.module.startswith(
@@ -108,11 +155,24 @@ class ArquiteturaModularTest(unittest.TestCase):
                                     self.assertEqual([a.name for a in node.names], ['Blueprint'])
                             if isinstance(node, ast.Call):
                                 fn = node.func
-                                self.assertTrue((isinstance(fn, ast.Name) and fn.id in {'Blueprint', 'getattr'}) or (
+                                self.assertTrue((isinstance(
+                                    fn,
+                                    ast.Name
+                                ) and fn.id in {
+                                    'Blueprint',
+                                    'getattr'
+                                }) or (
                                     isinstance(fn, ast.Attribute) and isinstance(fn.value, ast.Name)
                                     and fn.value.id == 'blueprint' and fn.attr == 'add_url_rule'))
                     if path.name == '__init__.py':
-                        self.assertFalse(any(isinstance(n, (ast.Import, ast.ImportFrom, ast.Call)) for n in ast.walk(tree)))
+                        self.assertFalse(any(isinstance(
+                            n,
+                            (
+                                ast.Import,
+                                ast.ImportFrom,
+                                ast.Call
+                            )
+                        ) for n in ast.walk(tree)))
 
     def test_apis_explicitas_sem_exportar_persistencia(self):
         for owner in MIGRADOS:
@@ -149,8 +209,10 @@ class ArquiteturaModularTest(unittest.TestCase):
             classes = [m.class_ for m in mappers if m.class_.__module__.startswith(f'app.modules.{owner}.models.')]
             self.assertEqual(len(classes), MODULOS[owner])
             self.assertIn(f'api.{owner}', a.blueprints)
-        self.assertEqual(sorted((r.rule, sorted(r.methods)) for r in a.url_map.iter_rules()),
-                         sorted((r.rule, sorted(r.methods)) for r in b.url_map.iter_rules()))
+        self.assertEqual(
+            sorted((r.rule, sorted(r.methods)) for r in a.url_map.iter_rules()),
+            sorted((r.rule, sorted(r.methods)) for r in b.url_map.iter_rules())
+        )
         self.assertEqual(len(a.before_request_funcs[None]), 1)
         self.assertEqual(len(a.after_request_funcs[None]), 2)  # CORS e cache.
         self.assertEqual(set(a.cli.commands), {'criar-administrador', 'limpar-autenticacao'})
@@ -160,10 +222,24 @@ class ArquiteturaModularTest(unittest.TestCase):
         for root in (APP / 'core', APP / 'contracts'):
             for path in root.glob('*.py'):
                 names = list(importacoes(ast.parse(path.read_text(encoding='utf-8'))))
-                self.assertFalse(any(n.startswith(('app.modules', 'app.domain', 'app.composition', 'flask')) for n in names), path)
+                self.assertFalse(
+                    any(n.startswith((
+                        'app.modules',
+                        'app.domain',
+                        'app.composition',
+                        'flask'
+                    )) for n in names),
+                    path
+                )
 
     def test_pastas_globais_sem_implementacoes_apos_transicao(self):
         if set(MIGRADOS) == set(MODULOS):
             for name in ('controllers', 'services', 'repositories', 'domain'):
                 self.assertFalse(list((APP / name).rglob('*.py')))
-            self.assertEqual({p.name for p in (APP / 'models').glob('*.py')}, {'__init__.py', 'crud_mixin.py'})
+            self.assertEqual(
+                {p.name for p in (APP / 'models').glob('*.py')},
+                {
+                    '__init__.py',
+                    'crud_mixin.py'
+                }
+            )

@@ -25,9 +25,9 @@ def validar_email(valor):
     email = valor.strip().lower()
     partes = email.split("@")
     if (not email.isascii() or len(email) > 254 or len(partes) != 2
-            or not all(partes) or "." not in partes[-1] or ".." in email
-            or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in email)
-            or partes[-1].startswith(".") or partes[-1].endswith(".")):
+        or not all(partes) or "." not in partes[-1] or ".." in email
+        or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in email)
+        or partes[-1].startswith(".") or partes[-1].endswith(".")):
         raise AutenticacaoError("Informe um e-mail válido.")
     return email
 
@@ -80,5 +80,5 @@ def configurar_autenticacao(app):
     for origem in origens:
         url = urlsplit(origem)
         if (url.scheme not in {"http", "https"} or not url.netloc or url.path
-                or url.query or url.fragment or url.username or "*" in origem):
+            or url.query or url.fragment or url.username or "*" in origem):
             raise RuntimeError("CORS_ORIGINS exige origens HTTP/HTTPS explícitas, sem caminho.")

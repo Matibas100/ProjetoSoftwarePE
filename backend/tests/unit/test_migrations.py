@@ -22,7 +22,11 @@ class StructuralFingerprintTest(unittest.TestCase):
         cursor = connection.cursor.return_value.__enter__.return_value
         for procedure in (None, {}, {"routine_definition": None}):
             cursor.fetchone.return_value = procedure
-            cursor.fetchall.return_value = [{"parameter_mode": "IN", "parameter_name": "p_assunto_id", "dtd_identifier": "int"}]
+            cursor.fetchall.return_value = [{
+                "parameter_mode": "IN",
+                "parameter_name": "p_assunto_id",
+                "dtd_identifier": "int"
+            }]
             with self.assertRaises(migrate.MigrationError):
                 legacy_schema._validate_procedure(connection)
         cursor.execute.side_effect = migrate.pymysql.MySQLError(1142, "segredo-sentinela")
@@ -32,21 +36,72 @@ class StructuralFingerprintTest(unittest.TestCase):
 
     def metadata(self):
         return {
-            "table": [{"TABLE_NAME": "probe", "ENGINE": "InnoDB", "TABLE_COLLATION": "utf8mb4_unicode_ci",
-                       "ROW_FORMAT": "Dynamic", "CREATE_OPTIONS": "", "TABLE_COMMENT": "Teste Á"}],
-            "columns": [dict(ORDINAL_POSITION=position, COLUMN_NAME=name, COLUMN_TYPE="varchar(20)",
-                             IS_NULLABLE="YES", COLUMN_DEFAULT=default, EXTRA="", CHARACTER_SET_NAME="utf8mb4",
-                             COLLATION_NAME="utf8mb4_unicode_ci", GENERATION_EXPRESSION="", COLUMN_COMMENT="")
-                        for position, name, default in [(1, "valor", None), (2, "literal", "NULL")]],
-            "indexes": [dict(INDEX_NAME="PRIMARY", NON_UNIQUE=0, SEQ_IN_INDEX=1, COLUMN_NAME="valor",
-                             EXPRESSION=None, SUB_PART=None, COLLATION="A", INDEX_TYPE="BTREE",
-                             IS_VISIBLE="YES", INDEX_COMMENT="")],
-            "foreign_keys": [dict(CONSTRAINT_NAME="fk_probe", ORDINAL_POSITION=1, COLUMN_NAME="valor",
-                                  REFERENCED_TABLE_SCHEMA="origem", REFERENCED_TABLE_NAME="parent",
-                                  REFERENCED_COLUMN_NAME="id", POSITION_IN_UNIQUE_CONSTRAINT=1,
-                                  UNIQUE_CONSTRAINT_NAME="PRIMARY", UPDATE_RULE="RESTRICT",
-                                  DELETE_RULE="RESTRICT", MATCH_OPTION="NONE")],
-            "checks": [dict(CONSTRAINT_NAME="ck_probe", CHECK_CLAUSE="(`literal` <> _utf8mb4'Null')", ENFORCED="YES")],
+            "table": [{
+                "TABLE_NAME": "probe",
+                "ENGINE": "InnoDB",
+                "TABLE_COLLATION": "utf8mb4_unicode_ci",
+                "ROW_FORMAT": "Dynamic",
+                "CREATE_OPTIONS": "",
+                "TABLE_COMMENT": "Teste Á"
+            }],
+            "columns": [
+                dict(
+                    ORDINAL_POSITION=position,
+                    COLUMN_NAME=name,
+                    COLUMN_TYPE="varchar(20)",
+                    IS_NULLABLE="YES",
+                    COLUMN_DEFAULT=default,
+                    EXTRA="",
+                    CHARACTER_SET_NAME="utf8mb4",
+                    COLLATION_NAME="utf8mb4_unicode_ci",
+                    GENERATION_EXPRESSION="",
+                    COLUMN_COMMENT=""
+                )
+                for position,
+                name,
+                default in [
+                    (
+                        1,
+                        "valor",
+                        None
+                    ),
+                    (
+                        2,
+                        "literal",
+                        "NULL"
+                    )
+                ]
+            ],
+            "indexes": [dict(
+                INDEX_NAME="PRIMARY",
+                NON_UNIQUE=0,
+                SEQ_IN_INDEX=1,
+                COLUMN_NAME="valor",
+                EXPRESSION=None,
+                SUB_PART=None,
+                COLLATION="A",
+                INDEX_TYPE="BTREE",
+                IS_VISIBLE="YES",
+                INDEX_COMMENT=""
+            )],
+            "foreign_keys": [dict(
+                CONSTRAINT_NAME="fk_probe",
+                ORDINAL_POSITION=1,
+                COLUMN_NAME="valor",
+                REFERENCED_TABLE_SCHEMA="origem",
+                REFERENCED_TABLE_NAME="parent",
+                REFERENCED_COLUMN_NAME="id",
+                POSITION_IN_UNIQUE_CONSTRAINT=1,
+                UNIQUE_CONSTRAINT_NAME="PRIMARY",
+                UPDATE_RULE="RESTRICT",
+                DELETE_RULE="RESTRICT",
+                MATCH_OPTION="NONE"
+            )],
+            "checks": [dict(
+                CONSTRAINT_NAME="ck_probe",
+                CHECK_CLAUSE="(`literal` <> _utf8mb4'Null')",
+                ENFORCED="YES"
+            )],
         }
 
     def canonical(self, metadata, schema="origem"):
@@ -75,11 +130,20 @@ class StructuralFingerprintTest(unittest.TestCase):
             for field, value in rows[0].items():
                 with self.subTest(section=section, field=field):
                     other = copy.deepcopy(original)
-                    other[section][0][field] = value + 1 if isinstance(value, int) else str(value) + "X"
+                    other[section][0][field] = value + 1 if isinstance(
+                        value,
+                        int
+                    ) else str(value) + "X"
                     self.assertNotEqual(expected, self.canonical(other))
         other = copy.deepcopy(original)
         other["foreign_keys"][0]["REFERENCED_TABLE_SCHEMA"] = "internal"
-        self.assertEqual(json.loads(self.canonical(other))["foreign_keys"][0][3], ["external", "internal"])
+        self.assertEqual(
+            json.loads(self.canonical(other))["foreign_keys"][0][3],
+            [
+                "external",
+                "internal"
+            ]
+        )
 
     def test_defaults_preservam_tipo_caixa_e_literal(self):
         variants = []
@@ -226,7 +290,18 @@ class DatabaseSettingsTest(unittest.TestCase):
                 "DB_PASSWORD": "senha",
             }
         )
-        self.assertEqual((settings.port, settings.name, settings.charset), (3307, "enem_teste", "utf8mb4"))
+        self.assertEqual(
+            (
+                settings.port,
+                settings.name,
+                settings.charset
+            ),
+            (
+                3307,
+                "enem_teste",
+                "utf8mb4"
+            )
+        )
 
         settings = migrate.load_database_settings(
             {
@@ -271,7 +346,8 @@ class DatabaseSettingsTest(unittest.TestCase):
         ]
         for environment, message in invalid:
             with self.subTest(environment=environment), self.assertRaisesRegex(
-                migrate.MigrationError, message
+                migrate.MigrationError,
+                message
             ):
                 migrate.load_database_settings(environment)
 
@@ -303,7 +379,8 @@ class MigrationFilesTest(unittest.TestCase):
         ]
         for paths, message in cases:
             with self.subTest(paths=paths), self.assertRaisesRegex(
-                migrate.MigrationError, message
+                migrate.MigrationError,
+                message
             ):
                 migrate.discover_migrations(FakeMigrationDirectory(*paths))
         with self.assertRaisesRegex(migrate.MigrationError, "Nenhuma"):
@@ -334,7 +411,8 @@ class SqlParserTest(unittest.TestCase):
             migrate.split_sql("SELECT 1\nDELIMITER $$\n")
         for command in ("USE outro;", "SOURCE arquivo.sql;", "\\. arquivo.sql;"):
             with self.subTest(command=command), self.assertRaisesRegex(
-                migrate.MigrationError, "nao permitido"
+                migrate.MigrationError,
+                "nao permitido"
             ):
                 migrate.validate_statements(migrate.split_sql(command))
 
@@ -374,7 +452,8 @@ class HistoryAndExecutionTest(unittest.TestCase):
             row = dict(applied)
             row[field] = value
             with self.subTest(field=field), self.assertRaisesRegex(
-                migrate.MigrationError, message
+                migrate.MigrationError,
+                message
             ):
                 migrate.inspect_history(migrations, [row])
 
@@ -417,7 +496,11 @@ class HistoryAndExecutionTest(unittest.TestCase):
             migrate.run_baseline(FakeConnection(), settings, [migration()], False)
         with self.assertRaisesRegex(migrate.MigrationError, "--confirm"):
             migrate.reconcile_failure(
-                FakeConnection(), settings, [migration()], "000", False
+                FakeConnection(),
+                settings,
+                [migration()],
+                "000",
+                False
             )
 
 
@@ -443,7 +526,9 @@ class ImportAndEntrypointTest(unittest.TestCase):
         return result.stdout
 
     def test_importacao_sem_configuracao_conexao_ou_cli(self):
-        self.run_isolated("-c", textwrap.dedent('''
+        self.run_isolated(
+            "-c",
+            textwrap.dedent('''
             from unittest.mock import patch
 
             with patch("dotenv.load_dotenv", side_effect=AssertionError("configuracao")), \
@@ -461,11 +546,13 @@ class ImportAndEntrypointTest(unittest.TestCase):
                         pass
                     else:
                         raise AssertionError("Entrada invalida aceita")
-        '''))
+        ''')
+        )
 
     def test_help_por_caminho_fora_do_projeto(self):
         output = self.run_isolated(
-            str(migrate.PROJECT_ROOT / "backend" / "database" / "migrate.py"), "--help"
+            str(migrate.PROJECT_ROOT / "backend" / "database" / "migrate.py"),
+            "--help"
         )
         for command in ("status", "up", "baseline", "reconcile"):
             self.assertIn(command, output)

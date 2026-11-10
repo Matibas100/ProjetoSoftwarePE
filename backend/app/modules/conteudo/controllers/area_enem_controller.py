@@ -5,5 +5,7 @@ from app.modules.conteudo.services.listar_areas_enem_service import ListarAreasE
 class AreaEnemController:
     @staticmethod
     def listar():
-        return responder_http(ListarAreasEnemService.executar,
-            contexto="Falha interna: areas ENEM.")
+        return responder_http(
+            ListarAreasEnemService.executar,
+            contexto="Falha interna: areas ENEM."
+        )

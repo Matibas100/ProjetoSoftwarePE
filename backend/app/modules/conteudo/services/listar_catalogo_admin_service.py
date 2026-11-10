@@ -7,7 +7,9 @@ from app.core.paginacao import inteiro_filtro, envelope_paginado
 def _parametros(parametros):
     pagina = inteiro_filtro(parametros.get("pagina", 1), "pagina")
     por_pagina = inteiro_filtro(
-        parametros.get("por_pagina", 20), "por_pagina", maximo=100
+        parametros.get("por_pagina", 20),
+        "por_pagina",
+        maximo=100
     )
     busca = (parametros.get("busca") or "").strip()
     if len(busca) > 100:
@@ -28,11 +30,14 @@ class ListarMateriasAdminService:
             "busca": busca,
             "status": status,
             "area_enem_id": inteiro_filtro(
-                parametros.get("area_enem_id"), "area_enem_id"
+                parametros.get("area_enem_id"),
+                "area_enem_id"
             ),
         }
         itens, total = self._consulta.listar(
-            filtros, pagina, por_pagina
+            filtros,
+            pagina,
+            por_pagina
         )
         return envelope_paginado(itens, pagina, por_pagina, total)
 
@@ -47,12 +52,15 @@ class ListarAssuntosAdminService:
             "busca": busca,
             "status": status,
             "area_enem_id": inteiro_filtro(
-                parametros.get("area_enem_id"), "area_enem_id"
+                parametros.get("area_enem_id"),
+                "area_enem_id"
             ),
             "materia_id": inteiro_filtro(parametros.get("materia_id"), "materia_id"),
         }
         linhas, total = self._consulta.listar(
-            filtros, pagina, por_pagina
+            filtros,
+            pagina,
+            por_pagina
         )
         itens = [{**linha, 'resumos': None} for linha in linhas]
         return envelope_paginado(itens, pagina, por_pagina, total)

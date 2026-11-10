@@ -5,7 +5,10 @@ from app.core.persistencia import CrudMixin
 class Questao(CrudMixin):
     __tablename__ = "questoes"
     __table_args__ = (
-        db.CheckConstraint("status IN ('rascunho','publicada','arquivada')", name="ck_questoes_status"),
+        db.CheckConstraint(
+            "status IN ('rascunho','publicada','arquivada')",
+            name="ck_questoes_status"
+        ),
         db.CheckConstraint("revisao >= 1", name="ck_questoes_revisao"),
         db.CheckConstraint(
             "resposta_correta IN ('A', 'B', 'C', 'D', 'E')",
@@ -21,8 +24,19 @@ class Questao(CrudMixin):
     status = db.Column(db.String(20), nullable=False, default="rascunho", index=True)
     revisao = db.Column(db.Integer, nullable=False, default=1)
     criado_em = db.Column(db.DateTime)
-    atualizado_em = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp(6))
-    versao_publicada_id = db.Column(db.Integer, db.ForeignKey("questao_versoes.id", ondelete="RESTRICT", onupdate="RESTRICT"))
+    atualizado_em = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.current_timestamp(6)
+    )
+    versao_publicada_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "questao_versoes.id",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT"
+        )
+    )
     enunciado = db.Column(db.Text, nullable=False)
     alternativa_a = db.Column(db.Text, nullable=False)
     alternativa_b = db.Column(db.Text, nullable=False)

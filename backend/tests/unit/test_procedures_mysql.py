@@ -24,8 +24,11 @@ class ProceduresMySQLTest(unittest.TestCase):
         return conexao, cursor
 
     def test_vazio_util_terminal_parametros_e_conexao_emprestada(self):
-        conexao, cursor = self.preparar([([('id',)], []),
-            ([('total',)], [(8,)]), (None, [])])
+        conexao, cursor = self.preparar([
+            ([('id',)], []),
+            ([('total',)], [(8,)]),
+            (None, [])
+        ])
         valores = ("' OR 1=1 --",)
         resultado = executar_resultados(conexao, 'comando %s', valores)
         self.assertEqual(resultado, [[], [{'total': 8}]])

@@ -38,7 +38,10 @@ class MateriaServicesTest(unittest.TestCase):
             {"nome": " Fisica ", "descricao": " Mecanica ", "area_enem_id": 3}
         )
         materia_class.assert_called_once_with(
-            nome="Fisica", descricao="Mecanica", area_enem_id=3, status="ativa"
+            nome="Fisica",
+            descricao="Mecanica",
+            area_enem_id=3,
+            status="ativa"
         )
         materia.salvar.assert_called_once_with()
         self.assertEqual(result["id"], 1)
@@ -68,7 +71,8 @@ class MateriaServicesTest(unittest.TestCase):
         materia.to_dict.return_value = {"id": 1}
         self.assertEqual(
             AtualizarMateriaService.executar(
-                1, {"nome": " Nova ", "descricao": None, "ignorado": True}
+                1,
+                {"nome": " Nova ", "descricao": None, "ignorado": True}
             ),
             {"id": 1},
         )
@@ -86,7 +90,9 @@ class MateriaServicesTest(unittest.TestCase):
         materia = MagicMock()
         materia_class.buscar_por_id.return_value = materia
         repository.impacto_materia.return_value = {
-            "assuntos": 0, "questoes": 0, "transferencias": 0
+            "assuntos": 0,
+            "questoes": 0,
+            "transferencias": 0
         }
         self.assertIsNone(DeletarMateriaService.executar(1))
         materia.deletar.side_effect = integrity_error()
@@ -131,12 +137,19 @@ class AssuntoServicesTest(unittest.TestCase):
         assunto = assunto_class.return_value
         assunto.to_dict.return_value = {"id": 2}
         self.assertEqual(
-            CriarAssuntoService.executar({"nome": " Algebra ", "materia_id": 1, "descricao": " A "}),
+            CriarAssuntoService.executar({
+                "nome": " Algebra ",
+                "materia_id": 1,
+                "descricao": " A "
+            }),
             {"id": 2},
         )
         assunto_class.assert_called_once_with(
-            nome="Algebra", nome_normalizado="algebra", descricao="A",
-            materia_id=1, status="ativa"
+            nome="Algebra",
+            nome_normalizado="algebra",
+            descricao="A",
+            materia_id=1,
+            status="ativa"
         )
         assunto.salvar.side_effect = integrity_error()
         with self.assertRaises(ConflitoError):
@@ -149,7 +162,14 @@ class AssuntoServicesTest(unittest.TestCase):
         with self.assertRaises(RecursoNaoEncontradoError):
             AtualizarAssuntoService.executar(1, {"nome": "x"})
         assunto_class.buscar_por_id.return_value = MagicMock()
-        invalid = [None, {}, {"nome": ""}, {"nome": "x" * 151}, {"descricao": 1}, {"materia_id": True}]
+        invalid = [
+            None,
+            {},
+            {"nome": ""},
+            {"nome": "x" * 151},
+            {"descricao": 1},
+            {"materia_id": True}
+        ]
         for data in invalid:
             with self.subTest(data=data), self.assertRaises(DadosInvalidosError):
                 AtualizarAssuntoService.executar(1, data)
@@ -168,11 +188,20 @@ class AssuntoServicesTest(unittest.TestCase):
         repository.existe_assunto_equivalente.return_value = False
         assunto.to_dict.return_value = {"id": 1}
         self.assertEqual(
-            AtualizarAssuntoService.executar(1, {"nome": " Novo ", "descricao": " D ", "materia_id": 2}),
+            AtualizarAssuntoService.executar(
+                1,
+                {
+                    "nome": " Novo ",
+                    "descricao": " D ",
+                    "materia_id": 2
+                }
+            ),
             {"id": 1},
         )
         assunto.atualizar.assert_called_once_with(
-            nome="Novo", nome_normalizado="novo", descricao="D"
+            nome="Novo",
+            nome_normalizado="novo",
+            descricao="D"
         )
         assunto.atualizar.side_effect = integrity_error()
         with self.assertRaises(ConflitoError):
@@ -256,7 +285,8 @@ class QuestaoServicesTest(unittest.TestCase):
         with self.assertRaises(RecursoNaoEncontradoError):
             CriarQuestaoService.executar(self.valid_data())
         assunto_class.buscar_por_id.return_value = MagicMock(
-            status="ativa", materia=MagicMock(status="ativa")
+            status="ativa",
+            materia=MagicMock(status="ativa")
         )
         data = self.valid_data()
         data["explicacao"] = 10
@@ -267,16 +297,23 @@ class QuestaoServicesTest(unittest.TestCase):
     @patch("app.modules.conteudo.services.criar_questao_service.Assunto")
     def test_criar_persiste_e_traduz_conflito(self, assunto_class, questao_class):
         assunto_class.buscar_por_id.return_value = MagicMock(
-            status="ativa", materia=MagicMock(status="ativa")
+            status="ativa",
+            materia=MagicMock(status="ativa")
         )
         questao = questao_class.return_value
         questao.to_dict.return_value = {"id": 3}
-        with patch("app.modules.conteudo.services.criar_questao_service.TransactionManager.executar", side_effect=lambda op: op()), \
+        with patch(
+            "app.modules.conteudo.services.criar_questao_service.TransactionManager.executar",
+            side_effect=lambda op: op()
+        ), \
              patch("app.modules.conteudo.services.criar_questao_service.QuestaoEvento"):
             self.assertEqual(CriarQuestaoService.executar(self.valid_data(), 1), {"id": 3})
         self.assertEqual(questao_class.call_args.kwargs["explicacao"], "Explicacao")
         questao.salvar.side_effect = integrity_error()
-        with patch("app.modules.conteudo.services.criar_questao_service.TransactionManager.executar", side_effect=lambda op: op()), \
+        with patch(
+            "app.modules.conteudo.services.criar_questao_service.TransactionManager.executar",
+            side_effect=lambda op: op()
+        ), \
              self.assertRaises(ConflitoError):
             CriarQuestaoService.executar(self.valid_data(), 1)
 

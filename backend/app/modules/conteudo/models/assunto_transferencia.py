@@ -7,7 +7,8 @@ class AssuntoTransferencia(CrudMixin):
     __table_args__ = (
         db.CheckConstraint("questoes_impactadas >= 0", name="ck_transferencias_questoes"),
         db.CheckConstraint(
-            "materia_origem_id <> materia_destino_id", name="ck_transferencias_materias"
+            "materia_origem_id <> materia_destino_id",
+            name="ck_transferencias_materias"
         ),
     )
 
@@ -32,7 +33,9 @@ class AssuntoTransferencia(CrudMixin):
     )
     questoes_impactadas = db.Column(db.Integer, nullable=False)
     criado_em = db.Column(
-        db.DateTime, nullable=False, server_default=db.func.current_timestamp(6)
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.current_timestamp(6)
     )
     assunto = db.relationship("Assunto", back_populates="transferencias")
     materia_origem = db.relationship("Materia", foreign_keys=[materia_origem_id])

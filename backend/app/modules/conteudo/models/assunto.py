@@ -6,17 +6,21 @@ class Assunto(CrudMixin):
     __tablename__ = "assuntos"
     __table_args__ = (
         db.UniqueConstraint(
-            "materia_id", "nome_normalizado", name="uq_assuntos_materia_nome_normalizado"
+            "materia_id",
+            "nome_normalizado",
+            name="uq_assuntos_materia_nome_normalizado"
         ),
         db.CheckConstraint(
-            "status IN ('ativa', 'inativa', 'arquivada')", name="ck_assuntos_status"
+            "status IN ('ativa', 'inativa', 'arquivada')",
+            name="ck_assuntos_status"
         ),
     )
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nome = db.Column(db.String(150), nullable=False)
     nome_normalizado = db.Column(
-        db.String(150, collation="utf8mb4_0900_ai_ci"), nullable=False
+        db.String(150, collation="utf8mb4_0900_ai_ci"),
+        nullable=False
     )
     descricao = db.Column(db.Text, nullable=True)
     materia_id = db.Column(
@@ -27,7 +31,9 @@ class Assunto(CrudMixin):
     )
     status = db.Column(db.String(20), nullable=False, default="ativa", index=True)
     criado_em = db.Column(
-        db.DateTime, nullable=False, server_default=db.func.current_timestamp(6)
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.current_timestamp(6)
     )
     atualizado_em = db.Column(
         db.DateTime,
@@ -43,7 +49,9 @@ class Assunto(CrudMixin):
         passive_deletes="all",
     )
     transferencias = db.relationship(
-        "AssuntoTransferencia", back_populates="assunto", passive_deletes="all"
+        "AssuntoTransferencia",
+        back_populates="assunto",
+        passive_deletes="all"
     )
 
     campos_atualizaveis = {

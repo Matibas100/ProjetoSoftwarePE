@@ -12,8 +12,37 @@ from app.modules.contas.models.sessao import Sessao
 from app.modules.contas.models.auth_limite import AuthLimite
 from app.modules.praticas.models.pratica_tentativa import PraticaTentativa
 from app.modules.plano_estudos.models.plano_estudo import PlanoEstudo, PlanoEstudoItem
-from app.modules.simulados.models.simulado import (Simulado, SimuladoRascunhoItem, SimuladoVersao,
-    SimuladoVersaoItem, SimuladoEvento, SimuladoTentativa, SimuladoResposta)
+from app.modules.simulados.models.simulado import (
+    Simulado,
+    SimuladoRascunhoItem,
+    SimuladoVersao,
+    SimuladoVersaoItem,
+    SimuladoEvento,
+    SimuladoTentativa,
+    SimuladoResposta
+)
 
 
-__all__ = ['AreaEnem', 'Assunto', 'AssuntoTransferencia', 'Materia', 'Questao', 'QuestaoVersao', 'QuestaoEvento', 'Usuario', 'RegistroPrivacidade', 'Sessao', 'AuthLimite', 'PraticaTentativa', 'PlanoEstudo', 'PlanoEstudoItem', 'Simulado', 'SimuladoRascunhoItem', 'SimuladoVersao', 'SimuladoVersaoItem', 'SimuladoEvento', 'SimuladoTentativa', 'SimuladoResposta']
+__all__ = [
+    'AreaEnem',
+    'Assunto',
+    'AssuntoTransferencia',
+    'Materia',
+    'Questao',
+    'QuestaoVersao',
+    'QuestaoEvento',
+    'Usuario',
+    'RegistroPrivacidade',
+    'Sessao',
+    'AuthLimite',
+    'PraticaTentativa',
+    'PlanoEstudo',
+    'PlanoEstudoItem',
+    'Simulado',
+    'SimuladoRascunhoItem',
+    'SimuladoVersao',
+    'SimuladoVersaoItem',
+    'SimuladoEvento',
+    'SimuladoTentativa',
+    'SimuladoResposta'
+]

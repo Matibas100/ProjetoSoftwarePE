@@ -13,5 +13,11 @@ class AlunoAdminRegistro(TypedDict):
 
 
 class ConsultaAlunosAdmin(Protocol):
-    def listar(self, busca: str, ativo: bool | None, pagina: int,
-               limite: int) -> tuple[list[AlunoAdminRegistro], int]: ...
+    def listar(
+        self,
+        busca: str,
+        ativo: bool | None,
+        pagina: int,
+        limite: int
+    ) -> tuple[list[AlunoAdminRegistro], int]:
+        ...

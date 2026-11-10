@@ -10,19 +10,39 @@ from app.modules.contas.services.recusar_consentimento_plano_service import Recu
 from app.modules.contas.services.revogar_consentimento_plano_service import RevogarConsentimentoPlanoService
 from app.modules.plano_estudos.api import EliminarPlanosPropriosService
 
-from app.modules.conteudo.repositories.consultas_catalogo import ConsultaMateriasMySQL, ConsultaAssuntosMySQL
-from app.modules.conteudo.services.listar_catalogo_admin_service import ListarMateriasAdminService, ListarAssuntosAdminService
+from app.modules.conteudo.repositories.consultas_catalogo import (
+    ConsultaMateriasMySQL,
+    ConsultaAssuntosMySQL,
+)
+from app.modules.conteudo.services.listar_catalogo_admin_service import (
+    ListarMateriasAdminService,
+    ListarAssuntosAdminService,
+)
 from app.modules.conteudo.models.assunto import Assunto
-from app.modules.conteudo.repositories.consultas_questoes import ConsultaQuestoesPorAssuntoMySQL, ConsultaQuestoesElegiveisMySQL
+from app.modules.conteudo.repositories.consultas_questoes import (
+    ConsultaQuestoesPorAssuntoMySQL,
+    ConsultaQuestoesElegiveisMySQL,
+)
 from app.modules.conteudo.services.buscar_questoes_por_assunto_service import BuscarQuestoesPorAssuntoService
 from app.modules.praticas.services.listar_questoes_aluno_service import ListarQuestoesAlunoService
-from app.modules.simulados.repositories.consultas_simulados import ConsultaCatalogoSimuladosMySQL, ConsultaHistoricoSimuladosMySQL
+from app.modules.simulados.repositories.consultas_simulados import (
+    ConsultaCatalogoSimuladosMySQL,
+    ConsultaHistoricoSimuladosMySQL,
+)
 from app.modules.simulados.services.listar_simulados_aluno_service import ListarSimuladosAlunoService
 from app.modules.simulados.services.listar_historico_simulados_service import ListarHistoricoSimuladosService
 from app.modules.conteudo.services.gestao_questao_service import ConsultarVersoesElegiveisService
-from app.modules.desempenho.repositories.consultas_desempenho import EscoposLeituraMySQL, ConsultaMetricasMySQL, ConsultaAtividadesMySQL, ConsultaContagensMySQL
+from app.modules.desempenho.repositories.consultas_desempenho import (
+    EscoposLeituraMySQL,
+    ConsultaMetricasMySQL,
+    ConsultaAtividadesMySQL,
+    ConsultaContagensMySQL,
+)
 from app.modules.desempenho.services.consultar_desempenho_service import ConsultarDesempenhoService
-from app.modules.desempenho.services.dashboard_service import ConsultarDashboardAlunoService, ConsultarDashboardAdminService
+from app.modules.desempenho.services.dashboard_service import (
+    ConsultarDashboardAlunoService,
+    ConsultarDashboardAdminService,
+)
 from app.modules.plano_estudos.services.selecionar_plano_service import SelecionarPlanoService
 from app.modules.plano_estudos.services.gerar_plano_service import GerarPlanoService
 from app.modules.plano_estudos.services.recalcular_plano_service import RecalcularPlanoService
@@ -56,22 +76,35 @@ def compor(config=None) -> Composicao:
     eliminador = EliminarPlanosPropriosService()
     return Composicao(
         alunos_admin=ListarAlunosAdminService(UsuarioRepository()),
-        gerar_tutoria=GerarTutoriaService(GeminiService(
-            habilitado=config.get('TUTOR_IA_ENABLED', False),
-            chave=config.get('GEMINI_API_KEY', ''),
-            modelo=config.get('GEMINI_MODEL', 'gemini-3.6-flash')),
-            ValidarPermissaoTutoriaService.executar, LimiteTutoria()),
+        gerar_tutoria=GerarTutoriaService(
+            GeminiService(
+                habilitado=config.get('TUTOR_IA_ENABLED', False),
+                chave=config.get('GEMINI_API_KEY', ''),
+                modelo=config.get('GEMINI_MODEL', 'gemini-3.6-flash')
+            ),
+            ValidarPermissaoTutoriaService.executar,
+            LimiteTutoria()
+        ),
         recusar_consentimento_plano=RecusarConsentimentoPlanoService(eliminador.executar),
         revogar_consentimento_plano=RevogarConsentimentoPlanoService(eliminador.executar),
         materias_admin=ListarMateriasAdminService(ConsultaMateriasMySQL()),
         assuntos_admin=ListarAssuntosAdminService(ConsultaAssuntosMySQL()),
         questoes_por_assunto=BuscarQuestoesPorAssuntoService(
-            ConsultaQuestoesPorAssuntoMySQL(), lambda id_: Assunto.buscar_por_id(id_) is not None),
+            ConsultaQuestoesPorAssuntoMySQL(),
+            lambda id_: Assunto.buscar_por_id(id_) is not None
+        ),
         questoes_aluno=ListarQuestoesAlunoService(ConsultaQuestoesElegiveisMySQL()),
-        simulados_aluno=ListarSimuladosAlunoService(ConsultaCatalogoSimuladosMySQL(), ConsultarVersoesElegiveisService()),
+        simulados_aluno=ListarSimuladosAlunoService(
+            ConsultaCatalogoSimuladosMySQL(),
+            ConsultarVersoesElegiveisService()
+        ),
         historico_simulados=ListarHistoricoSimuladosService(ConsultaHistoricoSimuladosMySQL()),
         desempenho=diagnostico,
-        dashboard_aluno=ConsultarDashboardAlunoService(diagnostico, ConsultaAtividadesMySQL(), escopos),
+        dashboard_aluno=ConsultarDashboardAlunoService(
+            diagnostico,
+            ConsultaAtividadesMySQL(),
+            escopos
+        ),
         dashboard_admin=ConsultarDashboardAdminService(ConsultaContagensMySQL(), escopos),
         gerar_plano=GerarPlanoService(seletor),
         recalcular_plano=RecalcularPlanoService(seletor),

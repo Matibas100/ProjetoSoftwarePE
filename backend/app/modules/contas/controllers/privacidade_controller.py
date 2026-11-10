@@ -10,7 +10,11 @@ from app.modules.contas.services.consentir_plano_service import ConsentirPlanoSe
 class PrivacidadeController:
     @staticmethod
     def _responder(operacao):
-        return responder_http(operacao, contexto="Falha interna: privacidade.", adaptar_sucesso=resposta_json_dinamica)
+        return responder_http(
+            operacao,
+            contexto="Falha interna: privacidade.",
+            adaptar_sucesso=resposta_json_dinamica
+        )
 
     @staticmethod
     def termos():
@@ -22,16 +26,28 @@ class PrivacidadeController:
 
     @staticmethod
     def aceitar_uso():
-        return PrivacidadeController._responder(lambda: AceitarTermosUsoService.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
+        return PrivacidadeController._responder(lambda: AceitarTermosUsoService.executar(
+            g.auth_sessao.usuario_id,
+            request.get_json(silent=True)
+        ))
 
     @staticmethod
     def consentir():
-        return PrivacidadeController._responder(lambda: ConsentirPlanoService.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
+        return PrivacidadeController._responder(lambda: ConsentirPlanoService.executar(
+            g.auth_sessao.usuario_id,
+            request.get_json(silent=True)
+        ))
 
     @staticmethod
     def recusar():
-        return PrivacidadeController._responder(lambda: servicos().recusar_consentimento_plano.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
+        return PrivacidadeController._responder(lambda: servicos().recusar_consentimento_plano.executar(
+            g.auth_sessao.usuario_id,
+            request.get_json(silent=True)
+        ))
 
     @staticmethod
     def revogar():
-        return PrivacidadeController._responder(lambda: servicos().revogar_consentimento_plano.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
+        return PrivacidadeController._responder(lambda: servicos().revogar_consentimento_plano.executar(
+            g.auth_sessao.usuario_id,
+            request.get_json(silent=True)
+        ))

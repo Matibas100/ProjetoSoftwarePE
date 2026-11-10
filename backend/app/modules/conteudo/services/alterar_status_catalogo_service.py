@@ -52,7 +52,9 @@ class AlterarStatusAssuntoService:
             if materia is None or materia.status != "ativa":
                 raise ConflitoError("A materia precisa estar ativa para reativar o assunto.")
             if CatalogoRepository.existe_assunto_equivalente(
-                assunto.materia_id, assunto.nome_normalizado, ignorar_id=assunto.id
+                assunto.materia_id,
+                assunto.nome_normalizado,
+                ignorar_id=assunto.id
             ):
                 raise ConflitoError("Ja existe um assunto equivalente nesta materia.")
         assunto.atualizar(status=destino)

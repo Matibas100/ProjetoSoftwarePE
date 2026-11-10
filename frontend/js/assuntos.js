@@ -4,7 +4,9 @@
   let persistedForm = "";
   const formSnapshot = () => JSON.stringify(Object.fromEntries(new FormData(form)));
   globalThis.AuthUI?.registerGuard(() => formSnapshot() !== persistedForm);
-  form.addEventListener("reset", () => queueMicrotask(() => { persistedForm = formSnapshot(); }));
+  form.addEventListener("reset", () => queueMicrotask(() => {
+    persistedForm = formSnapshot();
+  }));
   const assuntoIdInput = document.querySelector("#assunto-id");
   const nomeInput = document.querySelector("#assunto-nome");
   const materiaSelect = document.querySelector("#assunto-materia-id");
@@ -43,8 +45,8 @@
     const opcaoInicial = document.createElement("option");
     opcaoInicial.value = "";
     opcaoInicial.textContent = materias.length
-      ? "Selecione uma matéria"
-      : "Cadastre uma matéria primeiro";
+    ? "Selecione uma matéria"
+    : "Cadastre uma matéria primeiro";
     materiaSelect.appendChild(opcaoInicial);
 
     materias.forEach((materia) => {
@@ -134,7 +136,7 @@
     descricaoInput.value = assunto.descricao || "";
     persistedForm = formSnapshot();
     document.querySelector("#titulo-assunto-formulario").textContent =
-      "Editar assunto";
+    "Editar assunto";
     salvarButton.textContent = "Salvar alterações";
     cancelarButton.hidden = false;
     nomeInput.focus();
@@ -145,7 +147,7 @@
     form.reset();
     assuntoIdInput.value = "";
     document.querySelector("#titulo-assunto-formulario").textContent =
-      "Novo assunto";
+    "Novo assunto";
     salvarButton.textContent = "Cadastrar assunto";
     cancelarButton.hidden = true;
   }
@@ -226,6 +228,8 @@
     carregarAssuntos();
   });
 
-  carregarMaterias().then(() => { persistedForm = formSnapshot(); });
+  carregarMaterias().then(() => {
+    persistedForm = formSnapshot();
+  });
   carregarAssuntos();
 })();

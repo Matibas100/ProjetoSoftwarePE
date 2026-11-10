@@ -1,12 +1,96 @@
-* { box-sizing: border-box; }
-html { color: #172238; background: #f5f6fb; font: 1rem/1.7 system-ui, sans-serif; }
-body { margin: 0; }
-main { max-width: 50rem; margin: 2rem auto; padding: 2rem; background: white; border-radius: .75rem; }
-h1 { font-size: 2rem; line-height: 1.2; }
-h2 { font-size: 1.25rem; margin-top: 2rem; }
-a { color: #4535c4; overflow-wrap: anywhere; }
-a:focus-visible { outline: 3px solid #4535c4; outline-offset: 4px; }
-nav { display: flex; flex-wrap: wrap; gap: 1rem; }
-.aviso { padding: 1rem; border-left: 4px solid #4535c4; background: #f0edff; }
-@media (max-width: 600px) { main { margin: 0; padding: 1.25rem; } }
-@media print { html { color: black; background: white; font-size: 11pt; } main { margin: 0; max-width: none; padding: 0; } nav { display: none; } h2 { break-after: avoid; } p, li { orphans: 3; widows: 3; } a { color: black; } .aviso { background: white; border-color: black; } }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color: #172238;
+  background: #f5f6fb;
+  font: 1rem/1.7 system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 50rem;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: .75rem;
+}
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+}
+
+a {
+  color: #4535c4;
+  overflow-wrap: anywhere;
+}
+
+a:focus-visible {
+  outline: 3px solid #4535c4;
+  outline-offset: 4px;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.aviso {
+  padding: 1rem;
+  border-left: 4px solid #4535c4;
+  background: #f0edff;
+}
+
+@media (max-width: 600px) {
+  main {
+    margin: 0;
+    padding: 1.25rem;
+  }
+}
+
+@media print {
+  html {
+    color: black;
+    background: white;
+    font-size: 11pt;
+  }
+
+  main {
+    margin: 0;
+    max-width: none;
+    padding: 0;
+  }
+
+  nav {
+    display: none;
+  }
+
+  h2 {
+    break-after: avoid;
+  }
+
+  p, li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  a {
+    color: black;
+  }
+
+  .aviso {
+    background: white;
+    border-color: black;
+  }
+}

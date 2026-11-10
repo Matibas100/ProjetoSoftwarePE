@@ -18,10 +18,14 @@ def _exigir_questao(questao):
 
 
 def _detalhe(questao):
-    return {"questao": questao.to_dict(), "status": questao.status, "revisao": questao.revisao,
+    return {
+        "questao": questao.to_dict(),
+        "status": questao.status,
+        "revisao": questao.revisao,
         "versao_publicada_id": questao.versao_publicada_id,
         "versoes": [{"id": v.id, "numero": v.numero, "estado": v.estado}
-                    for v in QuestaoRepository.versoes(questao.id)]}
+            for v in QuestaoRepository.versoes(questao.id)]
+    }
 
 
 
@@ -34,8 +38,14 @@ def _conferir_revisao(questao, revisao):
 
 
 def _evento(questao, ator_id, acao, motivo, instante, versao_id=None):
-    QuestaoEvento(questao_id=questao.id, versao_id=versao_id, ator_id=ator_id,
-        acao=acao, motivo=motivo, criado_em=instante).salvar(confirmar=False)
+    QuestaoEvento(
+        questao_id=questao.id,
+        versao_id=versao_id,
+        ator_id=ator_id,
+        acao=acao,
+        motivo=motivo,
+        criado_em=instante
+    ).salvar(confirmar=False)
 
 
 class ConsultarQuestaoService:
@@ -47,8 +57,16 @@ class ConsultarQuestaoService:
 class ListarQuestoesAdminService:
     @staticmethod
     def executar(parametros):
-        permitidos = {"pagina", "por_pagina", "busca", "status", "dificuldade",
-                      "area_enem_id", "materia_id", "assunto_id"}
+        permitidos = {
+            "pagina",
+            "por_pagina",
+            "busca",
+            "status",
+            "dificuldade",
+            "area_enem_id",
+            "materia_id",
+            "assunto_id"
+        }
         if set(parametros) - permitidos:
             raise DadosInvalidosError("Filtro desconhecido.")
         pagina = inteiro_filtro(parametros.get("pagina", "1"), "pagina")
@@ -56,9 +74,11 @@ class ListarQuestoesAdminService:
         if pagina is None or limite is None:
             raise DadosInvalidosError("Paginação inválida.")
         filtros = {campo: inteiro_filtro(parametros.get(campo), campo)
-                   for campo in ("area_enem_id", "materia_id", "assunto_id")}
-        for campo, validos in (("status", {"rascunho", "publicada", "arquivada"}),
-                               ("dificuldade", CriarQuestaoService.DIFICULDADES_VALIDAS)):
+            for campo in ("area_enem_id", "materia_id", "assunto_id")}
+        for campo, validos in (
+            ("status", {"rascunho", "publicada", "arquivada"}),
+            ("dificuldade", CriarQuestaoService.DIFICULDADES_VALIDAS)
+        ):
             valor = parametros.get(campo) or None
             if valor and valor not in validos:
                 raise DadosInvalidosError(f"{campo} inválido.")
@@ -119,11 +139,21 @@ class PublicarQuestaoService:
                 raise ConflitoError("Catálogo indisponível para publicação.")
             valores = CriarQuestaoService.validar(questao.to_dict())
             instante = agora_utc()
-            versao = QuestaoVersao(**valores, questao_id=questao.id,
-                numero=max((v.numero for v in versoes), default=0)+1, revisao_origem=revisao,
-                estado="publicada", assunto_nome=assunto.nome, materia_id=materia.id,
-                materia_nome=materia.nome, area_enem_id=area.id, area_enem_nome=area.nome,
-                ator_id=ator_id, origem="manual", criado_em=instante)
+            versao = QuestaoVersao(
+                **valores,
+                questao_id=questao.id,
+                numero=max((v.numero for v in versoes), default=0)+1,
+                revisao_origem=revisao,
+                estado="publicada",
+                assunto_nome=assunto.nome,
+                materia_id=materia.id,
+                materia_nome=materia.nome,
+                area_enem_id=area.id,
+                area_enem_nome=area.nome,
+                ator_id=ator_id,
+                origem="manual",
+                criado_em=instante
+            )
             versao.salvar(confirmar=False)
             for acao in ("revisao", "aprovacao", "publicacao"):
                 _evento(questao, ator_id, acao, motivo, instante, versao.id)
@@ -161,7 +191,7 @@ class ConsultarVersaoElegivelService:
         if versao is None:
             raise RecursoNaoEncontradoError("Versão não encontrada.")
         elegivel = (QuestaoRepository.versao_elegivel(versao_id, bloquear=True) if bloquear
-                    else QuestaoRepository.versao_elegivel(versao_id))
+            else QuestaoRepository.versao_elegivel(versao_id))
         if elegivel is None:
             raise ConflitoError("Versão indisponível para novo uso.")
         return elegivel.conteudo()

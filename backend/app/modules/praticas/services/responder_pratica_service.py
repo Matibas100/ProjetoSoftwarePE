@@ -20,7 +20,10 @@ class ResponderPraticaService:
                 if tentativa.resposta_escolhida != alternativa:
                     raise ConflitoError("Esta tentativa já possui uma resposta definitiva.")
                 return detalhe(tentativa)
-            versao = ConsultarVersaoHistoricaService.executar(tentativa.questao_versao_id, correcao=True)
+            versao = ConsultarVersaoHistoricaService.executar(
+                tentativa.questao_versao_id,
+                correcao=True
+            )
             tentativa.resposta_escolhida = alternativa
             tentativa.correta = alternativa == versao["resposta_correta"]
             tentativa.respondida_em = agora_utc()

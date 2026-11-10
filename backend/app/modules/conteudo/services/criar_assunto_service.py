@@ -5,7 +5,11 @@ from app.modules.conteudo.models.assunto import Assunto
 from app.modules.conteudo.models.materia import Materia
 from app.modules.conteudo.domain.catalogo import normalizar_nome_assunto
 from app.modules.conteudo.repositories.catalogo_repository import CatalogoRepository
-from app.modules.conteudo.services.catalogo_validacao import validar_descricao, validar_id, validar_nome
+from app.modules.conteudo.services.catalogo_validacao import (
+    validar_descricao,
+    validar_id,
+    validar_nome,
+)
 
 
 class CriarAssuntoService:

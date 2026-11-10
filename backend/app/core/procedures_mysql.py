@@ -5,6 +5,7 @@ mesmo vazios, são úteis; o conjunto terminal do protocolo não é retornado.
 Não há commit, rollback, criação de conexão ou conhecimento de domínio aqui.
 """
 
+
 class ConjuntoResultado(list):
     """Linhas com a descrição disponível inclusive quando não há registros."""
 

@@ -36,12 +36,25 @@ def gerar(usuario_id, dados, seletor: SelecionarPlanoService, recalcular=False):
         if atual is not None:
             atual.atual = False
             atual.salvar(confirmar=False)
-        plano = PlanoEstudo(usuario_id=usuario_id, geracao=atual.geracao + 1 if atual else 1,
-            atual=True, periodo=periodo, gerado_em=instante, chave_envio=chave, operacao=tipo,
-            plano_anterior_id=anterior_id).salvar(confirmar=False)
+        plano = PlanoEstudo(
+            usuario_id=usuario_id,
+            geracao=atual.geracao + 1 if atual else 1,
+            atual=True,
+            periodo=periodo,
+            gerado_em=instante,
+            chave_envio=chave,
+            operacao=tipo,
+            plano_anterior_id=anterior_id
+        ).salvar(confirmar=False)
         for snapshot in itens:
-            PlanoEstudoItem(plano_id=plano.id, assunto_id=snapshot["assunto_id"], materia_id=snapshot["materia_id"],
-                posicao=snapshot["posicao"], snapshot=snapshot, estado="pendente").salvar(confirmar=False)
+            PlanoEstudoItem(
+                plano_id=plano.id,
+                assunto_id=snapshot["assunto_id"],
+                materia_id=snapshot["materia_id"],
+                posicao=snapshot["posicao"],
+                snapshot=snapshot,
+                estado="pendente"
+            ).salvar(confirmar=False)
         return {"estado": "disponivel", "plano": plano_dto(plano)}, 201
 
     return TransactionManager.executar(executar)

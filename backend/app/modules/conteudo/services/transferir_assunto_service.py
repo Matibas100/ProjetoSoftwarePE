@@ -31,7 +31,9 @@ class TransferirAssuntoService:
         if destino.status != "ativa":
             raise DadosInvalidosError("A materia de destino precisa estar ativa.")
         if CatalogoRepository.existe_assunto_equivalente(
-            destino.id, assunto.nome_normalizado, ignorar_id=assunto.id
+            destino.id,
+            assunto.nome_normalizado,
+            ignorar_id=assunto.id
         ):
             raise ConflitoError("Ja existe um assunto equivalente na materia de destino.")
         return {
@@ -83,10 +85,13 @@ class TransferirAssuntoService:
             if destino.status != "ativa":
                 raise DadosInvalidosError("A materia de destino precisa estar ativa.")
             nome_normalizado = atualizacoes.get(
-                "nome_normalizado", assunto.nome_normalizado
+                "nome_normalizado",
+                assunto.nome_normalizado
             )
             if CatalogoRepository.existe_assunto_equivalente(
-                destino.id, nome_normalizado, ignorar_id=assunto.id
+                destino.id,
+                nome_normalizado,
+                ignorar_id=assunto.id
             ):
                 raise ConflitoError("Ja existe um assunto equivalente na materia de destino.")
             impacto = CatalogoRepository.impacto_assunto(assunto.id)["questoes"]
@@ -103,7 +108,9 @@ class TransferirAssuntoService:
                 )
             origem_id = assunto.materia_id
             assunto.atualizar(
-                confirmar=False, materia_id=destino.id, **atualizacoes
+                confirmar=False,
+                materia_id=destino.id,
+                **atualizacoes
             )
             AssuntoTransferencia(
                 assunto_id=assunto.id,

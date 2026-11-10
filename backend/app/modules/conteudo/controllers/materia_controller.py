@@ -70,5 +70,8 @@ class MateriaController:
 
     @staticmethod
     def _responder(operacao, status_sucesso=200):
-        return responder_http(operacao, contexto="Falha interna: materia.",
-            adaptar_sucesso=lambda dados: resposta_json(dados, status_sucesso))
+        return responder_http(
+            operacao,
+            contexto="Falha interna: materia.",
+            adaptar_sucesso=lambda dados: resposta_json(dados, status_sucesso)
+        )

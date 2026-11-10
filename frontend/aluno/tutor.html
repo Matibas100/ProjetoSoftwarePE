@@ -1,22 +1,33 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tutor IA | Plataforma ENEM</title>
-<link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/aluno.css"><link rel="stylesheet" href="../css/tutor.css"></head>
-<body data-auth="aluno">
-  <section class="auth-status-panel" id="auth-loading"><p role="status">Verificando sua sessão...</p></section>
-  <div id="auth-content" class="aluno-shell" hidden>
-    <nav class="aluno-nav" aria-label="Navegação do aluno"><img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM"><div class="navigation-slot" data-navigation="aluno" data-current="tutor"></div></nav>
-    <div class="aluno-main"><header class="aluno-top"><strong>Tutor IA</strong><div class="aluno-user"><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
-    <main class="aluno-page">
-      <h1>Tutor IA</h1><p class="aluno-subtitle">Compreenda a dúvida, verifique o raciocínio e escolha o próximo passo.</p>
-      <form id="tutor-form" novalidate>
-        <div class="pratica-card pratica-filtros tutor-filtros">
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Tutor IA | Plataforma ENEM</title>
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/aluno.css">
+    <link rel="stylesheet" href="../css/tutor.css">
+  </head>
+  <body data-auth="aluno">
+    <section class="auth-status-panel" id="auth-loading">
+      <p role="status">Verificando sua sessão...</p>
+    </section>
+    <div id="auth-content" class="aluno-shell" hidden>
+      <nav class="aluno-nav" aria-label="Navegação do aluno"><img class="auth-logo" src="../assets/logo-plataforma-enem-horizontal.svg" alt="Plataforma ENEM"><div class="navigation-slot" data-navigation="aluno" data-current="tutor"></div></nav>
+      <div class="aluno-main">
+        <header class="aluno-top"><strong>Tutor IA</strong><div class="aluno-user"><span data-auth-name></span><button type="button" class="auth-exit" data-auth-exit>Sair</button></div></header>
+        <main class="aluno-page">
+          <h1>Tutor IA</h1>
+          <p class="aluno-subtitle">Compreenda a dúvida, verifique o raciocínio e escolha o próximo passo.</p>
+          <form id="tutor-form" novalidate>
+            <div class="pratica-card pratica-filtros tutor-filtros">
           <div><label for="tutor-materia">Matéria</label><select id="tutor-materia" required disabled><option value="">Carregando catálogo...</option></select></div>
           <div><label for="tutor-assunto">Assunto</label><select id="tutor-assunto" required disabled><option value="">Escolha a matéria</option></select></div>
           <p><strong>Nível</strong><br>Ensino médio · revisão para o ENEM</p>
           <button id="tutor-catalogo" type="button" class="auth-secondary">Recarregar catálogo</button>
         </div>
-        <div class="tutor-layout">
-          <aside class="pratica-card tutor-contexto" aria-labelledby="tutor-contexto-titulo">
+            <div class="tutor-layout">
+              <aside class="pratica-card tutor-contexto" aria-labelledby="tutor-contexto-titulo">
             <h2 id="tutor-contexto-titulo">Contexto de estudo</h2>
             <p id="tutor-contexto">Escolha uma matéria e um assunto do catálogo ativo.</p>
             <h3>Como perguntar</h3><p>Descreva o que você não entendeu e qual parte do raciocínio quer revisar.</p>
@@ -24,25 +35,30 @@
             <p class="tutor-dados">Não compartilhe nome completo, e-mail, telefone ou outros dados pessoais seus ou de terceiros.</p>
             <p>Uma dúvida por envio, sem histórico. O consentimento do plano é independente do Tutor.</p>
           </aside>
-          <section id="tutor-painel" class="pratica-card tutor-painel" aria-label="Dúvida e resposta">
+              <section id="tutor-painel" class="pratica-card tutor-painel" aria-label="Dúvida e resposta">
             <p id="tutor-aviso" class="tutor-aviso"><strong>A IA pode errar. Confira o raciocínio.</strong> Ao enviar, sua dúvida, matéria, assunto e nível seguem ao Google Gemini. Não enviamos automaticamente identidade, histórico ou desempenho. Não inclua dados pessoais.</p>
             <p>O uso exige o <a href="/legal/termo-de-uso-v2.html">Termo de Uso 2.0</a>. <code>store=false</code> desativa o armazenamento da interação, sem garantir retenção operacional zero pelo provedor.</p>
             <p id="tutor-status" class="pratica-status" role="status" aria-live="polite" tabindex="-1">Carregando catálogo...</p>
             <p id="tutor-termos" hidden><a href="/aluno/privacidade.html">Ler e aceitar o Termo de Uso na página de privacidade</a>. Depois, confirme um novo envio.</p>
             <div id="tutor-resultado" hidden aria-labelledby="tutor-resposta-titulo">
-              <h2 id="tutor-resposta-titulo" tabindex="-1">Resposta do Tutor</h2>
-              <p id="tutor-resposta-contexto" class="tutor-resposta-contexto"></p>
-              <p id="tutor-pergunta-anterior" class="tutor-pergunta"></p>
-              <div id="tutor-secoes"></div>
-            </div>
+                  <h2 id="tutor-resposta-titulo" tabindex="-1">Resposta do Tutor</h2>
+                  <p id="tutor-resposta-contexto" class="tutor-resposta-contexto"></p>
+                  <p id="tutor-pergunta-anterior" class="tutor-pergunta"></p>
+                  <div id="tutor-secoes"></div>
+                </div>
             <div class="auth-field"><label for="tutor-duvida">Sua dúvida</label><textarea id="tutor-duvida" rows="5" minlength="10" maxlength="2000" required aria-describedby="tutor-aviso tutor-ajuda" placeholder="Descreva sua dúvida de estudo..."></textarea></div>
             <p id="tutor-ajuda">De 10 a 2000 caracteres. A dúvida fica somente nesta página e é preservada em caso de erro para a mesma conta.</p>
             <button id="tutor-enviar" type="submit" class="auth-primary" disabled>Enviar dúvida ao Gemini</button>
           </section>
-        </div>
-      </form>
-      <p class="aluno-subtitle tutor-rodape">O Tutor apoia seus estudos, sem atribuir nota ou alterar o plano. Cancelar a espera local não garante cancelamento nem evita consumo no provedor.</p>
-    </main></div>
-  </div>
-  <script src="../js/navigation.js"></script><script src="../js/api.js"></script><script src="../js/auth-session.js"></script><script src="../js/aluno-tutor.js"></script>
-</body></html>
+            </div>
+          </form>
+          <p class="aluno-subtitle tutor-rodape">O Tutor apoia seus estudos, sem atribuir nota ou alterar o plano. Cancelar a espera local não garante cancelamento nem evita consumo no provedor.</p>
+        </main>
+      </div>
+    </div>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth-session.js"></script>
+    <script src="../js/aluno-tutor.js"></script>
+  </body>
+</html>

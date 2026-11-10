@@ -54,9 +54,17 @@ describe("tela de questoes", () => {
     expect(app.document.querySelector("#questoes-lista-status").hidden).toBe(false);
 
     questoes = [{
-      id: 8, assunto_id: 4, dificuldade: "<media>", enunciado: "<Quanto?>",
-      alternativa_a: "<A>", alternativa_b: "B", alternativa_c: "C",
-      alternativa_d: "D", alternativa_e: "E", resposta_correta: "A", explicacao: "Porque",
+      id: 8,
+      assunto_id: 4,
+      dificuldade: "<media>",
+      enunciado: "<Quanto?>",
+      alternativa_a: "<A>",
+      alternativa_b: "B",
+      alternativa_c: "C",
+      alternativa_d: "D",
+      alternativa_e: "E",
+      resposta_correta: "A",
+      explicacao: "Porque",
     }];
     form.dispatchEvent(new app.window.Event("submit", { bubbles: true, cancelable: true }));
     await settle();

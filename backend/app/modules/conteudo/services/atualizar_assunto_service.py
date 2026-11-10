@@ -5,7 +5,11 @@ from app.modules.conteudo.models.assunto import Assunto
 from app.modules.conteudo.models.materia import Materia
 from app.modules.conteudo.domain.catalogo import normalizar_nome_assunto
 from app.modules.conteudo.repositories.catalogo_repository import CatalogoRepository
-from app.modules.conteudo.services.catalogo_validacao import validar_descricao, validar_id, validar_nome
+from app.modules.conteudo.services.catalogo_validacao import (
+    validar_descricao,
+    validar_id,
+    validar_nome,
+)
 from app.modules.conteudo.services.transferir_assunto_service import TransferirAssuntoService
 
 
@@ -53,10 +57,13 @@ class AtualizarAssuntoService:
 
         materia_final = dados.get("materia_id", assunto.materia_id)
         normalizado_final = dados_atualizacao.get(
-            "nome_normalizado", assunto.nome_normalizado
+            "nome_normalizado",
+            assunto.nome_normalizado
         )
         if CatalogoRepository.existe_assunto_equivalente(
-            materia_final, normalizado_final, ignorar_id=assunto_id
+            materia_final,
+            normalizado_final,
+            ignorar_id=assunto_id
         ):
             raise ConflitoError("Ja existe um assunto equivalente nesta materia.")
 

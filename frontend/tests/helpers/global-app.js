@@ -29,6 +29,10 @@ export function prepareAdminGlobalDom(sourcePath) {
   document.close();
   HTMLElement.prototype.focus = () => {};
   HTMLElement.prototype.scrollIntoView = () => {};
-  HTMLDialogElement.prototype.showModal = function showModal() { this.open = true; };
-  HTMLDialogElement.prototype.close = function close() { this.open = false; };
+  HTMLDialogElement.prototype.showModal = function showModal() {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close = function close() {
+    this.open = false;
+  };
 }

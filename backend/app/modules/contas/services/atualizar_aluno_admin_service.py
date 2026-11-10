@@ -8,16 +8,17 @@ from app.modules.contas.services.gestao_alunos_validacao import executar_mutacao
 
 class AtualizarAlunoAdminService:
     @staticmethod
-    def executar(usuario_id,dados):
+    def executar(usuario_id, dados):
         validar_id(usuario_id)
+
         def atualizar():
             usuario = exigir_aluno(UsuarioRepository.bloquear(usuario_id))
-            validar_dados(dados,{'nome','email'})
+            validar_dados(dados, {'nome', 'email'})
             nome, email = validar_nome(dados['nome']), validar_email(dados['email'])
             mudou_email = email != usuario.email
             if nome != usuario.nome or mudou_email:
-                usuario.atualizar(confirmar=False,nome=nome,email=email)
+                usuario.atualizar(confirmar=False, nome=nome, email=email)
             if mudou_email:
-                AutenticacaoRepository.revogar_usuario(usuario_id,agora_utc())
+                AutenticacaoRepository.revogar_usuario(usuario_id, agora_utc())
             return apresentar_usuario(usuario)
         return executar_mutacao(atualizar)

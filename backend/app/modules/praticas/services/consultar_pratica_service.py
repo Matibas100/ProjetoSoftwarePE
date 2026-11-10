@@ -12,11 +12,18 @@ def exigir_propria(usuario_id, tentativa_id, bloquear=False):
 
 def detalhe(tentativa):
     respondida = tentativa.estado == "respondida"
-    questao = ConsultarVersaoHistoricaService.executar(tentativa.questao_versao_id, correcao=respondida)
+    questao = ConsultarVersaoHistoricaService.executar(
+        tentativa.questao_versao_id,
+        correcao=respondida
+    )
     questao.update(tentativa.classificacao())
     dados = {"id": tentativa.id, "estado": tentativa.estado, "questao": questao}
     if respondida:
-        dados.update(tentativa.resumo(), gabarito=questao["resposta_correta"], explicacao=questao["explicacao"])
+        dados.update(
+            tentativa.resumo(),
+            gabarito=questao["resposta_correta"],
+            explicacao=questao["explicacao"]
+        )
     return dados
 
 

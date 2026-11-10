@@ -35,8 +35,14 @@ class PersistenciaCapacidadesTest(unittest.TestCase):
         self.assertFalse(hasattr(ModeloAtualizavel, 'deletar'))
 
     def test_capacidades_das_vinte_e_uma_models(self):
-        imutaveis = {QuestaoVersao, QuestaoEvento, SimuladoVersao,
-                     SimuladoVersaoItem, SimuladoEvento, RegistroPrivacidade}
+        imutaveis = {
+            QuestaoVersao,
+            QuestaoEvento,
+            SimuladoVersao,
+            SimuladoVersaoItem,
+            SimuladoEvento,
+            RegistroPrivacidade
+        }
         planos = {PlanoEstudo, PlanoEstudoItem}
         for mapper in db.Model.registry.mappers:
             model = mapper.class_
@@ -50,9 +56,11 @@ class PersistenciaCapacidadesTest(unittest.TestCase):
     def test_flush_falho_deixa_rollback_ao_caso_composto(self, session):
         session.flush.side_effect = RuntimeError('falha controlada')
         materia = Materia(nome='Antes')
-        for operacao in (lambda: materia.salvar(confirmar=False),
-                         lambda: materia.atualizar(confirmar=False, nome='Depois'),
-                         lambda: materia.deletar(confirmar=False)):
+        for operacao in (
+            lambda: materia.salvar(confirmar=False),
+            lambda: materia.atualizar(confirmar=False, nome='Depois'),
+            lambda: materia.deletar(confirmar=False)
+        ):
             with self.assertRaises(RuntimeError):
                 operacao()
         session.rollback.assert_not_called()

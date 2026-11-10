@@ -68,29 +68,45 @@ def encerrar(processos):
 
 def executar_suite(base, environment, comando=None):
     exigir_opt_in(environment)
-    nome = validar_schema(PREFIX + uuid4().hex[:12])
+    nome = validar_schema(PREFIX + uuid4().hex[: 12])
     settings = replace(base, name=nome)
     api_port, frontend_port = porta_livre(), porta_livre()
     while frontend_port == api_port:
         frontend_port = porta_livre()
     frontend = f"http://127.0.0.1:{frontend_port}"
     api = f"http://127.0.0.1:{api_port}"
-    env = {**environment, "PYTHON_DOTENV_DISABLED": "1", "PYTHONPATH": str(ROOT / "backend"),
+    env = {
+        **environment,
+        "PYTHON_DOTENV_DISABLED": "1",
+        "PYTHONPATH": str(ROOT / "backend"),
         "DATABASE_URL": f"mysql+pymysql://{quote_plus(settings.user)}:{quote_plus(settings.password)}"
-            f"@{settings.host}:{settings.port}/{nome}?charset={settings.charset}",
-        "AUTH_SECRET_KEY": secrets.token_hex(32), "AUTH_COOKIE_SECURE": "false",
-        "FLASK_DEBUG": "false", "CORS_ORIGINS": frontend, "APP_HOST": "127.0.0.1",
-        "APP_PORT": str(api_port), "E2E_BASE_URL": frontend, "E2E_API_URL": api + "/api",
+        f"@{settings.host}:{settings.port}/{nome}?charset={settings.charset}",
+        "AUTH_SECRET_KEY": secrets.token_hex(32),
+        "AUTH_COOKIE_SECURE": "false",
+        "FLASK_DEBUG": "false",
+        "CORS_ORIGINS": frontend,
+        "APP_HOST": "127.0.0.1",
+        "APP_PORT": str(api_port),
+        "E2E_BASE_URL": frontend,
+        "E2E_API_URL": api + "/api",
         "E2E_ADMIN_EMAIL": f"operador-{uuid4().hex[:12]}@teste.local",
-        "E2E_ADMIN_PASSWORD": secrets.token_urlsafe(24), "E2E_SCHEMA": nome}
+        "E2E_ADMIN_PASSWORD": secrets.token_urlsafe(24),
+        "E2E_SCHEMA": nome
+    }
     env.pop('GEMINI_API_KEY', None)
     env['TUTOR_IA_ENABLED'] = 'false'
     env["E2E_STUDENT_EMAIL"] = f"aluno-{uuid4().hex[:12]}@teste.local"
     env["E2E_STUDENT_PASSWORD"] = secrets.token_urlsafe(24)
     env['E2E_TUTOR_EMAIL'] = f"tutor-{uuid4().hex[:12]}@teste.local"
     env['E2E_TUTOR_PASSWORD'] = secrets.token_urlsafe(24)
-    admin = pymysql.connect(host=base.host, port=base.port, user=base.user,
-        password=base.password, charset=base.charset, autocommit=True)
+    admin = pymysql.connect(
+        host=base.host,
+        port=base.port,
+        user=base.user,
+        password=base.password,
+        charset=base.charset,
+        autocommit=True
+    )
     criado = False
     processos = []
     try:
@@ -124,12 +140,33 @@ with app.app_context():
     db.session.remove()
     db.engine.dispose()
 """
-        subprocess.run([sys.executable, "-c", seed], cwd=ROOT, env=env, check=True,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        for args, url in (([sys.executable, "backend/run.py"], api + "/api/health"),
-                          ([sys.executable, "scripts/serve_frontend.py", "--port", str(frontend_port)], frontend + "/login")):
-            processo = subprocess.Popen(args, cwd=ROOT, env=env,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            [sys.executable, "-c", seed],
+            cwd=ROOT,
+            env=env,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        for args, url in (
+            ([sys.executable, "backend/run.py"], api + "/api/health"),
+            (
+                [
+                    sys.executable,
+                    "scripts/serve_frontend.py",
+                    "--port",
+                    str(frontend_port)
+                ],
+                frontend + "/login"
+            )
+        ):
+            processo = subprocess.Popen(
+                args,
+                cwd=ROOT,
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
             processos.append(processo)
             aguardar_http(url, processo)
         print("E2E: MySQL descartável preparado; API/frontend locais disponíveis.", flush=True)
@@ -158,7 +195,10 @@ def main():
         return 130
     except Exception as erro:
         # Não revelar mensagem/SQL/parâmetros/credenciais de infraestrutura.
-        print(f"E2E falhou ({type(erro).__name__}). Confira opt-in, MySQL e instalação do Chromium.", file=sys.stderr)
+        print(
+            f"E2E falhou ({type(erro).__name__}). Confira opt-in, MySQL e instalação do Chromium.",
+            file=sys.stderr
+        )
         return 1
 
 

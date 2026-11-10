@@ -15,20 +15,36 @@ class GeminiService:
     @property
     def disponivel(self):
         return bool(self._habilitado and isinstance(self._chave, str) and self._chave.strip()
-                    and isinstance(self._modelo, str) and self._modelo.strip())
+            and isinstance(self._modelo, str) and self._modelo.strip())
 
     def gerar(self, entrada, instrucao):
         if not self.disponivel:
             raise TutoriaError('Tutor indisponível no momento.', 503, 'tutor_indisponivel')
-        payload = {'model': self._modelo, 'system_instruction': instrucao,
-                   'input': json.dumps(entrada, ensure_ascii=False), 'store': False,
-                   'generation_config': {'max_output_tokens': 4096}}
+        payload = {
+            'model': self._modelo,
+            'system_instruction': instrucao,
+            'input': json.dumps(entrada, ensure_ascii=False),
+            'store': False,
+            'generation_config': {'max_output_tokens': 4096}
+        }
         try:
-            with requests.post(ENDPOINT, headers={'x-goog-api-key': self._chave},
-                               json=payload, timeout=(5, 30), allow_redirects=False, stream=True) as resposta:
+            with requests.post(
+                ENDPOINT,
+                headers={'x-goog-api-key': self._chave},
+                json=payload,
+                timeout=(
+                    5,
+                    30
+                ),
+                allow_redirects=False,
+                stream=True
+            ) as resposta:
                 if resposta.status_code != 200:
-                    raise TutoriaError('Não foi possível consultar o provedor de tutoria.',
-                                       502, 'tutor_provedor_indisponivel')
+                    raise TutoriaError(
+                        'Não foi possível consultar o provedor de tutoria.',
+                        502,
+                        'tutor_provedor_indisponivel'
+                    )
                 partes, total = [], 0
                 for bloco in resposta.iter_content(chunk_size=8192):
                     total += len(bloco)
@@ -42,12 +58,22 @@ class GeminiService:
             # Requests pode encapsular ReadTimeout durante iter_content em ConnectionError.
             from urllib3.exceptions import ReadTimeoutError
             if erro.args and isinstance(erro.args[0], ReadTimeoutError):
-                raise TutoriaError('O Tutor excedeu o tempo de espera.', 502, 'tutor_timeout') from None
-            raise TutoriaError('Não foi possível consultar o provedor de tutoria.',
-                               502, 'tutor_provedor_indisponivel') from None
+                raise TutoriaError(
+                    'O Tutor excedeu o tempo de espera.',
+                    502,
+                    'tutor_timeout'
+                ) from None
+            raise TutoriaError(
+                'Não foi possível consultar o provedor de tutoria.',
+                502,
+                'tutor_provedor_indisponivel'
+            ) from None
         except requests.RequestException:
-            raise TutoriaError('Não foi possível consultar o provedor de tutoria.',
-                               502, 'tutor_provedor_indisponivel') from None
+            raise TutoriaError(
+                'Não foi possível consultar o provedor de tutoria.',
+                502,
+                'tutor_provedor_indisponivel'
+            ) from None
         except (ValueError, UnicodeError):
             raise resposta_invalida() from None
         return self._extrair(dados)

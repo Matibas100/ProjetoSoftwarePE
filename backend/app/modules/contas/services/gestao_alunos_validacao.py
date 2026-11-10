@@ -19,9 +19,17 @@ def executar_mutacao(operacao):
         args = getattr(original, 'args', ())
         numero = args[0] if args else None
         if numero == 1062 and 'uq_usuarios_email' in str(original):
-            raise AutenticacaoError('Este e-mail já está em uso.',409,'email_em_uso') from None
+            raise AutenticacaoError('Este e-mail já está em uso.', 409, 'email_em_uso') from None
         if numero == 1451:
-            raise AutenticacaoError('A conta possui vínculos. Considere desativá-la.',409,'usuario_com_vinculos') from None
-        if numero in {1205,1213}:
-            raise AutenticacaoError('Operação concorrente. Confirme novamente.',409,'operacao_concorrente') from None
+            raise AutenticacaoError(
+                'A conta possui vínculos. Considere desativá-la.',
+                409,
+                'usuario_com_vinculos'
+            ) from None
+        if numero in {1205, 1213}:
+            raise AutenticacaoError(
+                'Operação concorrente. Confirme novamente.',
+                409,
+                'operacao_concorrente'
+            ) from None
         raise

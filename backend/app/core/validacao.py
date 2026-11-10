@@ -6,16 +6,26 @@ from app.core.paginacao import inteiro_filtro
 
 def parametros(parametros, filtros):
     permitidos = {"pagina", "por_pagina", *filtros}
-    repetidos = hasattr(parametros, "getlist") and any(len(parametros.getlist(k)) != 1 for k in parametros)
+    repetidos = hasattr(
+        parametros,
+        "getlist"
+    ) and any(len(parametros.getlist(k)) != 1 for k in parametros)
     if set(parametros) - permitidos or repetidos:
         raise DadosInvalidosError("Filtro desconhecido ou repetido.")
     valores = {}
     for campo in permitidos:
         padrao = "1" if campo == "pagina" else "20" if campo == "por_pagina" else None
         valor = parametros.get(campo, padrao)
-        if (valor is not None or campo in parametros) and (not isinstance(valor, str) or len(valor) > 10 or not valor.isascii() or not valor.isdecimal()):
+        if (valor is not None or campo in parametros) and (not isinstance(
+            valor,
+            str
+        ) or len(valor) > 10 or not valor.isascii() or not valor.isdecimal()):
             raise DadosInvalidosError(f"{campo} deve ser um inteiro positivo.")
-        valores[campo] = inteiro_filtro(valor, campo, maximo=100 if campo == "por_pagina" else 2147483647)
+        valores[campo] = inteiro_filtro(
+            valor,
+            campo,
+            maximo=100 if campo == "por_pagina" else 2147483647
+        )
     return valores
 
 

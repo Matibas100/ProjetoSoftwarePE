@@ -8,21 +8,37 @@ from app.modules.plano_estudos.services.concluir_plano_item_service import Concl
 class PlanoEstudoController:
     @staticmethod
     def _responder(operacao):
-        return responder_http(operacao, contexto="Falha interna: plano_estudo.",
-            adaptar_sucesso=resposta_json_dinamica)
+        return responder_http(
+            operacao,
+            contexto="Falha interna: plano_estudo.",
+            adaptar_sucesso=resposta_json_dinamica
+        )
 
     @staticmethod
     def consultar():
-        return PlanoEstudoController._responder(lambda: ConsultarPlanoService.executar(g.auth_sessao.usuario_id, request.args))
+        return PlanoEstudoController._responder(lambda: ConsultarPlanoService.executar(
+            g.auth_sessao.usuario_id,
+            request.args
+        ))
 
     @staticmethod
     def gerar():
-        return PlanoEstudoController._responder(lambda: servicos().gerar_plano.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
+        return PlanoEstudoController._responder(lambda: servicos().gerar_plano.executar(
+            g.auth_sessao.usuario_id,
+            request.get_json(silent=True)
+        ))
 
     @staticmethod
     def recalcular():
-        return PlanoEstudoController._responder(lambda: servicos().recalcular_plano.executar(g.auth_sessao.usuario_id, request.get_json(silent=True)))
+        return PlanoEstudoController._responder(lambda: servicos().recalcular_plano.executar(
+            g.auth_sessao.usuario_id,
+            request.get_json(silent=True)
+        ))
 
     @staticmethod
     def concluir(item_id):
-        return PlanoEstudoController._responder(lambda: ConcluirPlanoItemService.executar(g.auth_sessao.usuario_id, item_id, request.get_json(silent=True)))
+        return PlanoEstudoController._responder(lambda: ConcluirPlanoItemService.executar(
+            g.auth_sessao.usuario_id,
+            item_id,
+            request.get_json(silent=True)
+        ))

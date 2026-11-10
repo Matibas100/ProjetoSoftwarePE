@@ -39,7 +39,7 @@ class MySQLMigrationTestCase(unittest.TestCase):
             self.fail("RUN_MYSQL_INTEGRATION=1 tambem e obrigatorio.")
         self.base_settings = migrate.load_database_settings()
         self.schema_name = validate_migration_test_schema(
-            MIGRATION_TEST_PREFIX + uuid4().hex[:12]
+            MIGRATION_TEST_PREFIX + uuid4().hex[: 12]
         )
         self.admin_connection = pymysql.connect(
             host=self.base_settings.host,

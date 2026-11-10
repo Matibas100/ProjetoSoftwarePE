@@ -7,13 +7,24 @@ from app.core.persistencia import CrudMixin, ModeloBase
 
 
 def referencia(tabela, tipo=db.Integer, **opcoes):
-    return db.Column(tipo, db.ForeignKey(tabela + ".id", ondelete="RESTRICT", onupdate="RESTRICT"), **opcoes)
+    return db.Column(
+        tipo,
+        db.ForeignKey(
+            tabela + ".id",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT"
+        ),
+        **opcoes
+    )
 
 
 class Simulado(CrudMixin):
     __tablename__ = "simulados"
     __table_args__ = (
-        db.CheckConstraint("estado IN ('rascunho','publicado','arquivado')", name="ck_simulados_estado"),
+        db.CheckConstraint(
+            "estado IN ('rascunho','publicado','arquivado')",
+            name="ck_simulados_estado"
+        ),
         db.CheckConstraint("revisao >= 1", name="ck_simulados_revisao"),
     )
     id = db.Column(db.Integer, primary_key=True)
@@ -85,10 +96,18 @@ class SimuladoTentativa(CrudMixin):
     __tablename__ = "simulado_tentativas"
     __table_args__ = (
         db.UniqueConstraint("usuario_id", "chave_envio", name="uq_sim_tentativa_chave"),
-        db.UniqueConstraint("usuario_id", "simulado_versao_id", "em_andamento_marcador", name="uq_sim_tentativa_andamento"),
+        db.UniqueConstraint(
+            "usuario_id",
+            "simulado_versao_id",
+            "em_andamento_marcador",
+            name="uq_sim_tentativa_andamento"
+        ),
         db.Index("ix_sim_tentativa_historico", "usuario_id", "finalizada_em", "id"),
         db.CheckConstraint("revisao >= 1", name="ck_sim_tentativa_revisao"),
-        db.CheckConstraint("(estado = 'em_andamento' AND finalizada_em IS NULL AND total IS NULL AND respondidas IS NULL AND acertos IS NULL AND erros IS NULL AND em_branco IS NULL AND percentual_acerto IS NULL) OR (estado = 'finalizada' AND finalizada_em IS NOT NULL AND finalizada_em >= iniciada_em AND total IS NOT NULL AND total BETWEEN 1 AND 180 AND respondidas IS NOT NULL AND acertos IS NOT NULL AND erros IS NOT NULL AND em_branco IS NOT NULL AND percentual_acerto IS NOT NULL AND acertos >= 0 AND erros >= 0 AND em_branco >= 0 AND total = acertos + erros + em_branco AND respondidas = acertos + erros AND percentual_acerto = ROUND(100 * acertos / total, 2))", name="ck_sim_tentativa_estado"),
+        db.CheckConstraint(
+            "(estado = 'em_andamento' AND finalizada_em IS NULL AND total IS NULL AND respondidas IS NULL AND acertos IS NULL AND erros IS NULL AND em_branco IS NULL AND percentual_acerto IS NULL) OR (estado = 'finalizada' AND finalizada_em IS NOT NULL AND finalizada_em >= iniciada_em AND total IS NOT NULL AND total BETWEEN 1 AND 180 AND respondidas IS NOT NULL AND acertos IS NOT NULL AND erros IS NOT NULL AND em_branco IS NOT NULL AND percentual_acerto IS NOT NULL AND acertos >= 0 AND erros >= 0 AND em_branco >= 0 AND total = acertos + erros + em_branco AND respondidas = acertos + erros AND percentual_acerto = ROUND(100 * acertos / total, 2))",
+            name="ck_sim_tentativa_estado"
+        ),
     )
     id = db.Column(db.BigInteger, primary_key=True)
     usuario_id = referencia("usuarios", nullable=False)
@@ -104,18 +123,39 @@ class SimuladoTentativa(CrudMixin):
     erros = db.Column(db.Integer)
     em_branco = db.Column(db.Integer)
     percentual_acerto = db.Column(db.Numeric(5, 2))
-    em_andamento_marcador = db.Column(db.Integer, db.Computed("CASE WHEN estado = 'em_andamento' THEN 1 ELSE NULL END", persisted=True))
+    em_andamento_marcador = db.Column(
+        db.Integer,
+        db.Computed(
+            "CASE WHEN estado = 'em_andamento' THEN 1 ELSE NULL END",
+            persisted=True
+        )
+    )
 
     def resultado(self):
-        return {**{c: getattr(self, c) for c in ("total", "respondidas", "acertos", "erros", "em_branco")},
-                "percentual_acerto": float(self.percentual_acerto), "finalizada_em": self.finalizada_em.isoformat() + "Z"}
+        return {
+            **{c: getattr(
+                self,
+                c
+            ) for c in (
+                "total",
+                "respondidas",
+                "acertos",
+                "erros",
+                "em_branco"
+            )},
+            "percentual_acerto": float(self.percentual_acerto),
+            "finalizada_em": self.finalizada_em.isoformat() + "Z"
+        }
 
 
 class SimuladoResposta(CrudMixin):
     __tablename__ = "simulado_respostas"
     __table_args__ = (
         db.UniqueConstraint("tentativa_id", "item_id", name="uq_sim_resposta_item"),
-        db.CheckConstraint("alternativa IS NULL OR alternativa IN ('A','B','C','D','E')", name="ck_sim_resposta_alternativa"),
+        db.CheckConstraint(
+            "alternativa IS NULL OR alternativa IN ('A','B','C','D','E')",
+            name="ck_sim_resposta_alternativa"
+        ),
         db.CheckConstraint("correta IS NULL OR correta IN (0,1)", name="ck_sim_resposta_correta"),
     )
     id = db.Column(db.BigInteger, primary_key=True)

@@ -28,8 +28,15 @@ def registrar_falha(contexto, erro):
     current_app.logger.error("%s (%s)", contexto, type(erro).__name__)
 
 
-def responder_http(operacao, *, contexto, adaptar_sucesso=resposta_json,
-                   tipo_erro=ErroAplicacao, adaptar_erro=erro_json, adaptar_falha=falha_json):
+def responder_http(
+    operacao,
+    *,
+    contexto,
+    adaptar_sucesso=resposta_json,
+    tipo_erro=ErroAplicacao,
+    adaptar_erro=erro_json,
+    adaptar_falha=falha_json
+):
     try:
         return adaptar_sucesso(operacao())
     except tipo_erro as erro:

@@ -26,11 +26,19 @@ class HttpResponseTest(unittest.TestCase):
 
     def test_envelopes_detalhes_e_status_especificos(self):
         with self.app.test_request_context():
-            for controller in (MateriaController, AssuntoController, QuestaoController,
-                               PraticaController, SimuladoController, PlanoEstudoController, DesempenhoController):
+            for controller in (
+                MateriaController,
+                AssuntoController,
+                QuestaoController,
+                PraticaController,
+                SimuladoController,
+                PlanoEstudoController,
+                DesempenhoController
+            ):
                 with self.subTest(controller=controller):
                     response, status = controller._responder(lambda: {'itens': []})
                     self.assertEqual((status, response.json), (200, {'itens': []}))
+
                     def falhar():
                         raise ConflitoError('Conflito esperado', {'revisao': 2})
                     response, status = controller._responder(falhar)
@@ -48,16 +56,33 @@ class HttpResponseTest(unittest.TestCase):
                 self.assertEqual((status, response.json), (201, {'id': 1}))
 
     def test_falhas_sanitizadas_em_todos_adaptadores(self):
-        erro = StatementError('senha-SENTINELA', 'SELECT token-SENTINELA',
-            {'password': 'parametro-SENTINELA'}, RuntimeError('corpo-SENTINELA'))
+        erro = StatementError(
+            'senha-SENTINELA',
+            'SELECT token-SENTINELA',
+            {'password': 'parametro-SENTINELA'},
+            RuntimeError('corpo-SENTINELA')
+        )
+
         def falhar():
             raise erro
-        with self.app.test_request_context('/api/materias?token=url-SENTINELA',
-                headers={'Cookie': 'cookie-SENTINELA'}):
-            for controller in (MateriaController, AssuntoController, QuestaoController,
-                               PraticaController, SimuladoController, PlanoEstudoController,
-                               DesempenhoController, AutenticacaoController):
-                with self.subTest(controller=controller), self.assertLogs(self.app.logger, 'ERROR') as logs:
+        with self.app.test_request_context(
+            '/api/materias?token=url-SENTINELA',
+            headers={'Cookie': 'cookie-SENTINELA'}
+        ):
+            for controller in (
+                MateriaController,
+                AssuntoController,
+                QuestaoController,
+                PraticaController,
+                SimuladoController,
+                PlanoEstudoController,
+                DesempenhoController,
+                AutenticacaoController
+            ):
+                with self.subTest(controller=controller), self.assertLogs(
+                    self.app.logger,
+                    'ERROR'
+                ) as logs:
                     result = controller._responder(falhar)
                     response = self.app.make_response(result)
                     self.assertEqual(response.status_code, 500)
@@ -65,10 +90,22 @@ class HttpResponseTest(unittest.TestCase):
                 self.assertNotIn('SENTINELA', str(logs.output) + response.get_data(as_text=True))
                 self.assertTrue(all(record.exc_info is None for record in logs.records))
             for target, call in (
-                ('app.modules.conteudo.controllers.area_enem_controller.ListarAreasEnemService.executar', AreaEnemController.listar),
-                ('app.modules.contas.auth_http.AutorizarService.executar', lambda: self.app.test_client().get('/api/materias')),
+                (
+                    'app.modules.conteudo.controllers.area_enem_controller.ListarAreasEnemService.executar',
+                    AreaEnemController.listar
+                ),
+                (
+                    'app.modules.contas.auth_http.AutorizarService.executar',
+                    lambda: self.app.test_client().get('/api/materias')
+                ),
             ):
-                with patch(target, side_effect=erro), self.assertLogs(self.app.logger, 'ERROR') as logs:
+                with patch(
+                    target,
+                    side_effect=erro
+                ), self.assertLogs(
+                    self.app.logger,
+                    'ERROR'
+                ) as logs:
                     response = self.app.make_response(call())
                     self.assertEqual(response.status_code, 500)
                 self.assertIn('StatementError', str(logs.output))
@@ -79,11 +116,28 @@ class HttpResponseTest(unittest.TestCase):
             response = jsonify({'csrf_token': 'teste'})
             response.set_cookie('enem_session', 'teste', httponly=True)
             self.assertIs(AutenticacaoController._responder(lambda: response), response)
+
             def falhar():
                 raise AutenticacaoError('Espere', 429, 'limite', retry_after=30)
             result = AutenticacaoController._responder(falhar)
-            self.assertEqual((result.status_code, result.json), (429, {'erro': 'Espere', 'codigo': 'limite'}))
+            self.assertEqual(
+                (
+                    result.status_code,
+                    result.json
+                ),
+                (
+                    429,
+                    {
+                        'erro': 'Espere',
+                        'codigo': 'limite'
+                    }
+                )
+            )
             self.assertEqual(result.headers['Retry-After'], '30')
+
             def expirar():
                 raise AutenticacaoError('Sessão expirada', 401, 'sessao_invalida')
-            self.assertIn('Max-Age=0', AutenticacaoController._responder(expirar).headers['Set-Cookie'])
+            self.assertIn(
+                'Max-Age=0',
+                AutenticacaoController._responder(expirar).headers['Set-Cookie']
+            )

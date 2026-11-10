@@ -4,17 +4,17 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const reportPath = process.argv[2]
-  ? path.resolve(process.argv[2])
-  : path.join(root, "coverage-frontend", "coverage-summary.json");
+? path.resolve(process.argv[2])
+: path.join(root, "coverage-frontend", "coverage-summary.json");
 const minimumLines = 90;
 const minimumBranches = 85;
 
 function productionFiles() {
   return fs
-    .readdirSync(path.join(root, "frontend", "js"), { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
-    .map((entry) => path.join(root, "frontend", "js", entry.name))
-    .sort();
+  .readdirSync(path.join(root, "frontend", "js"), { withFileTypes: true })
+  .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
+  .map((entry) => path.join(root, "frontend", "js", entry.name))
+  .sort();
 }
 
 function normalizedKey(value) {
@@ -24,8 +24,8 @@ function normalizedKey(value) {
 export function validateCoverage(report) {
   const files = new Map(
     Object.entries(report)
-      .filter(([name]) => name !== "total")
-      .map(([name, summary]) => [normalizedKey(name), summary]),
+    .filter(([name]) => name !== "total")
+    .map(([name, summary]) => [normalizedKey(name), summary]),
   );
   const errors = [];
   let coveredLines = 0;
@@ -51,7 +51,7 @@ export function validateCoverage(report) {
 
   const linePercent = totalLines === 0 ? 100 : (coveredLines * 100) / totalLines;
   const branchPercent =
-    totalBranches === 0 ? 100 : (coveredBranches * 100) / totalBranches;
+  totalBranches === 0 ? 100 : (coveredBranches * 100) / totalBranches;
   if (linePercent < minimumLines) {
     errors.push(
       `Cobertura agregada de linhas ${linePercent.toFixed(2)}% abaixo de ${minimumLines}%`,
@@ -73,7 +73,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const result = validateCoverage(JSON.parse(fs.readFileSync(reportPath, "utf8")));
     console.log(
       `Frontend: linhas ${result.linePercent.toFixed(2)}% (${result.coveredLines}/${result.totalLines}); ` +
-        `branches ${result.branchPercent.toFixed(2)}% (${result.coveredBranches}/${result.totalBranches}).`,
+      `branches ${result.branchPercent.toFixed(2)}% (${result.coveredBranches}/${result.totalBranches}).`,
     );
     for (const error of result.errors) console.error(`ERRO: ${error}`);
     process.exitCode = result.errors.length ? 1 : 0;

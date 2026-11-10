@@ -18,14 +18,26 @@ def corpo():
     try:
         return request.get_json(silent=True)
     except RequestEntityTooLarge:
-        raise AutenticacaoError('Corpo da requisição muito grande.',413,'corpo_muito_grande') from None
+        raise AutenticacaoError(
+            'Corpo da requisição muito grande.',
+            413,
+            'corpo_muito_grande'
+        ) from None
 
 
-def responder(operacao,status=200):
-    return responder_http(operacao,contexto='Falha na gestão de Alunos.',
-        adaptar_sucesso=lambda dados: resposta_json(dados,status),
-        tipo_erro=AutenticacaoError,adaptar_erro=resposta_erro,
-        adaptar_falha=lambda: resposta_erro(AutenticacaoError('Não foi possível concluir a operação.',500,'erro_interno')))
+def responder(operacao, status=200):
+    return responder_http(
+        operacao,
+        contexto='Falha na gestão de Alunos.',
+        adaptar_sucesso=lambda dados: resposta_json(dados, status),
+        tipo_erro=AutenticacaoError,
+        adaptar_erro=resposta_erro,
+        adaptar_falha=lambda: resposta_erro(AutenticacaoError(
+            'Não foi possível concluir a operação.',
+            500,
+            'erro_interno'
+        ))
+    )
 
 
 class UsuarioController:
@@ -35,7 +47,7 @@ class UsuarioController:
 
     @staticmethod
     def criar():
-        return responder(lambda: CriarAlunoAdminService.executar(corpo()),201)
+        return responder(lambda: CriarAlunoAdminService.executar(corpo()), 201)
 
     @staticmethod
     def buscar(usuario_id):
@@ -43,16 +55,16 @@ class UsuarioController:
 
     @staticmethod
     def atualizar(usuario_id):
-        return responder(lambda: AtualizarAlunoAdminService.executar(usuario_id,corpo()))
+        return responder(lambda: AtualizarAlunoAdminService.executar(usuario_id, corpo()))
 
     @staticmethod
     def desativar(usuario_id):
-        return responder(lambda: DesativarAlunoService.executar(usuario_id,corpo()))
+        return responder(lambda: DesativarAlunoService.executar(usuario_id, corpo()))
 
     @staticmethod
     def reativar(usuario_id):
-        return responder(lambda: ReativarAlunoService.executar(usuario_id,corpo()))
+        return responder(lambda: ReativarAlunoService.executar(usuario_id, corpo()))
 
     @staticmethod
     def excluir(usuario_id):
-        return responder(lambda: ExcluirAlunoAdminService.executar(usuario_id,corpo()),204)
+        return responder(lambda: ExcluirAlunoAdminService.executar(usuario_id, corpo()), 204)

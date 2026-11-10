@@ -21,7 +21,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 def main() -> int:
     suite = unittest.defaultTestLoader.discover(
-        str(BACKEND_ROOT / "tests" / "unit"), pattern="test_*.py"
+        str(BACKEND_ROOT / "tests" / "unit"),
+        pattern="test_*.py"
     )
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     return 0 if result.wasSuccessful() else 1

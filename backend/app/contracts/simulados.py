@@ -22,10 +22,24 @@ class HistoricoSimuladoRegistro(SimuladoCatalogoRegistro):
 
 
 class ConsultaCatalogoSimulados(Protocol):
-    def listar(self, pagina: int, limite: int) -> tuple[list[SimuladoCatalogoRegistro], int]: ...
-    def composicoes(self, versao_ids: Iterable[int]) -> dict[int, list[int]]: ...
-    def andamentos(self, usuario_id: int, versao_ids: Iterable[int]) -> dict[int, int]: ...
+    def listar(self, pagina: int, limite: int) -> tuple[list[SimuladoCatalogoRegistro], int]:
+        ...
+
+    def composicoes(self, versao_ids: Iterable[int]) -> dict[int, list[int]]:
+        ...
+
+    def andamentos(self, usuario_id: int, versao_ids: Iterable[int]) -> dict[int, int]:
+        ...
 
 
 class ConsultaHistoricoSimulados(Protocol):
-    def listar(self, usuario_id: int, pagina: int, limite: int) -> tuple[list[HistoricoSimuladoRegistro], int]: ...
+    def listar(
+        self,
+        usuario_id: int,
+        pagina: int,
+        limite: int
+    ) -> tuple[
+        list[HistoricoSimuladoRegistro],
+        int
+    ]:
+        ...

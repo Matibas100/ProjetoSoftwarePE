@@ -25,7 +25,8 @@ class IntegrationGuardTest(unittest.TestCase):
             "plataforma_enem_migration_test_abcdef123456;DROP",
         ):
             with self.subTest(invalid=invalid), self.assertRaisesRegex(
-                RuntimeError, "recusado"
+                RuntimeError,
+                "recusado"
             ):
                 validate_migration_test_schema(invalid)
 

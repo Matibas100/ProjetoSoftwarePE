@@ -44,8 +44,26 @@ class AssuntoAdminRegistro(AssuntoRegistro):
 
 
 class ConsultaMateriasAdmin(Protocol):
-    def listar(self, filtros: FiltrosCatalogo, pagina: int, limite: int) -> tuple[list[MateriaAdminRegistro], int]: ...
+    def listar(
+        self,
+        filtros: FiltrosCatalogo,
+        pagina: int,
+        limite: int
+    ) -> tuple[
+        list[MateriaAdminRegistro],
+        int
+    ]:
+        ...
 
 
 class ConsultaAssuntosAdmin(Protocol):
-    def listar(self, filtros: FiltrosCatalogo, pagina: int, limite: int) -> tuple[list[AssuntoAdminRegistro], int]: ...
+    def listar(
+        self,
+        filtros: FiltrosCatalogo,
+        pagina: int,
+        limite: int
+    ) -> tuple[
+        list[AssuntoAdminRegistro],
+        int
+    ]:
+        ...

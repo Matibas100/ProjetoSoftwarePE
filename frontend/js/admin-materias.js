@@ -39,10 +39,10 @@
 
   function validDetail(item, id) {
     return item && !Array.isArray(item) && typeof item === "object" && item.id === id
-      && typeof item.nome === "string" && item.nome.trim()
-      && ["ativa", "inativa", "arquivada"].includes(item.status)
-      && Number.isInteger(item.area_enem_id) && item.area_enem_id > 0
-      && (item.descricao === null || typeof item.descricao === "string");
+    && typeof item.nome === "string" && item.nome.trim()
+    && ["ativa", "inativa", "arquivada"].includes(item.status)
+    && Number.isInteger(item.area_enem_id) && item.area_enem_id > 0
+    && (item.descricao === null || typeof item.descricao === "string");
   }
 
   async function selectDetail(id) {
@@ -58,7 +58,8 @@
     ui.showMessage(message, "Carregando matéria...", "info");
     try {
       const [item] = await Promise.all([
-        apiRequest(`/materias/${id}`, { signal: controller.signal }), optionsReady,
+        apiRequest(`/materias/${id}`, { signal: controller.signal }),
+        optionsReady,
       ]);
       if (!current()) return;
       if (!validDetail(item, id)) throw new Error("Resposta inválida do servidor. Selecione Editar para tentar novamente.");
@@ -158,8 +159,8 @@
     });
     tableState.hidden = state.items.length > 0;
     tableState.textContent = state.items.length ? "" : search.value.trim() || statusFilter.value
-      ? "Nenhuma matéria encontrada para os filtros aplicados."
-      : "Nenhuma matéria cadastrada. Use Nova matéria para começar.";
+    ? "Nenhuma matéria encontrada para os filtros aplicados."
+    : "Nenhuma matéria cadastrada. Use Nova matéria para começar.";
     document.querySelector("#materias-total").textContent = `${state.total || 0} ${state.total === 1 ? "matéria" : "matérias"}`;
     document.querySelector("#materias-pagina").textContent = `Página ${state.page}${state.pages ? ` de ${state.pages}` : ""}`;
     document.querySelector("#materias-anterior").disabled = state.page <= 1;
@@ -283,12 +284,32 @@
   form.addEventListener("submit", save);
   document.querySelector("#nova-materia").addEventListener("click", () => startForm(true));
   document.querySelector("#materia-cancelar").addEventListener("click", () => startForm(false));
-  document.querySelector("#materias-limpar").addEventListener("click", () => { search.value = ""; statusFilter.value = ""; state.page = 1; load(); });
-  statusFilter.addEventListener("change", () => { state.page = 1; load(); });
-  search.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => {
-  if (globalThis.AuthUI && !(await globalThis.AuthUI.ready)) return; state.page = 1; load(); }, 250); });
-  document.querySelector("#materias-anterior").addEventListener("click", () => { state.page -= 1; load(); });
-  document.querySelector("#materias-proxima").addEventListener("click", () => { state.page += 1; load(); });
+  document.querySelector("#materias-limpar").addEventListener("click", () => {
+    search.value = "";
+    statusFilter.value = "";
+    state.page = 1;
+    load();
+  });
+  statusFilter.addEventListener("change", () => {
+    state.page = 1;
+    load();
+  });
+  search.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(async () => {
+      if (globalThis.AuthUI && !(await globalThis.AuthUI.ready)) return;
+      state.page = 1;
+      load();
+    }, 250);
+  });
+  document.querySelector("#materias-anterior").addEventListener("click", () => {
+    state.page -= 1;
+    load();
+  });
+  document.querySelector("#materias-proxima").addEventListener("click", () => {
+    state.page += 1;
+    load();
+  });
 
   const optionsReady = apiRequest("/areas-enem").then((areas) => {
     const pristine = !guard.dirty();

@@ -11,6 +11,9 @@ class ValidarPermissaoTutoriaService:
         def conferir():
             PrivacidadeRepository.bloquear_usuario(usuario_id)
             if not aceite_vigente(PrivacidadeRepository.ultimas(usuario_id)['uso'], 'uso'):
-                raise AutenticacaoError('Aceite o Termo de Uso vigente na página de privacidade.',
-                                       409, 'termos_uso_pendentes')
+                raise AutenticacaoError(
+                    'Aceite o Termo de Uso vigente na página de privacidade.',
+                    409,
+                    'termos_uso_pendentes'
+                )
         TransactionManager.executar(conferir)

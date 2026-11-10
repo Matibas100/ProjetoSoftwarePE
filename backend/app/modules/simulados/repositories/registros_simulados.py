@@ -3,11 +3,33 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-SIMULADO = ('id', 'titulo', 'estado', 'revisao', 'autor_id', 'criado_em',
-            'atualizado_em', 'simulado_versao_id')
-TENTATIVA = ('id', 'usuario_id', 'simulado_versao_id', 'estado', 'revisao',
-    'chave_envio', 'iniciada_em', 'finalizada_em', 'total', 'respondidas',
-    'acertos', 'erros', 'em_branco', 'percentual_acerto', 'em_andamento_marcador')
+SIMULADO = (
+    'id',
+    'titulo',
+    'estado',
+    'revisao',
+    'autor_id',
+    'criado_em',
+    'atualizado_em',
+    'simulado_versao_id'
+)
+TENTATIVA = (
+    'id',
+    'usuario_id',
+    'simulado_versao_id',
+    'estado',
+    'revisao',
+    'chave_envio',
+    'iniciada_em',
+    'finalizada_em',
+    'total',
+    'respondidas',
+    'acertos',
+    'erros',
+    'em_branco',
+    'percentual_acerto',
+    'em_andamento_marcador'
+)
 
 
 @dataclass(frozen=True)
@@ -41,6 +63,17 @@ class TentativaHistoricoRegistro:
     em_andamento_marcador: int | None
 
     def resultado(self):
-        return {**{c: getattr(self, c) for c in ('total', 'respondidas', 'acertos', 'erros', 'em_branco')},
+        return {
+            **{c: getattr(
+                self,
+                c
+            ) for c in (
+                'total',
+                'respondidas',
+                'acertos',
+                'erros',
+                'em_branco'
+            )},
             'percentual_acerto': float(self.percentual_acerto),
-            'finalizada_em': self.finalizada_em.isoformat()+'Z'}
+            'finalizada_em': self.finalizada_em.isoformat()+'Z'
+        }

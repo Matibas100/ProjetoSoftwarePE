@@ -14,8 +14,11 @@ class AutenticacaoRepository:
     @staticmethod
     def buscar_por_email(email):
         db.session.flush()
-        resultado = db.session.execute(select(Usuario).from_statement(
-            text('CALL sp_usuario_por_email(:email)').columns(*Usuario.__table__.columns)), {'email': email})
+        resultado = db.session.execute(
+            select(Usuario).from_statement(
+                text('CALL sp_usuario_por_email(:email)').columns(*Usuario.__table__.columns)),
+            {'email': email}
+        )
         try:
             return resultado.scalar_one_or_none()
         finally:
@@ -24,9 +27,15 @@ class AutenticacaoRepository:
     @staticmethod
     def consultar_sessao(identificador_hash):
         db.session.flush()
-        resultado = db.session.execute(select(Sessao).options(contains_eager(Sessao.usuario)).from_statement(
-            text('CALL sp_consultar_sessao(:hash)').columns(*Sessao.__table__.columns, *Usuario.__table__.columns))
-            .execution_options(populate_existing=True), {'hash': identificador_hash})
+        resultado = db.session.execute(
+            select(Sessao).options(contains_eager(Sessao.usuario)).from_statement(
+                text('CALL sp_consultar_sessao(:hash)').columns(
+                    *Sessao.__table__.columns,
+                    *Usuario.__table__.columns
+                ))
+            .execution_options(populate_existing=True),
+            {'hash': identificador_hash}
+        )
         try:
             return resultado.scalar_one_or_none()
         finally:
@@ -35,8 +44,11 @@ class AutenticacaoRepository:
     @staticmethod
     def renovar_acesso(sessao_id, agora):
         db.session.flush()
-        resultados = executar_resultados(db.session.connection(),
-            'CALL sp_renovar_acesso_sessao(%s,%s)', (sessao_id, agora))
+        resultados = executar_resultados(
+            db.session.connection(),
+            'CALL sp_renovar_acesso_sessao(%s,%s)',
+            (sessao_id, agora)
+        )
         linhas, = conferir_resultados(resultados, [('correspondencias',)])
         linha, = linhas
         renovada = linha['correspondencias'] == 1
@@ -49,7 +61,14 @@ class AutenticacaoRepository:
     @staticmethod
     def revogar(sessao_id, agora):
         db.session.flush()
-        resultados = executar_resultados(db.session.connection(), 'CALL sp_revogar_sessao(%s,%s)', (sessao_id, agora))
+        resultados = executar_resultados(
+            db.session.connection(),
+            'CALL sp_revogar_sessao(%s,%s)',
+            (
+                sessao_id,
+                agora
+            )
+        )
         linhas, = conferir_resultados(resultados, [('afetadas',)])
         _, = linhas
         for entidade in list(db.session.identity_map.values()):
@@ -60,8 +79,11 @@ class AutenticacaoRepository:
     @staticmethod
     def revogar_usuario(usuario_id, agora):
         db.session.flush()
-        resultados = executar_resultados(db.session.connection(),
-            'CALL sp_revogar_sessoes_usuario(%s,%s)', (usuario_id, agora))
+        resultados = executar_resultados(
+            db.session.connection(),
+            'CALL sp_revogar_sessoes_usuario(%s,%s)',
+            (usuario_id, agora)
+        )
         linhas, = conferir_resultados(resultados, [('afetadas',)])
         linha, = linhas
         for entidade in list(db.session.identity_map.values()):
@@ -72,9 +94,12 @@ class AutenticacaoRepository:
     @staticmethod
     def usuario_ativo_bloqueado(usuario_id):
         db.session.flush()
-        resultado = db.session.execute(select(Usuario).from_statement(
-            text('CALL sp_usuario_ativo_bloqueado(:id)').columns(*Usuario.__table__.columns))
-            .execution_options(populate_existing=True), {'id': usuario_id})
+        resultado = db.session.execute(
+            select(Usuario).from_statement(
+                text('CALL sp_usuario_ativo_bloqueado(:id)').columns(*Usuario.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'id': usuario_id}
+        )
         try:
             return resultado.scalar_one_or_none()
         finally:
@@ -83,9 +108,12 @@ class AutenticacaoRepository:
     @staticmethod
     def limite_bloqueado(chave_hash, agora):
         db.session.flush()
-        resultado = db.session.execute(select(AuthLimite).from_statement(
-            text('CALL sp_preparar_limite_autenticacao(:chave,:agora)').columns(*AuthLimite.__table__.columns))
-            .execution_options(populate_existing=True), {'chave': chave_hash, 'agora': agora})
+        resultado = db.session.execute(
+            select(AuthLimite).from_statement(
+                text('CALL sp_preparar_limite_autenticacao(:chave,:agora)').columns(*AuthLimite.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'chave': chave_hash, 'agora': agora}
+        )
         try:
             return resultado.scalar_one()
         finally:
@@ -94,7 +122,13 @@ class AutenticacaoRepository:
     @staticmethod
     def limpar(agora):
         db.session.flush()
-        resultados = executar_resultados(db.session.connection(), 'CALL sp_limpar_autenticacao(%s)', (agora,))
+        resultados = executar_resultados(
+            db.session.connection(),
+            'CALL sp_limpar_autenticacao(%s)',
+            (
+                agora,
+            )
+        )
         linhas, = conferir_resultados(resultados, [('sessoes', 'limites')])
         linha, = linhas
         for entidade in list(db.session.identity_map.values()):

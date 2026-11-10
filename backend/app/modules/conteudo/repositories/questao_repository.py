@@ -1,5 +1,13 @@
 from app.core.procedures_mysql import executar_resultados, conferir_resultados
-from app.modules.conteudo.repositories.registros_admin import (QUESTAO, ASSUNTO, MATERIA, AREA, CONTAGENS, colunas, questao_admin)
+from app.modules.conteudo.repositories.registros_admin import (
+    QUESTAO,
+    ASSUNTO,
+    MATERIA,
+    AREA,
+    CONTAGENS,
+    colunas,
+    questao_admin
+)
 import json
 from sqlalchemy import text, select
 
@@ -25,8 +33,14 @@ class QuestaoRepository:
         if not assunto_ids:
             return set()
         db.session.flush()
-        resultados = executar_resultados(db.session.connection(),
-            'CALL sp_pares_elegiveis_plano(%s,%s)', (json.dumps(sorted(set(assunto_ids))), int(bloquear)))
+        resultados = executar_resultados(
+            db.session.connection(),
+            'CALL sp_pares_elegiveis_plano(%s,%s)',
+            (
+                json.dumps(sorted(set(assunto_ids))),
+                int(bloquear)
+            )
+        )
         linhas, = conferir_resultados(resultados, [('assunto_id', 'materia_id')])
         return {(r['assunto_id'], r['materia_id']) for r in linhas}
 
@@ -35,21 +49,33 @@ class QuestaoRepository:
         resultados = contexto.executar_resultados("CALL sp_conteudo_contagens_dashboard()")
         linhas, = conferir_resultados(resultados, [CONTAGENS])
         linha, = linhas
-        return {estado: int(linha['questoes_' + estado]) for estado in ('rascunhos', 'publicadas', 'arquivadas')}
+        return {estado: int(linha['questoes_' + estado]) for estado in (
+            'rascunhos',
+            'publicadas',
+            'arquivadas'
+        )}
 
     @staticmethod
     def projecao_classificacao_historica():
         """Contrato de leitura de classificação das versões publicadas imutáveis."""
         q = QuestaoVersao
-        return select(q.id.label("questao_versao_id"), q.materia_id, q.materia_nome,
-            q.assunto_id, q.assunto_nome).where(q.estado == "publicada")
+        return select(
+            q.id.label("questao_versao_id"),
+            q.materia_id,
+            q.materia_nome,
+            q.assunto_id,
+            q.assunto_nome
+        ).where(q.estado == "publicada")
 
     @staticmethod
     def bloquear(questao_id):
         db.session.flush()
-        resultado = db.session.execute(select(Questao).from_statement(
-            text("CALL sp_bloquear_questao(:id)").columns(*Questao.__table__.columns))
-            .execution_options(populate_existing=True), {'id': questao_id})
+        resultado = db.session.execute(
+            select(Questao).from_statement(
+                text("CALL sp_bloquear_questao(:id)").columns(*Questao.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'id': questao_id}
+        )
         try:
             return resultado.scalar_one_or_none()
         finally:
@@ -68,8 +94,11 @@ class QuestaoRepository:
     @staticmethod
     def versoes(questao_id):
         db.session.flush()
-        resultado = db.session.execute(select(QuestaoVersao).from_statement(
-            text("CALL sp_versoes_questao(:id)").columns(*QuestaoVersao.__table__.columns)), {'id': questao_id})
+        resultado = db.session.execute(
+            select(QuestaoVersao).from_statement(
+                text("CALL sp_versoes_questao(:id)").columns(*QuestaoVersao.__table__.columns)),
+            {'id': questao_id}
+        )
         try:
             return resultado.scalars().all()
         finally:
@@ -78,13 +107,24 @@ class QuestaoRepository:
     @staticmethod
     def listar_admin(filtros, pagina, por_pagina):
         db.session.flush()
-        resultados = executar_resultados(db.session.connection(),
+        resultados = executar_resultados(
+            db.session.connection(),
             "CALL sp_questoes_admin(%s,%s,%s,%s,%s,%s,%s,%s)",
-            (filtros.get('busca') or None, filtros.get('status'), filtros.get('dificuldade'),
-             filtros.get('area_enem_id'), filtros.get('materia_id'), filtros.get('assunto_id'),
-             pagina, por_pagina))
-        linhas, totais = conferir_resultados(resultados,
-            [colunas(('q', QUESTAO), ('s', ASSUNTO), ('m', MATERIA), ('a', AREA)), ('total',)])
+            (
+                filtros.get('busca') or None,
+                filtros.get('status'),
+                filtros.get('dificuldade'),
+                filtros.get('area_enem_id'),
+                filtros.get('materia_id'),
+                filtros.get('assunto_id'),
+                pagina,
+                por_pagina
+            )
+        )
+        linhas, totais = conferir_resultados(
+            resultados,
+            [colunas(('q', QUESTAO), ('s', ASSUNTO), ('m', MATERIA), ('a', AREA)), ('total',)]
+        )
         total, = totais
         return [questao_admin(linha) for linha in linhas], int(total['total'])
 
@@ -104,10 +144,15 @@ class QuestaoRepository:
     @staticmethod
     def listar_elegiveis(filtros, pagina, limite):
         db.session.flush()
-        resultados = executar_resultados(db.session.connection(), "CALL sp_questoes_elegiveis(%s,%s,%s,%s)",
-            (filtros.get('assunto_id'), filtros.get('materia_id'), pagina, limite))
-        linhas, totais = conferir_resultados(resultados,
-            [tuple(c.name for c in QuestaoVersao.__table__.columns), ('total',)])
+        resultados = executar_resultados(
+            db.session.connection(),
+            "CALL sp_questoes_elegiveis(%s,%s,%s,%s)",
+            (filtros.get('assunto_id'), filtros.get('materia_id'), pagina, limite)
+        )
+        linhas, totais = conferir_resultados(
+            resultados,
+            [tuple(c.name for c in QuestaoVersao.__table__.columns), ('total',)]
+        )
         total, = totais
         return list(linhas), int(total['total'])
 
@@ -116,9 +161,11 @@ class QuestaoRepository:
         if not ids:
             return []
         db.session.flush()
-        resultado = db.session.execute(select(QuestaoVersao).from_statement(
-            text("CALL sp_questoes_versoes_elegiveis(:ids)").columns(*QuestaoVersao.__table__.columns)),
-            {'ids': json.dumps(sorted(set(ids)))})
+        resultado = db.session.execute(
+            select(QuestaoVersao).from_statement(
+                text("CALL sp_questoes_versoes_elegiveis(:ids)").columns(*QuestaoVersao.__table__.columns)),
+            {'ids': json.dumps(sorted(set(ids)))}
+        )
         try:
             return resultado.scalars().all()
         finally:
@@ -129,9 +176,11 @@ class QuestaoRepository:
         if not ids:
             return []
         db.session.flush()
-        resultado = db.session.execute(select(QuestaoVersao).from_statement(
-            text("CALL sp_questoes_versoes_historicas(:ids)").columns(*QuestaoVersao.__table__.columns)),
-            {'ids': json.dumps(sorted(set(ids)))})
+        resultado = db.session.execute(
+            select(QuestaoVersao).from_statement(
+                text("CALL sp_questoes_versoes_historicas(:ids)").columns(*QuestaoVersao.__table__.columns)),
+            {'ids': json.dumps(sorted(set(ids)))}
+        )
         try:
             return resultado.scalars().all()
         finally:

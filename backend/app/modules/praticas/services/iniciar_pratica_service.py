@@ -21,10 +21,17 @@ class IniciarPraticaService:
 
         def criar():
             versao = ConsultarVersaoElegivelService.executar(versao_id)
-            tentativa = PraticaTentativa(usuario_id=usuario_id, questao_versao_id=versao_id,
-                chave_envio=chave, estado="em_andamento", iniciada_em=agora_utc(),
-                assunto_id=versao["assunto"]["id"], assunto_nome=versao["assunto"]["nome"],
-                materia_id=versao["materia"]["id"], materia_nome=versao["materia"]["nome"])
+            tentativa = PraticaTentativa(
+                usuario_id=usuario_id,
+                questao_versao_id=versao_id,
+                chave_envio=chave,
+                estado="em_andamento",
+                iniciada_em=agora_utc(),
+                assunto_id=versao["assunto"]["id"],
+                assunto_nome=versao["assunto"]["nome"],
+                materia_id=versao["materia"]["id"],
+                materia_nome=versao["materia"]["nome"]
+            )
             tentativa.salvar(confirmar=False)
             return detalhe(tentativa), 201
 

@@ -14,18 +14,42 @@ class PlanoEstudo(ModeloAtualizavel):
         db.UniqueConstraint("usuario_id", "chave_envio", name="uq_plano_chave"),
         db.UniqueConstraint("usuario_atual", name="uq_plano_atual"),
         db.CheckConstraint("geracao >= 1 AND atual IN (0,1)", name="ck_plano_geracao"),
-        db.CheckConstraint("(operacao = 'gerar' AND plano_anterior_id IS NULL) OR (operacao = 'recalcular' AND plano_anterior_id IS NOT NULL)", name="ck_plano_operacao"),
+        db.CheckConstraint(
+            "(operacao = 'gerar' AND plano_anterior_id IS NULL) OR (operacao = 'recalcular' AND plano_anterior_id IS NOT NULL)",
+            name="ck_plano_operacao"
+        ),
     )
     id = db.Column(db.BigInteger, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id", ondelete="RESTRICT", onupdate="RESTRICT"), nullable=False)
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "usuarios.id",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT"
+        ),
+        nullable=False
+    )
     geracao = db.Column(db.Integer, nullable=False)
     atual = db.Column(db.Boolean, nullable=False)
-    usuario_atual = db.Column(db.Integer, db.Computed("CASE WHEN atual = 1 THEN usuario_id ELSE NULL END", persisted=True))
+    usuario_atual = db.Column(
+        db.Integer,
+        db.Computed(
+            "CASE WHEN atual = 1 THEN usuario_id ELSE NULL END",
+            persisted=True
+        )
+    )
     periodo = db.Column(db.JSON, nullable=False)
     gerado_em = db.Column(DATETIME(fsp=6), nullable=False)
     chave_envio = db.Column(db.CHAR(36, collation="ascii_bin"), nullable=False)
     operacao = db.Column(db.String(12), nullable=False)
-    plano_anterior_id = db.Column(db.BigInteger, db.ForeignKey("planos_estudo.id", ondelete="RESTRICT", onupdate="RESTRICT"))
+    plano_anterior_id = db.Column(
+        db.BigInteger,
+        db.ForeignKey(
+            "planos_estudo.id",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT"
+        )
+    )
     campos_atualizaveis = {"atual"}
 
 
@@ -35,12 +59,39 @@ class PlanoEstudoItem(ModeloAtualizavel):
         db.UniqueConstraint("plano_id", "posicao", name="uq_plano_item_posicao"),
         db.UniqueConstraint("plano_id", "assunto_id", name="uq_plano_item_assunto"),
         db.CheckConstraint("posicao BETWEEN 1 AND 3", name="ck_plano_item_posicao"),
-        db.CheckConstraint("(estado = 'pendente' AND concluido_em IS NULL) OR (estado = 'concluido' AND concluido_em IS NOT NULL)", name="ck_plano_item_estado"),
+        db.CheckConstraint(
+            "(estado = 'pendente' AND concluido_em IS NULL) OR (estado = 'concluido' AND concluido_em IS NOT NULL)",
+            name="ck_plano_item_estado"
+        ),
     )
     id = db.Column(db.BigInteger, primary_key=True)
-    plano_id = db.Column(db.BigInteger, db.ForeignKey("planos_estudo.id", ondelete="RESTRICT", onupdate="RESTRICT"), nullable=False)
-    assunto_id = db.Column(db.Integer, db.ForeignKey("assuntos.id", ondelete="RESTRICT", onupdate="RESTRICT"), nullable=False)
-    materia_id = db.Column(db.Integer, db.ForeignKey("materias.id", ondelete="RESTRICT", onupdate="RESTRICT"), nullable=False)
+    plano_id = db.Column(
+        db.BigInteger,
+        db.ForeignKey(
+            "planos_estudo.id",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT"
+        ),
+        nullable=False
+    )
+    assunto_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "assuntos.id",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT"
+        ),
+        nullable=False
+    )
+    materia_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "materias.id",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT"
+        ),
+        nullable=False
+    )
     posicao = db.Column(db.Integer, nullable=False)
     snapshot = db.Column(db.JSON, nullable=False)
     estado = column_property(db.Column(db.String(12), nullable=False), active_history=True)

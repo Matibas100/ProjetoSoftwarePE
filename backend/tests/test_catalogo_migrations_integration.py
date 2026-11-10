@@ -15,13 +15,21 @@ class CatalogoMigrationsIntegrationTest(MySQLMigrationTestCase):
 
     def setUp(self):
         super().setUp()
-        self.migrations = self.migrations[:14]
+        self.migrations = self.migrations[: 14]
 
     def test_upgrade_012_013_dados_baseline_restauracao_e_idempotencia(self):
         self.apply_without_history('012')
         self.seed()
         antes = self.rows(self.connection)
-        self.assertEqual(migrate.run_baseline(self.connection, self.settings, self.migrations, True), '012')
+        self.assertEqual(
+            migrate.run_baseline(
+                self.connection,
+                self.settings,
+                self.migrations,
+                True
+            ),
+            '012'
+        )
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 1)
         self.assertEqual(migrate.run_up(self.connection, self.settings, self.migrations), 0)
         self.assertEqual(migrate.detect_legacy_prefix(self.connection), '013')
@@ -29,11 +37,21 @@ class CatalogoMigrationsIntegrationTest(MySQLMigrationTestCase):
         with self.second_schema() as (restaurada, settings):
             self.restore(restaurada)
             self.assertEqual(migrate.detect_legacy_prefix(restaurada), '013')
-            self.assertEqual(migrate.run_baseline(restaurada, settings, self.migrations, True), '013')
+            self.assertEqual(
+                migrate.run_baseline(
+                    restaurada,
+                    settings,
+                    self.migrations,
+                    True
+                ),
+                '013'
+            )
             self.assertEqual(migrate.run_up(restaurada, settings, self.migrations), 0)
             self.assertEqual(self.rows(restaurada), antes)
-            self.assertEqual([r['version'] for r in migrate.fetch_history(restaurada)],
-                [m.version for m in self.migrations])
+            self.assertEqual(
+                [r['version'] for r in migrate.fetch_history(restaurada)],
+                [m.version for m in self.migrations]
+            )
 
     def test_recurso_013_parcial_corpo_assinatura_seguranca_e_dependencia_012(self):
         for tipo in ['ausente', 'corpo', 'assinatura', 'seguranca', 'dependencia']:
@@ -64,7 +82,11 @@ class CatalogoMigrationsIntegrationTest(MySQLMigrationTestCase):
         with self.connection.cursor() as c:
             c.execute("INSERT INTO materias(nome,area_enem_id) VALUES('Lote sintético',4)")
             id_ = c.lastrowid
-            for nome in ['sp_bloquear_materias', 'sp_questoes_versoes_elegiveis', 'sp_questoes_versoes_historicas']:
+            for nome in [
+                'sp_bloquear_materias',
+                'sp_questoes_versoes_elegiveis',
+                'sp_questoes_versoes_historicas'
+            ]:
                 c.execute(f'CALL {nome}(%s)', ('[]',))
                 self.assertFalse(c.fetchall())
                 while c.nextset():

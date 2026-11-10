@@ -4,7 +4,10 @@ from app.core.procedures_mysql import executar_resultados, conferir_resultados
 from app.contexto_leitura import ContextoLeitura
 from app.extensions import db
 from app.modules.contas.api import bloquear_usuario
-from app.modules.plano_estudos.models.plano_estudo import PlanoEstudo as Plano, PlanoEstudoItem as Item
+from app.modules.plano_estudos.models.plano_estudo import (
+    PlanoEstudo as Plano,
+    PlanoEstudoItem as Item,
+)
 
 
 class PlanoEstudoRepository:
@@ -21,7 +24,13 @@ class PlanoEstudoRepository:
             .columns(*Plano.__table__.columns))
         if bloquear:
             consulta = consulta.execution_options(populate_existing=True)
-        resultado = db.session.execute(consulta, {'usuario_id': usuario_id, 'bloquear': int(bloquear)})
+        resultado = db.session.execute(
+            consulta,
+            {
+                'usuario_id': usuario_id,
+                'bloquear': int(bloquear)
+            }
+        )
         try:
             return resultado.scalar_one_or_none()
         finally:
@@ -30,9 +39,12 @@ class PlanoEstudoRepository:
     @staticmethod
     def por_chave(usuario_id, chave):
         db.session.flush()
-        resultado = db.session.execute(select(Plano).from_statement(
-            text('CALL sp_plano_por_chave(:usuario_id,:chave)').columns(*Plano.__table__.columns))
-            .execution_options(populate_existing=True), {'usuario_id': usuario_id, 'chave': chave})
+        resultado = db.session.execute(
+            select(Plano).from_statement(
+                text('CALL sp_plano_por_chave(:usuario_id,:chave)').columns(*Plano.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'usuario_id': usuario_id, 'chave': chave}
+        )
         try:
             return resultado.scalar_one_or_none()
         finally:
@@ -41,9 +53,12 @@ class PlanoEstudoRepository:
     @staticmethod
     def itens(plano_id):
         db.session.flush()
-        resultado = db.session.execute(select(Item).from_statement(
-            text('CALL sp_plano_itens(:plano_id)').columns(*Item.__table__.columns))
-            .execution_options(populate_existing=True), {'plano_id': plano_id})
+        resultado = db.session.execute(
+            select(Item).from_statement(
+                text('CALL sp_plano_itens(:plano_id)').columns(*Item.__table__.columns))
+            .execution_options(populate_existing=True),
+            {'plano_id': plano_id}
+        )
         try:
             return resultado.scalars().all()
         finally:
@@ -52,10 +67,16 @@ class PlanoEstudoRepository:
     @staticmethod
     def item_proprio(usuario_id, item_id):
         db.session.flush()
-        resultado = db.session.execute(select(Item, Plano).from_statement(
-            text('CALL sp_plano_item_proprio(:usuario_id,:item_id)')
-            .columns(*Item.__table__.columns, *Plano.__table__.columns))
-            .execution_options(populate_existing=True), {'usuario_id': usuario_id, 'item_id': item_id})
+        resultado = db.session.execute(
+            select(Item, Plano).from_statement(
+                text('CALL sp_plano_item_proprio(:usuario_id,:item_id)')
+                .columns(*Item.__table__.columns, *Plano.__table__.columns))
+            .execution_options(populate_existing=True),
+            {
+                'usuario_id': usuario_id,
+                'item_id': item_id
+            }
+        )
         try:
             return resultado.one_or_none()
         finally:
@@ -76,8 +97,11 @@ class PlanoEstudoRepository:
                 continue
             if plano is not None and plano.usuario_id == usuario_id:
                 afetadas.append(entidade)
-        resultados = executar_resultados(db.session.connection(),
-            'CALL sp_eliminar_planos_proprios(%s)', (usuario_id,))
+        resultados = executar_resultados(
+            db.session.connection(),
+            'CALL sp_eliminar_planos_proprios(%s)',
+            (usuario_id,)
+        )
         contagens, = conferir_resultados(resultados, [('planos_eliminados', 'itens_eliminados')])
         linha, = contagens
         # Expiração seletiva conserva a negativa pendente e permite rollback externo.

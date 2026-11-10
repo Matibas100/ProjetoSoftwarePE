@@ -8,7 +8,9 @@ for (const area of ["aluno", "admin"]) {
     it(`renderiza menu ${area}/${file} com destinos, atual único e indisponíveis sem ação`, async () => {
       vi.resetModules();
       const html = fs.readFileSync(path.join(root, "frontend", area, file), "utf8");
-      document.open(); document.write(html.replace(/<script\s+src="[^"]+"><\/script>/g, "")); document.close();
+      document.open();
+      document.write(html.replace(/<script\s+src="[^"]+"><\/script>/g, ""));
+      document.close();
       await import("../js/navigation.js");
       const slot = document.querySelector("[data-navigation]");
       expect(slot.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
@@ -25,13 +27,22 @@ for (const area of ["aluno", "admin"]) {
         expect(unavailable.hasAttribute("href")).toBe(false);
         expect(unavailable.tabIndex).toBe(-1);
       }
-      const link = slot.querySelector("a"); link.focus(); expect(document.activeElement).toBe(link);
+      const link = slot.querySelector("a");
+      link.focus();
+      expect(document.activeElement).toBe(link);
       expect(html.indexOf("js/navigation.js")).toBeLessThan(html.indexOf("js/auth-session.js"));
       expect(document.querySelector("[data-auth-exit]")).not.toBeNull();
       expect(document.querySelector("[data-auth-name]")).not.toBeNull();
       if (area === "aluno") {
         expect([...slot.querySelectorAll("a")].map(a => a.textContent)).toEqual([
-          "Meu início", "Praticar questões", "Meu histórico", "Simulados", "Tutor IA", "Desempenho", "Plano de Estudos", "Privacidade e termos",
+          "Meu início",
+          "Praticar questões",
+          "Meu histórico",
+          "Simulados",
+          "Tutor IA",
+          "Desempenho",
+          "Plano de Estudos",
+          "Privacidade e termos",
         ]);
       }
       for (const item of slot.querySelectorAll('a,[aria-disabled="true"]')) {
@@ -49,8 +60,12 @@ for (const area of ["aluno", "admin"]) {
 }
 
 it("preserva slots desconhecidos e ignora página sem slot", async () => {
-  vi.resetModules(); document.body.innerHTML = '<div data-navigation="desconhecido">Preservar</div>';
-  await import("../js/navigation.js"); expect(document.body.textContent).toBe("Preservar");
-  vi.resetModules(); document.body.replaceChildren(); await import("../js/navigation.js");
+  vi.resetModules();
+  document.body.innerHTML = '<div data-navigation="desconhecido">Preservar</div>';
+  await import("../js/navigation.js");
+  expect(document.body.textContent).toBe("Preservar");
+  vi.resetModules();
+  document.body.replaceChildren();
+  await import("../js/navigation.js");
   expect(document.body.childElementCount).toBe(0);
 });

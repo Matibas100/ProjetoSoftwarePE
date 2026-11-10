@@ -5,12 +5,19 @@ from typing import Mapping, Protocol, TypedDict
 
 class ContextoConsulta(Protocol):
     """Opaco ao Service: somente o instante, sem conexão ou execução SQL."""
+
     @property
-    def instante(self) -> datetime: ...
+    def instante(self) -> datetime:
+        ...
 
 
 class EscoposLeitura(Protocol):
-    def usar(self, contexto: ContextoConsulta | None = None, instante: datetime | None = None) -> AbstractContextManager[ContextoConsulta]: ...
+    def usar(
+        self,
+        contexto: ContextoConsulta | None = None,
+        instante: datetime | None = None
+    ) -> AbstractContextManager[ContextoConsulta]:
+        ...
 
 
 class ContagemMetrica(TypedDict):
@@ -31,7 +38,18 @@ class GrupoAssunto(GrupoMateria):
 
 
 class ConsultaMetricasDesempenho(Protocol):
-    def agregar(self, contexto: ContextoConsulta, usuario_id: int, inicio: datetime, fim: datetime) -> tuple[ContagemMetrica, list[GrupoMateria], list[GrupoAssunto]]: ...
+    def agregar(
+        self,
+        contexto: ContextoConsulta,
+        usuario_id: int,
+        inicio: datetime,
+        fim: datetime
+    ) -> tuple[
+        ContagemMetrica,
+        list[GrupoMateria],
+        list[GrupoAssunto]
+    ]:
+        ...
 
 
 class AtividadeAluno(TypedDict):
@@ -42,7 +60,14 @@ class AtividadeAluno(TypedDict):
 
 
 class ConsultaAtividadesAluno(Protocol):
-    def atividades(self, contexto: ContextoConsulta, usuario_id: int, inicio: datetime, fim: datetime) -> list[AtividadeAluno]: ...
+    def atividades(
+        self,
+        contexto: ContextoConsulta,
+        usuario_id: int,
+        inicio: datetime,
+        fim: datetime
+    ) -> list[AtividadeAluno]:
+        ...
 
 
 class ContagensCatalogo(TypedDict):
@@ -70,7 +95,8 @@ class ContagensAdmin(TypedDict):
 
 
 class ConsultaContagensAdmin(Protocol):
-    def administrativo(self, contexto: ContextoConsulta) -> ContagensAdmin: ...
+    def administrativo(self, contexto: ContextoConsulta) -> ContagensAdmin:
+        ...
 
 
 class PeriodoDiagnostico(TypedDict):
@@ -114,4 +140,14 @@ class DiagnosticoRegistro(TypedDict):
 
 
 class DiagnosticoAluno(Protocol):
-    def executar(self, usuario_id: int, filtros: Mapping[str, str] | None = None, contexto: ContextoConsulta | None = None, instante: datetime | None = None) -> DiagnosticoRegistro: ...
+    def executar(
+        self,
+        usuario_id: int,
+        filtros: Mapping[
+            str,
+            str
+        ] | None = None,
+        contexto: ContextoConsulta | None = None,
+        instante: datetime | None = None
+    ) -> DiagnosticoRegistro:
+        ...

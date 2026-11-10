@@ -4,7 +4,10 @@ import unittest
 from unittest.mock import patch
 
 from app import create_app
-from app.modules.conteudo.services.listar_catalogo_admin_service import ListarMateriasAdminService, ListarAssuntosAdminService
+from app.modules.conteudo.services.listar_catalogo_admin_service import (
+    ListarMateriasAdminService,
+    ListarAssuntosAdminService,
+)
 from tests.unit.test_config_and_app import TestConfig
 
 
@@ -14,10 +17,14 @@ class CatalogoEmLista:
 
     def listar(self, filtros, pagina, limite):
         linhas = [r for r in self.linhas if
-                  (not filtros['busca'] or filtros['busca'].lower() in r['nome'].lower()) and
-                  all(not filtros.get(k) or r[k] == filtros[k] for k in ('status', 'area_enem_id', 'materia_id'))]
+            (not filtros['busca'] or filtros['busca'].lower() in r['nome'].lower()) and
+            all(not filtros.get(k) or r[k] == filtros[k] for k in (
+                'status',
+                'area_enem_id',
+                'materia_id'
+            ))]
         linhas.sort(key=lambda r: (r['nome'], r['id']))
-        return deepcopy(linhas[(pagina-1)*limite:pagina*limite]), len(linhas)
+        return deepcopy(linhas[(pagina-1)*limite: pagina*limite]), len(linhas)
 
 
 class CatalogoIndexado:
@@ -30,19 +37,48 @@ class CatalogoIndexado:
             if filtros.get(chave):
                 ids &= {i for i, r in self.por_id.items() if r[chave] == filtros[chave]}
         if filtros['busca']:
-            ids &= {i for i, r in self.por_id.items() if filtros['busca'].lower() in r['nome'].lower()}
+            ids &= {
+                i for i,
+                r in self.por_id.items() if filtros['busca'].lower() in r['nome'].lower()
+            }
         linhas = sorted((self.por_id[i] for i in ids), key=lambda r: (r['nome'], r['id']))
-        return deepcopy(linhas[(pagina-1)*limite:pagina*limite]), len(linhas)
+        return deepcopy(linhas[(pagina-1)*limite: pagina*limite]), len(linhas)
 
 
 def registros():
     area = dict(id=4, nome='Matemática', codigo='matematica', ordem=4)
-    materia = dict(id=7, nome='Álgebra', descricao=None, area_enem_id=4, status='ativa',
-                   criado_em='2026-11-06T10:00:00', atualizado_em=None)
-    return [dict(materia, id=i, nome=f'Álgebra {i}', nome_normalizado=f'álgebra {i}', materia_id=7,
-                 area_enem=area, materia=materia, assuntos=2, questoes=i)
-            for i in (3, 1, 2)] + [dict(materia, id=9, nome='Física', nome_normalizado='física',
-                materia_id=8, area_enem=area, materia=materia, assuntos=0, questoes=0, status='inativa')]
+    materia = dict(
+        id=7,
+        nome='Álgebra',
+        descricao=None,
+        area_enem_id=4,
+        status='ativa',
+        criado_em='2026-11-06T10:00:00',
+        atualizado_em=None
+    )
+    return [dict(
+        materia,
+        id=i,
+        nome=f'Álgebra {i}',
+        nome_normalizado=f'álgebra {i}',
+        materia_id=7,
+        area_enem=area,
+        materia=materia,
+        assuntos=2,
+        questoes=i
+    )
+        for i in (3, 1, 2)] + [dict(
+            materia,
+            id=9,
+            nome='Física',
+            nome_normalizado='física',
+            materia_id=8,
+            area_enem=area,
+            materia=materia,
+            assuntos=0,
+            questoes=0,
+            status='inativa'
+        )]
 
 
 class SubstituicaoCatalogoTest(unittest.TestCase):
@@ -51,8 +87,13 @@ class SubstituicaoCatalogoTest(unittest.TestCase):
             resultados = []
             for adapter in (CatalogoEmLista, CatalogoIndexado):
                 consulta = service(adapter(registros()))
-                filtros = {'busca': ' Álgebra ', 'status': 'ativa', 'area_enem_id': '4',
-                           'pagina': '2', 'por_pagina': '2'}
+                filtros = {
+                    'busca': ' Álgebra ',
+                    'status': 'ativa',
+                    'area_enem_id': '4',
+                    'pagina': '2',
+                    'por_pagina': '2'
+                }
                 if service is ListarAssuntosAdminService:
                     filtros['materia_id'] = '7'
                 r = consulta.executar(filtros)

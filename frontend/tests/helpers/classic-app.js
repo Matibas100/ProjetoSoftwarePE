@@ -43,8 +43,11 @@ export function createClassicApp({ apiRequest, confirm = () => true } = {}) {
     execute(path.posix.join("frontend", scriptPath));
     if (scriptPath === "js/api.js" && apiRequest) {
       dom.window.__apiRequestMock = (path, ...args) => path === "/auth/sessao"
-        ? Promise.resolve({ usuario: { id: 1, nome: "Admin teste", email: "admin@teste.local", perfil: "administrador" }, csrf_token: "unit" })
-        : apiRequest(path, ...args);
+      ? Promise.resolve({
+        usuario: { id: 1, nome: "Admin teste", email: "admin@teste.local", perfil: "administrador" },
+        csrf_token: "unit"
+      })
+      : apiRequest(path, ...args);
       dom.window.eval("apiRequest = window.__apiRequestMock");
     }
   }
@@ -68,8 +71,12 @@ export function createAdminApp(htmlFile, { apiRequest } = {}) {
   );
   dom.window.HTMLElement.prototype.focus = () => {};
   dom.window.HTMLElement.prototype.scrollIntoView = () => {};
-  dom.window.HTMLDialogElement.prototype.showModal = function showModal() { this.open = true; };
-  dom.window.HTMLDialogElement.prototype.close = function close() { this.open = false; };
+  dom.window.HTMLDialogElement.prototype.showModal = function showModal() {
+    this.open = true;
+  };
+  dom.window.HTMLDialogElement.prototype.close = function close() {
+    this.open = false;
+  };
   const scripts = declaredScripts(sourceHtml);
   for (const scriptPath of scripts) {
     const absolutePath = path.resolve(path.dirname(htmlFile), scriptPath);
@@ -78,8 +85,11 @@ export function createAdminApp(htmlFile, { apiRequest } = {}) {
     dom.window.document.head.appendChild(script);
     if (scriptPath.endsWith("api.js") && apiRequest) {
       dom.window.__apiRequestMock = (path, ...args) => path === "/auth/sessao"
-        ? Promise.resolve({ usuario: { id: 1, nome: "Admin teste", email: "admin@teste.local", perfil: "administrador" }, csrf_token: "unit" })
-        : apiRequest(path, ...args);
+      ? Promise.resolve({
+        usuario: { id: 1, nome: "Admin teste", email: "admin@teste.local", perfil: "administrador" },
+        csrf_token: "unit"
+      })
+      : apiRequest(path, ...args);
       dom.window.eval("apiRequest = window.__apiRequestMock");
     }
   }

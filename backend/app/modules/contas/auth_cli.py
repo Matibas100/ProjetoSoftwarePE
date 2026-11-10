@@ -1,7 +1,10 @@
 import click
 
 from app.modules.contas.domain.autenticacao import AutenticacaoError
-from app.modules.contas.services.autenticacao_service import CriarUsuarioService, LimparAutenticacaoService
+from app.modules.contas.services.autenticacao_service import (
+    CriarUsuarioService,
+    LimparAutenticacaoService,
+)
 
 
 def registrar_comandos(app):
@@ -11,8 +14,15 @@ def registrar_comandos(app):
     def criar_administrador(nome, email):
         senha = click.prompt("Senha", hide_input=True, confirmation_prompt="Confirmar senha")
         try:
-            CriarUsuarioService.executar({"nome": nome, "email": email, "senha": senha,
-                                          "senha_confirmacao": senha}, "administrador")
+            CriarUsuarioService.executar(
+                {
+                    "nome": nome,
+                    "email": email,
+                    "senha": senha,
+                    "senha_confirmacao": senha
+                },
+                "administrador"
+            )
         except AutenticacaoError as erro:
             raise click.ClickException(str(erro)) from None
         except Exception:

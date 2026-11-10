@@ -69,37 +69,70 @@ class ConsultasCatalogoCaracterizacaoTest(MySQLIntegrationTestCase):
                 with db.engine.connect() as conexao:
                     transacao = conexao.begin()
                     nome = 'Rollback ' + uuid4().hex
-                    conexao.execute(text('INSERT INTO materias(nome,area_enem_id) VALUES(:nome,4)'),
-                        {'nome': nome})
+                    conexao.execute(
+                        text('INSERT INTO materias(nome,area_enem_id) VALUES(:nome,4)'),
+                        {'nome': nome}
+                    )
                     resultados = executar_resultados(conexao, 'CALL sp_teste_resultados()')
                     conferir_resultados(resultados, [('id',), ('total',)])
                     self.assertEqual(resultados, [[], [{'total': 7}]])
                     self.assertEqual(conexao.exec_driver_sql('SELECT 9').scalar_one(), 9)
                     self.assertTrue(transacao.is_active)
                     transacao.rollback()
-                self.assertEqual(db.session.execute(text('SELECT COUNT(*) FROM materias WHERE nome=:nome'),
-                    {'nome': nome}).scalar_one(), 0)
+                self.assertEqual(
+                    db.session.execute(
+                        text('SELECT COUNT(*) FROM materias WHERE nome=:nome'),
+                        {'nome': nome}
+                    ).scalar_one(),
+                    0
+                )
             finally:
                 with db.engine.begin() as limpeza:
                     limpeza.exec_driver_sql('DROP PROCEDURE sp_teste_resultados')
 
     def test_listagens_campos_nulos_busca_filtros_totais_e_pagina_grande(self):
-        nome = 'Álgebra_% ' + uuid4().hex[:12]
-        materia = self.client.post('/api/materias', json={
-            'nome': nome, 'area_enem_id': 4}).json
+        nome = 'Álgebra_% ' + uuid4().hex[: 12]
+        materia = self.client.post(
+            '/api/materias',
+            json={
+                'nome': nome,
+                'area_enem_id': 4
+            }
+        ).json
         assunto = self._subject(materia['id'], nome)
         questao = self._question(assunto['id'])
         # Uma segunda Questão prova que JOIN não multiplica assuntos/contagens.
         self._question(assunto['id'])
         casos = [
-            ('materias', {'busca': nome, 'area_enem_id': 4, 'status': 'ativa'},
-             materia, {'assuntos': 1, 'questoes': 2}),
-            ('assuntos', {'busca': nome, 'materia_id': materia['id'],
-                          'area_enem_id': 4, 'status': 'ativa'},
-             assunto, {'questoes': 2, 'resumos': None}),
-            ('questoes', {'assunto_id': assunto['id'], 'materia_id': materia['id'],
-                         'area_enem_id': 4, 'status': 'rascunho', 'dificuldade': 'facil'},
-             questao, {}),
+            (
+                'materias',
+                {'busca': nome, 'area_enem_id': 4, 'status': 'ativa'},
+                materia,
+                {'assuntos': 1, 'questoes': 2}
+            ),
+            (
+                'assuntos',
+                {
+                    'busca': nome,
+                    'materia_id': materia['id'],
+                    'area_enem_id': 4,
+                    'status': 'ativa'
+                },
+                assunto,
+                {'questoes': 2, 'resumos': None}
+            ),
+            (
+                'questoes',
+                {
+                    'assunto_id': assunto['id'],
+                    'materia_id': materia['id'],
+                    'area_enem_id': 4,
+                    'status': 'rascunho',
+                    'dificuldade': 'facil'
+                },
+                questao,
+                {}
+            ),
         ]
         for recurso, filtros, esperado, extras in casos:
             url = '/api/admin/' + recurso
@@ -113,34 +146,71 @@ class ConsultasCatalogoCaracterizacaoTest(MySQLIntegrationTestCase):
             if recurso != 'materias':
                 self.assertEqual(item['materia'], materia)
             for pagina in [2, 2**31 + 1]:
-                vazia = self.client.get(url, query_string={**filtros,
-                    'pagina': pagina, 'por_pagina': 100}).json
+                vazia = self.client.get(
+                    url,
+                    query_string={
+                        **filtros,
+                        'pagina': pagina,
+                        'por_pagina': 100
+                    }
+                ).json
                 self.assertEqual(vazia['itens'], [])
                 self.assertEqual(vazia['total_itens'], dados['total_itens'])
-            ausente = self.client.get(url, query_string={**filtros,
-                'area_enem_id': 2**31 + 1}).json
+            ausente = self.client.get(
+                url,
+                query_string={
+                    **filtros,
+                    'area_enem_id': 2**31 + 1
+                }
+            ).json
             self.assertEqual((ausente['itens'], ausente['total_itens']), ([], 0))
             self.assertEqual(self.app.test_client().get(url).status_code, 401)
 
     def test_questoes_busca_literal_e_catalogo_like(self):
-        nome = 'Caracterização ' + uuid4().hex[:12]
-        materia = self.client.post('/api/materias', json={
-            'nome': nome, 'area_enem_id': 4, 'descricao': None}).json
+        nome = 'Caracterização ' + uuid4().hex[: 12]
+        materia = self.client.post(
+            '/api/materias',
+            json={
+                'nome': nome,
+                'area_enem_id': 4,
+                'descricao': None
+            }
+        ).json
         assunto = self._subject(materia['id'], nome)
         q = self._question(assunto['id'])
         texto = "Acento á 50%_ / ' \\"
-        self.assertEqual(self.client.put('/api/questoes/' + str(q['id']),
-            json={'revisao': 1, 'enunciado': texto}).status_code, 200)
+        self.assertEqual(
+            self.client.put(
+                '/api/questoes/' + str(q['id']),
+                json={'revisao': 1, 'enunciado': texto}
+            ).status_code,
+            200
+        )
         for busca in ['%', '_', "'", '/', '\\', 'á']:
-            r = self.client.get('/api/admin/questoes', query_string={
-                'busca': busca, 'assunto_id': assunto['id']})
+            r = self.client.get(
+                '/api/admin/questoes',
+                query_string={
+                    'busca': busca,
+                    'assunto_id': assunto['id']
+                }
+            )
             self.assertEqual(r.status_code, 200)
             self.assertEqual([i['id'] for i in r.json['itens']], [q['id']])
         for recurso in ['materias', 'assuntos']:
-            r = self.client.get('/api/admin/' + recurso, query_string={
-                'busca': nome[:5] + '%', 'area_enem_id': 4})
+            r = self.client.get(
+                '/api/admin/' + recurso,
+                query_string={
+                    'busca': nome[: 5] + '%',
+                    'area_enem_id': 4
+                }
+            )
             self.assertEqual(r.status_code, 200)
             self.assertTrue(r.json['itens'])
-        r = self.client.get('/api/admin/questoes', query_string={
-            'busca': "' OR 1=1 --", 'assunto_id': assunto['id']})
+        r = self.client.get(
+            '/api/admin/questoes',
+            query_string={
+                'busca': "' OR 1=1 --",
+                'assunto_id': assunto['id']
+            }
+        )
         self.assertEqual((r.json['itens'], r.json['total_itens']), ([], 0))

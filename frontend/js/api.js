@@ -19,7 +19,9 @@ async function apiRequest(caminho, opcoes = {}) {
     throw new ApiError("Recupere sua sessão e confirme a ação novamente.", 403, null, "acesso_bloqueado");
   }
   if (mutation && !csrfToken) {
-    csrfPromise ||= apiRequest("/auth/csrf").finally(() => { csrfPromise = null; });
+    csrfPromise ||= apiRequest("/auth/csrf").finally(() => {
+      csrfPromise = null;
+    });
     await csrfPromise;
   }
   let resposta;
@@ -48,8 +50,8 @@ async function apiRequest(caminho, opcoes = {}) {
   } catch {
     throw new ApiError(
       resposta.ok
-        ? "Resposta inválida do servidor. Confira os dados antes de tentar novamente."
-        : "Não foi possível concluir a operação.",
+      ? "Resposta inválida do servidor. Confira os dados antes de tentar novamente."
+      : "Não foi possível concluir a operação.",
       resposta.status,
       null,
       resposta.ok ? "resposta_invalida" : null,
@@ -76,4 +78,6 @@ async function apiRequest(caminho, opcoes = {}) {
 // pelo transformador de cobertura do ambiente de testes.
 globalThis.ApiError = ApiError;
 globalThis.apiRequest = apiRequest;
-globalThis.resetCsrf = () => { csrfToken = null; };
+globalThis.resetCsrf = () => {
+  csrfToken = null;
+};

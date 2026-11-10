@@ -12,7 +12,9 @@ class DesempenhoRepository:
     @staticmethod
     def agregar(contexto, usuario_id, inicio, fim):
         resultados = contexto.executar_resultados(
-            "CALL sp_desempenho_resumo(%s,%s,%s)", (usuario_id, inicio, fim))
+            "CALL sp_desempenho_resumo(%s,%s,%s)",
+            (usuario_id, inicio, fim)
+        )
         gerais, materias, assuntos = conferir_resultados(resultados, [METRICAS, GRUPOS, GRUPOS])
         geral, = gerais
         return geral, list(materias), list(assuntos)
@@ -20,7 +22,9 @@ class DesempenhoRepository:
     @staticmethod
     def atividades(contexto, usuario_id, inicio, fim):
         resultados = contexto.executar_resultados(
-            "CALL sp_atividades_recentes(%s,%s,%s)", (usuario_id, inicio, fim))
+            "CALL sp_atividades_recentes(%s,%s,%s)",
+            (usuario_id, inicio, fim)
+        )
         linhas, = conferir_resultados(resultados, [('tipo', 'id', 'ocorrido_em', 'titulo')])
         return list(linhas)
 
@@ -29,5 +33,9 @@ class DesempenhoRepository:
         catalogo = contagens_catalogo(contexto)
         questoes = contagens_questoes(contexto)
         simulados, finalizadas = contagens_simulados(contexto)
-        return {"catalogo": catalogo, "questoes": questoes, "simulados": simulados,
-            "tentativas_simulado_finalizadas": finalizadas}
+        return {
+            "catalogo": catalogo,
+            "questoes": questoes,
+            "simulados": simulados,
+            "tentativas_simulado_finalizadas": finalizadas
+        }

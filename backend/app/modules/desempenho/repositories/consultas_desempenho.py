@@ -13,7 +13,15 @@ class ConsultaMetricasMySQL:
         geral, materias, assuntos = DesempenhoRepository.agregar(contexto, usuario_id, inicio, fim)
 
         def registro(linha):
-            return {**linha, **{k: int(linha[k]) for k in ('total_respostas', 'acertos', 'pratica', 'simulado')}}
+            return {
+                **linha,
+                **{k: int(linha[k]) for k in (
+                    'total_respostas',
+                    'acertos',
+                    'pratica',
+                    'simulado'
+                )}
+            }
 
         return registro(geral), [registro(r) for r in materias], [registro(r) for r in assuntos]
 

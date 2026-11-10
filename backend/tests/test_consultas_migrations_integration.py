@@ -20,23 +20,47 @@ class ConsultasMigrationsIntegrationTest(MySQLMigrationTestCase):
                 self.apply_without_history('010')
                 self.seed()
                 antes = self.rows(self.connection)
-                for item in self.migrations[11:int(prefixo)+1]:
-                    migrate.execute_statements(self.connection,
-                        migrate.validate_statements(migrate.split_sql(item.sql)))
+                for item in self.migrations[11: int(prefixo)+1]:
+                    migrate.execute_statements(
+                        self.connection,
+                        migrate.validate_statements(migrate.split_sql(item.sql))
+                    )
                 self.assertEqual(migrate.detect_legacy_prefix(self.connection), prefixo)
                 self.assertEqual(self.rows(self.connection), antes)
                 with self.second_schema() as (restaurada, settings):
                     self.restore(restaurada)
-                    self.assertEqual(migrate.run_baseline(restaurada, settings,
-                        self.migrations, confirmed=True), prefixo)
+                    self.assertEqual(
+                        migrate.run_baseline(
+                            restaurada,
+                            settings,
+                            self.migrations,
+                            confirmed=True
+                        ),
+                        prefixo
+                    )
                     self.assertEqual(self.rows(restaurada), antes)
-                    self.assertEqual(migrate.run_up(restaurada, settings, self.migrations[:13]), 12-int(prefixo))
-                    self.assertEqual(migrate.run_up(restaurada, settings, self.migrations[:13]), 0)
+                    self.assertEqual(
+                        migrate.run_up(
+                            restaurada,
+                            settings,
+                            self.migrations[: 13]
+                        ),
+                        12-int(prefixo)
+                    )
+                    self.assertEqual(migrate.run_up(restaurada, settings, self.migrations[: 13]), 0)
                     self.assertEqual(migrate.detect_legacy_prefix(restaurada), '012')
                     self.assertEqual(self.rows(restaurada), antes)
 
     def test_recursos_ausentes_corpos_assinaturas_seguranca_e_schema_externo(self):
-        for alteracao in ['ausente', 'corpo', 'assinatura', 'seguranca', 'view', 'coluna', 'externo']:
+        for alteracao in [
+            'ausente',
+            'corpo',
+            'assinatura',
+            'seguranca',
+            'view',
+            'coluna',
+            'externo'
+        ]:
             with self.subTest(alteracao=alteracao):
                 self.recreate_schema()
                 self.apply_without_history('012')
@@ -49,7 +73,13 @@ class ConsultasMigrationsIntegrationTest(MySQLMigrationTestCase):
                             if alteracao == 'corpo':
                                 ddl = ddl.replace('COUNT(DISTINCT s.id)', 'COUNT(s.id)')
                             elif alteracao == 'assinatura':
-                                ddl = re.sub(r'varchar\(100\)', 'varchar(99)', ddl, count=1, flags=re.IGNORECASE)
+                                ddl = re.sub(
+                                    r'varchar\(100\)',
+                                    'varchar(99)',
+                                    ddl,
+                                    count=1,
+                                    flags=re.IGNORECASE
+                                )
                             else:
                                 ddl = ddl.replace('SQL SECURITY INVOKER', 'SQL SECURITY DEFINER')
                             c.execute(ddl)
@@ -69,29 +99,55 @@ class ConsultasMigrationsIntegrationTest(MySQLMigrationTestCase):
                                 migrate.detect_legacy_prefix(self.connection)
                             continue
                 with self.assertRaises(migrate.MigrationError):
-                    migrate.run_baseline(self.connection, self.settings, self.migrations, confirmed=True)
+                    migrate.run_baseline(
+                        self.connection,
+                        self.settings,
+                        self.migrations,
+                        confirmed=True
+                    )
                 self.assertEqual(migrate.fetch_history(self.connection), [])
 
     def test_metricas_sql_recusam_usuario_intervalo_e_preservam_vazios(self):
         migrate.run_up(self.connection, self.settings, self.migrations)
         with self.connection.cursor() as c:
             for nome in ['sp_desempenho_resumo', 'sp_atividades_recentes']:
-                for parametros in [(None, '2026-01-01', '2026-01-02'), (0, '2026-01-01', '2026-01-02'),
-                                    (1, None, '2026-01-02'), (1, '2026-01-02', '2026-01-01')]:
+                for parametros in [
+                    (
+                        None,
+                        '2026-01-01',
+                        '2026-01-02'
+                    ),
+                    (
+                        0,
+                        '2026-01-01',
+                        '2026-01-02'
+                    ),
+                    (1, None, '2026-01-02'),
+                    (1, '2026-01-02', '2026-01-01')
+                ]:
                     with self.assertRaises(pymysql.MySQLError):
                         c.execute(f'CALL {nome}(%s,%s,%s)', parametros)
                     while c.nextset():
                         pass
             c.execute("CALL sp_desempenho_resumo(1,'2026-01-01','2026-01-02')")
-            self.assertEqual(dict(c.fetchone()), {'total_respostas': 0, 'acertos': 0, 'pratica': 0, 'simulado': 0})
+            self.assertEqual(
+                dict(c.fetchone()),
+                {
+                    'total_respostas': 0,
+                    'acertos': 0,
+                    'pratica': 0,
+                    'simulado': 0
+                }
+            )
             self.assertTrue(c.nextset())
             self.assertFalse(c.fetchall())
             self.assertTrue(c.nextset())
             self.assertFalse(c.fetchall())
             while c.nextset():
                 pass
+
     def test_011_instala_quatro_procedures_e_recusa_parametros_invalidos(self):
-        migrate.run_up(self.connection, self.settings, self.migrations[:12])
+        migrate.run_up(self.connection, self.settings, self.migrations[: 12])
         with self.connection.cursor() as c:
             c.execute('SELECT COUNT(*) AS total FROM information_schema.ROUTINES '
                 "WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_NAME <> 'sp_questoes_por_assunto' "

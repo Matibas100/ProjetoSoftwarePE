@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 
 test.beforeAll(() => {
   if (process.env.RUN_MYSQL_E2E !== "1" || !/^plataforma_enem_e2e_test_[a-f0-9]{12}$/.test(process.env.E2E_SCHEMA || "")
-      || !process.env.E2E_BASE_URL || !process.env.E2E_API_URL) {
+    || !process.env.E2E_BASE_URL || !process.env.E2E_API_URL) {
     throw new Error("Use o runner: RUN_MYSQL_E2E=1 npm run test:e2e, com MySQL real.");
   }
 });
@@ -11,7 +11,7 @@ test.beforeAll(() => {
 async function mutacao(page, path, method, acao, status = 200) {
   const redireciona = ["/auth/login", "/auth/cadastro", "/aluno/praticas", "/aluno/tentativas-simulado"].includes(path);
   const pending = page.waitForResponse((r) => new URL(r.url()).pathname === `/api${path}` && r.request().method() === method)
-    .then(async (r) => ({ status: r.status(), data: redireciona ? null : await r.json() }));
+  .then(async (r) => ({ status: r.status(), data: redireciona ? null : await r.json() }));
   await acao();
   const response = await pending;
   expect(response.status).toBe(status);
@@ -57,7 +57,9 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
     alunoContext = await browser.newContext({ baseURL: process.env.E2E_BASE_URL });
     for (const context of [adminContext, alunoContext]) {
       // Somente o destino é configurado; sessão e fatos vêm dos fluxos reais.
-      await context.addInitScript((url) => { window.ENEM_API_URL = url; }, process.env.E2E_API_URL);
+      await context.addInitScript((url) => {
+        window.ENEM_API_URL = url;
+      }, process.env.E2E_API_URL);
     }
     const admin = await adminContext.newPage(), aluno = await alunoContext.newPage();
     let materia, assunto, simulado, tentativa, plano1, plano1Concluido, plano2, corpoGeracao;
@@ -160,8 +162,13 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
       plano1 = data.plano;
       expect(plano1).toMatchObject({ geracao: 1, atual: true });
       expect(plano1.itens).toHaveLength(1);
-      expect(plano1.itens[0]).toMatchObject({ estado: "pendente", concluido_em: null, assunto_id: assunto.id, materia_id: materia.id,
-        snapshot: { acertos: 2, total_respostas: 5, percentual_acerto: 40, limiar_amostra: 5 } });
+      expect(plano1.itens[0]).toMatchObject({
+        estado: "pendente",
+        concluido_em: null,
+        assunto_id: assunto.id,
+        materia_id: materia.id,
+        snapshot: { acertos: 2, total_respostas: 5, percentual_acerto: 40, limiar_amostra: 5 }
+      });
       expect(plano1.itens[0].snapshot.justificativa).toContain("2 acertos em 5 respostas");
       await expect(aluno.locator("#plano-lista")).toContainText(plano1.itens[0].snapshot.justificativa);
       expect((await consultar(aluno, "/aluno/plano")).plano).toEqual(plano1);
@@ -215,7 +222,9 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
       expect(JSON.stringify(detalhe)).not.toMatch(/gabarito|resposta_correta|explicacao|"correta"/);
       conferirDiagnostico(await consultar(aluno, "/aluno/desempenho"), 5, 2, 40, { pratica: 5, simulado: 0 });
       let posts = 0;
-      const observar = (r) => { if (r.method() === "POST" && new URL(r.url()).pathname === `/api/aluno/tentativas-simulado/${id}/finalizar`) posts++; };
+      const observar = (r) => {
+        if (r.method() === "POST" && new URL(r.url()).pathname === `/api/aluno/tentativas-simulado/${id}/finalizar`) posts++;
+      };
       aluno.on("request", observar);
       try {
         await aluno.locator("#sim-finalizar").click();
@@ -225,7 +234,9 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
         await expect(aluno.locator("#sim-finalizar")).toBeFocused();
         expect((await consultar(aluno, `/aluno/tentativas-simulado/${id}`)).estado).toBe("em_andamento");
         expect(posts).toBe(0);
-      } finally { aluno.off("request", observar); }
+      } finally {
+        aluno.off("request", observar);
+      }
     });
 
     await test.step("Finalizar pela UI: 1 acerto/1 erro/1 branco, resultado 33,33% e correção bloqueada", async () => {
@@ -254,7 +265,12 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
 
     await test.step("Desempenho pela tela/API: 3/7, 42,86%, base 5 práticas + 2 respostas do Simulado", async () => {
       await abrir(aluno, "/aluno/desempenho.html");
-      const metricas = [["Respostas concluídas", "7"], ["Acertos", "3"], ["Erros", "4"], ["Percentual de acerto", "42,86%"]];
+      const metricas = [
+        ["Respostas concluídas", "7"],
+        ["Acertos", "3"],
+        ["Erros", "4"],
+        ["Percentual de acerto", "42,86%"]
+      ];
       for (const [titulo, valor] of metricas) {
         await expect(aluno.locator("#dash-geral article").filter({ has: aluno.getByText(titulo, { exact: true }) }).locator("strong")).toHaveText(valor);
       }
@@ -270,7 +286,9 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
       await expect(aluno.locator('#plano-lista li[data-concluido="true"]')).toContainText("40% de acerto");
       expect((await consultar(aluno, "/aluno/plano")).plano).toEqual(plano1Concluido);
       let posts = 0;
-      const observar = (r) => { if (r.method() === "POST" && new URL(r.url()).pathname === "/api/aluno/plano/recalcular") posts++; };
+      const observar = (r) => {
+        if (r.method() === "POST" && new URL(r.url()).pathname === "/api/aluno/plano/recalcular") posts++;
+      };
       aluno.on("request", observar);
       try {
         await aluno.locator("#plano-recalcular").click();
@@ -280,14 +298,19 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
         await expect(aluno.locator("#plano-recalcular")).toBeFocused();
         expect((await consultar(aluno, "/aluno/plano")).plano).toEqual(plano1Concluido);
         expect(posts).toBe(0);
-      } finally { aluno.off("request", observar); }
+      } finally {
+        aluno.off("request", observar);
+      }
       await aluno.locator("#plano-recalcular").click();
       plano2 = (await mutacao(aluno, "/aluno/plano/recalcular", "POST", () => aluno.locator("#plano-confirmar").click(), 201)).plano;
       expect(plano2.id).not.toBe(plano1.id);
       expect(plano2).toMatchObject({ geracao: 2, atual: true });
       expect(plano2.itens).toHaveLength(1);
-      expect(plano2.itens[0]).toMatchObject({ estado: "pendente", concluido_em: null,
-        snapshot: { acertos: 3, total_respostas: 7, percentual_acerto: 42.86 } });
+      expect(plano2.itens[0]).toMatchObject({
+        estado: "pendente",
+        concluido_em: null,
+        snapshot: { acertos: 3, total_respostas: 7, percentual_acerto: 42.86 }
+      });
       await expect(aluno.locator("#plano-meta")).toContainText("Geração 2");
       await expect(aluno.locator("#plano-lista")).toContainText("42,86% de acerto");
       expect((await consultar(aluno, "/aluno/plano")).plano).toEqual(plano2);
@@ -307,6 +330,10 @@ test("Plano e Simulado: geração, conclusão, finalização e recálculo persis
       await expect(aluno.locator("#plano-meta")).toContainText("Geração 2");
     });
   } finally {
-    try { await alunoContext?.close(); } finally { await adminContext?.close(); }
+    try {
+      await alunoContext?.close();
+    } finally {
+      await adminContext?.close();
+    }
   }
 });

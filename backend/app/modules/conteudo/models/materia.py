@@ -6,7 +6,8 @@ class Materia(CrudMixin):
     __tablename__ = "materias"
     __table_args__ = (
         db.CheckConstraint(
-            "status IN ('ativa', 'inativa', 'arquivada')", name="ck_materias_status"
+            "status IN ('ativa', 'inativa', 'arquivada')",
+            name="ck_materias_status"
         ),
     )
 
@@ -21,7 +22,9 @@ class Materia(CrudMixin):
     )
     status = db.Column(db.String(20), nullable=False, default="ativa", index=True)
     criado_em = db.Column(
-        db.DateTime, nullable=False, server_default=db.func.current_timestamp(6)
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.current_timestamp(6)
     )
     atualizado_em = db.Column(
         db.DateTime,

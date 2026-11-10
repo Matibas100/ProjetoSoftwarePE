@@ -11,18 +11,28 @@ from tests.unit.test_config_and_app import TestConfig
 
 
 class CompositionTest(unittest.TestCase):
-    @patch('sqlalchemy.engine.Engine.connect', side_effect=AssertionError('Não conectar na factory'))
+    @patch(
+        'sqlalchemy.engine.Engine.connect',
+        side_effect=AssertionError('Não conectar na factory')
+    )
     def test_composicao_por_aplicacao_sem_conexao(self, connect):
         a, b = create_app(TestConfig), create_app(TestConfig)
         self.assertIsNot(a.extensions['servicos'], b.extensions['servicos'])
-        self.assertIsNot(a.extensions['servicos'].materias_admin, b.extensions['servicos'].materias_admin)
+        self.assertIsNot(
+            a.extensions['servicos'].materias_admin,
+            b.extensions['servicos'].materias_admin
+        )
         ca, cb = a.extensions['servicos'], b.extensions['servicos']
         for nome in ('recusar_consentimento_plano', 'revogar_consentimento_plano'):
             self.assertIsNot(getattr(ca, nome), getattr(cb, nome))
-            self.assertIsNot(getattr(ca, nome)._eliminar_planos.__self__,
-                             getattr(cb, nome)._eliminar_planos.__self__)
-        self.assertIs(ca.recusar_consentimento_plano._eliminar_planos.__self__,
-                      ca.revogar_consentimento_plano._eliminar_planos.__self__)
+            self.assertIsNot(
+                getattr(ca, nome)._eliminar_planos.__self__,
+                getattr(cb, nome)._eliminar_planos.__self__
+            )
+        self.assertIs(
+            ca.recusar_consentimento_plano._eliminar_planos.__self__,
+            ca.revogar_consentimento_plano._eliminar_planos.__self__
+        )
         self.assertEqual(vars(ca.recusar_consentimento_plano._eliminar_planos.__self__), {})
         with a.app_context():
             self.assertIs(servicos(), a.extensions['servicos'])
@@ -33,16 +43,42 @@ class CompositionTest(unittest.TestCase):
         for path in root.glob('*.py'):
             for node in ast.walk(ast.parse(path.read_text(encoding='utf8'))):
                 if isinstance(node, ast.ImportFrom):
-                    self.assertTrue(node.module.startswith(('typing', 'datetime', 'contextlib', 'app.contracts')), path)
+                    self.assertTrue(
+                        node.module.startswith((
+                            'typing',
+                            'datetime',
+                            'contextlib',
+                            'app.contracts'
+                        )),
+                        path
+                    )
                 if isinstance(node, ast.Import):
                     self.fail(f'Import não previsto no contrato: {path.name}')
 
     def test_nove_consultas_recebem_dependencias_obrigatorias(self):
         c = compor()
-        nomes = ('materias_admin', 'assuntos_admin', 'questoes_por_assunto', 'questoes_aluno',
-                 'simulados_aluno', 'historico_simulados', 'desempenho', 'dashboard_aluno', 'dashboard_admin')
-        proibidos = ('flask', 'sqlalchemy', 'pymysql', 'app.models', 'app.repositories',
-                     'app.extensions', 'app.composition', 'app.http_composition', 'app.contexto_leitura')
+        nomes = (
+            'materias_admin',
+            'assuntos_admin',
+            'questoes_por_assunto',
+            'questoes_aluno',
+            'simulados_aluno',
+            'historico_simulados',
+            'desempenho',
+            'dashboard_aluno',
+            'dashboard_admin'
+        )
+        proibidos = (
+            'flask',
+            'sqlalchemy',
+            'pymysql',
+            'app.models',
+            'app.repositories',
+            'app.extensions',
+            'app.composition',
+            'app.http_composition',
+            'app.contexto_leitura'
+        )
         for nome in nomes:
             service = getattr(c, nome)
             parametros = list(inspect.signature(type(service)).parameters.values())

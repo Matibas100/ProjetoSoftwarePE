@@ -11,8 +11,15 @@ class InteiroFiltroTest(unittest.TestCase):
                 self.assertIsNone(inteiro_filtro(valor, "pagina"))
 
     def test_preserva_conversoes_aceitas_por_int(self):
-        for valor, esperado in ((2, 2), ("2", 2), (" +02 ", 2),
-                                (True, 1), (2.9, 2), ("１２", 12), (b"3", 3)):
+        for valor, esperado in (
+            (2, 2),
+            ("2", 2),
+            (" +02 ", 2),
+            (True, 1),
+            (2.9, 2),
+            ("１２", 12),
+            (b"3", 3)
+        ):
             with self.subTest(valor=valor):
                 self.assertEqual(inteiro_filtro(valor, "pagina"), esperado)
 
@@ -24,8 +31,13 @@ class InteiroFiltroTest(unittest.TestCase):
         self.assertEqual(inteiro_filtro("2147483648", "pagina"), 2147483648)
 
     def test_conversao_invalida_preserva_mensagem_e_causa(self):
-        for valor, causa in (("abc", ValueError), ("1.5", ValueError),
-                             (" ", ValueError), ([], TypeError), ({}, TypeError)):
+        for valor, causa in (
+            ("abc", ValueError),
+            ("1.5", ValueError),
+            (" ", ValueError),
+            ([], TypeError),
+            ({}, TypeError)
+        ):
             with self.subTest(valor=valor):
                 with self.assertRaises(DadosInvalidosError) as erro:
                     inteiro_filtro(valor, "materia_id")
@@ -37,34 +49,55 @@ class InteiroFiltroTest(unittest.TestCase):
             with self.subTest(valor=valor):
                 with self.assertRaises(DadosInvalidosError) as erro:
                     inteiro_filtro(valor, "por_pagina", maximo=100)
-                self.assertEqual(str(erro.exception), "por_pagina esta fora do intervalo permitido.")
+                self.assertEqual(
+                    str(erro.exception),
+                    "por_pagina esta fora do intervalo permitido."
+                )
 
 
 class EnvelopePaginadoTest(unittest.TestCase):
     def test_total_zero_envelope_vazio(self):
-        self.assertEqual(envelope_paginado([], 1, 20, 0), {
-            "itens": [], "pagina": 1, "por_pagina": 20,
-            "total_itens": 0, "total_paginas": 0,
-        })
+        self.assertEqual(
+            envelope_paginado([], 1, 20, 0),
+            {
+                "itens": [],
+                "pagina": 1,
+                "por_pagina": 20,
+                "total_itens": 0,
+                "total_paginas": 0,
+            }
+        )
 
     def test_total_exato_e_parcial_preserva_lista_e_ordem(self):
         itens = [{"id": 3}, {"id": 1}]
         for total, paginas in ((20, 2), (21, 3)):
             with self.subTest(total=total):
                 resultado = envelope_paginado(itens, 2, 10, total)
-                self.assertEqual(resultado, {
-                    "itens": [{"id": 3}, {"id": 1}], "pagina": 2, "por_pagina": 10,
-                    "total_itens": total, "total_paginas": paginas,
-                })
+                self.assertEqual(
+                    resultado,
+                    {
+                        "itens": [{"id": 3}, {"id": 1}],
+                        "pagina": 2,
+                        "por_pagina": 10,
+                        "total_itens": total,
+                        "total_paginas": paginas,
+                    }
+                )
                 self.assertIs(resultado["itens"], itens)
 
     def test_pagina_apos_a_ultima_preserva_pagina_e_total(self):
         itens = []
         resultado = envelope_paginado(itens, 9, 10, 21)
-        self.assertEqual(resultado, {
-            "itens": [], "pagina": 9, "por_pagina": 10,
-            "total_itens": 21, "total_paginas": 3,
-        })
+        self.assertEqual(
+            resultado,
+            {
+                "itens": [],
+                "pagina": 9,
+                "por_pagina": 10,
+                "total_itens": 21,
+                "total_paginas": 3,
+            }
+        )
         self.assertIs(resultado["itens"], itens)
 
     def test_nao_introduz_validacao_de_zero_por_pagina(self):

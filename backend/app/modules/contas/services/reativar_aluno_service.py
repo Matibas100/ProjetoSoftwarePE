@@ -5,11 +5,12 @@ from app.modules.contas.services.gestao_alunos_validacao import confirmar_acao, 
 
 class ReativarAlunoService:
     @staticmethod
-    def executar(usuario_id,dados):
+    def executar(usuario_id, dados):
         validar_id(usuario_id)
+
         def reativar():
             usuario = exigir_aluno(UsuarioRepository.bloquear(usuario_id))
             confirmar_acao(dados)
-            usuario.atualizar(confirmar=False,ativo=True)
+            usuario.atualizar(confirmar=False, ativo=True)
             return apresentar_usuario(usuario)
         return executar_mutacao(reativar)

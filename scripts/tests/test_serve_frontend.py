@@ -79,7 +79,11 @@ class FrontendHTTPTests(unittest.TestCase):
     def test_aliases_preserve_queries_with_fixed_local_destinations(self):
         for canonical in ("/login", "/cadastro"):
             for alias in (canonical + ".html", canonical + "/"):
-                for query in ("", "?origem=local", "?next=https://example.com&redirect=//example.com"):
+                for query in (
+                    "",
+                    "?origem=local",
+                    "?next=https://example.com&redirect=//example.com"
+                ):
                     for method in ("GET", "HEAD"):
                         with self.subTest(alias=alias, query=query, method=method):
                             status, headers, body = self.request(alias + query, method)
@@ -87,17 +91,29 @@ class FrontendHTTPTests(unittest.TestCase):
                             self.assertEqual(headers["Location"], canonical + query)
                             self.assertEqual(headers["Content-Length"], "0")
                             self.assertEqual(body, b"")
-                            final_status, final_headers, _ = self.request(headers["Location"], method)
+                            final_status, final_headers, _ = self.request(
+                                headers["Location"],
+                                method
+                            )
                             self.assertEqual(final_status, 200)
                             self.assertNotIn("Location", final_headers)
 
     def test_legacy_pages_and_root(self):
-        for route in ("/", "/index.html", "/aluno/inicio.html", "/admin/materias.html", "/admin/assuntos.html"):
+        for route in (
+            "/",
+            "/index.html",
+            "/aluno/inicio.html",
+            "/admin/materias.html",
+            "/admin/assuntos.html"
+        ):
             with self.subTest(route=route):
                 status, headers, body = self.request(route)
                 self.assertEqual(status, 200)
                 self.assertEqual(headers["Content-type"], "text/html")
-                self.assertEqual(body, (PUBLIC_ROOT / (route.lstrip("/") or "index.html")).read_bytes())
+                self.assertEqual(
+                    body,
+                    (PUBLIC_ROOT / (route.lstrip("/") or "index.html")).read_bytes()
+                )
 
     def test_public_links_resources_and_css_fonts(self):
         for route, other in (("/login", "/cadastro"), ("/cadastro", "/login")):
@@ -110,13 +126,22 @@ class FrontendHTTPTests(unittest.TestCase):
                 self.assertEqual(status, 200)
                 self.assertNotIn(b"<script", body)
                 self.assertEqual(self.request(document, "HEAD")[0], 200)
-            for document in ("/legal/termo-de-uso-v1.html", "/legal/termo-de-consentimento-plano-v1.html"):
+            for document in (
+                "/legal/termo-de-uso-v1.html",
+                "/legal/termo-de-consentimento-plano-v1.html"
+            ):
                 self.assertEqual(self.request(document)[0], 200)
                 self.assertEqual(self.request(document, "HEAD")[0], 200)
-            self.assertEqual(page.resources, [
-                "/css/auth.css", "/assets/logo-plataforma-enem-horizontal.svg",
-                "/js/api.js", "/js/auth-session.js", "/js/auth-page.js",
-            ])
+            self.assertEqual(
+                page.resources,
+                [
+                    "/css/auth.css",
+                    "/assets/logo-plataforma-enem-horizontal.svg",
+                    "/js/api.js",
+                    "/js/auth-session.js",
+                    "/js/auth-page.js",
+                ]
+            )
             for resource in page.resources:
                 with self.subTest(route=route, resource=resource):
                     status, headers, body = self.request(resource)
@@ -132,10 +157,18 @@ class FrontendHTTPTests(unittest.TestCase):
 
     def test_unknown_api_and_external_paths_have_no_fallback(self):
         for route in (
-            "/pagina-inexistente", "/login/inexistente", "/cadastro/inexistente",
-            "/css/inexistente.css", "/api/auth/login", "/README.md", "/backend/run.py",
-            "/../README.md", "/%2e%2e/README.md", "/%2e%2e%2fREADME.md",
-            "/..%5cREADME.md", "/css/../../README.md",
+            "/pagina-inexistente",
+            "/login/inexistente",
+            "/cadastro/inexistente",
+            "/css/inexistente.css",
+            "/api/auth/login",
+            "/README.md",
+            "/backend/run.py",
+            "/../README.md",
+            "/%2e%2e/README.md",
+            "/%2e%2e%2fREADME.md",
+            "/..%5cREADME.md",
+            "/css/../../README.md",
         ):
             for method in ("GET", "HEAD"):
                 with self.subTest(route=route, method=method):
@@ -156,8 +189,11 @@ class FrontendHTTPTests(unittest.TestCase):
             except OSError:
                 if sys.platform != "win32":
                     raise
-                subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(external_path)],
-                               check=True, capture_output=True)
+                subprocess.run(
+                    ["cmd", "/c", "mklink", "/J", str(link), str(external_path)],
+                    check=True,
+                    capture_output=True
+                )
             try:
                 base = "/" + Path(public).name + "/outside"
                 for route in (base, base + "/", base + "/index.html"):
@@ -174,18 +210,27 @@ class FrontendHTTPTests(unittest.TestCase):
     def test_cli_from_another_directory(self):
         script = PUBLIC_ROOT.parent / "scripts" / "serve_frontend.py"
         with tempfile.TemporaryDirectory() as working_dir:
-            process = subprocess.Popen([sys.executable, str(script), "--port", "0"],
-                                       cwd=working_dir, stdout=subprocess.PIPE,
-                                       stderr=subprocess.DEVNULL, text=True)
+            process = subprocess.Popen(
+                [sys.executable, str(script), "--port", "0"],
+                cwd=working_dir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True
+            )
             try:
                 lines = Queue()
-                reader = threading.Thread(target=lambda: lines.put(process.stdout.readline()), daemon=True)
+                reader = threading.Thread(
+                    target=lambda: lines.put(process.stdout.readline()),
+                    daemon=True
+                )
                 reader.start()
                 output = lines.get(timeout=5)
                 match = re.fullmatch(r"Frontend: http://127\.0\.0\.1:(\d+)/login\n", output)
                 self.assertIsNotNone(match)
-                self.assertEqual(self.request("/login", port=int(match[1]))[2],
-                                 (PUBLIC_ROOT / "login.html").read_bytes())
+                self.assertEqual(
+                    self.request("/login", port=int(match[1]))[2],
+                    (PUBLIC_ROOT / "login.html").read_bytes()
+                )
             finally:
                 process.terminate()
                 process.wait(timeout=5)

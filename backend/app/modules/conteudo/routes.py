@@ -8,24 +8,46 @@ from app.modules.conteudo.controllers.questao_controller import QuestaoControlle
 
 blueprint = Blueprint("conteudo", __name__)
 
-blueprint.add_url_rule("/materias/<int:materia_id>", endpoint="buscar_materia_por_id",
-    view_func=MateriaController.buscar_por_id, methods=["GET"])
-blueprint.add_url_rule("/assuntos/<int:assunto_id>", endpoint="buscar_assunto_por_id",
-    view_func=AssuntoController.buscar_por_id, methods=["GET"])
-
-blueprint.add_url_rule("/admin/questoes", endpoint="listar_questoes_admin",
-    view_func=QuestaoController.listar_admin, methods=["GET"])
-
-for nome, metodo in (("detalhe", "GET"), ("editar", "PUT")):
-    blueprint.add_url_rule("/questoes/<int:questao_id>", endpoint=f"questao_{nome}",
-        view_func=getattr(QuestaoController, nome), methods=[metodo])
-
-for nome in ("publicar", "arquivar"):
-    blueprint.add_url_rule(f"/questoes/<int:questao_id>/{nome}", endpoint=f"questao_{nome}",
-        view_func=getattr(QuestaoController, nome), methods=["POST"])
+blueprint.add_url_rule(
+    "/materias/<int:materia_id>",
+    endpoint="buscar_materia_por_id",
+    view_func=MateriaController.buscar_por_id,
+    methods=["GET"]
+)
+blueprint.add_url_rule(
+    "/assuntos/<int:assunto_id>",
+    endpoint="buscar_assunto_por_id",
+    view_func=AssuntoController.buscar_por_id,
+    methods=["GET"]
+)
 
 blueprint.add_url_rule(
-    "/areas-enem", endpoint="listar_areas_enem", view_func=AreaEnemController.listar,
+    "/admin/questoes",
+    endpoint="listar_questoes_admin",
+    view_func=QuestaoController.listar_admin,
+    methods=["GET"]
+)
+
+for nome, metodo in (("detalhe", "GET"), ("editar", "PUT")):
+    blueprint.add_url_rule(
+        "/questoes/<int:questao_id>",
+        endpoint=f"questao_{nome}",
+        view_func=getattr(QuestaoController, nome),
+        methods=[metodo]
+    )
+
+for nome in ("publicar", "arquivar"):
+    blueprint.add_url_rule(
+        f"/questoes/<int:questao_id>/{nome}",
+        endpoint=f"questao_{nome}",
+        view_func=getattr(QuestaoController, nome),
+        methods=["POST"]
+    )
+
+blueprint.add_url_rule(
+    "/areas-enem",
+    endpoint="listar_areas_enem",
+    view_func=AreaEnemController.listar,
     methods=["GET"],
 )
 
@@ -51,13 +73,17 @@ blueprint.add_url_rule(
 )
 
 blueprint.add_url_rule(
-    "/admin/materias", endpoint="listar_materias_admin",
-    view_func=MateriaController.listar_admin, methods=["GET"],
+    "/admin/materias",
+    endpoint="listar_materias_admin",
+    view_func=MateriaController.listar_admin,
+    methods=["GET"],
 )
 
 blueprint.add_url_rule(
-    "/materias/<int:materia_id>/impacto-exclusao", endpoint="impacto_materia",
-    view_func=MateriaController.impacto, methods=["GET"],
+    "/materias/<int:materia_id>/impacto-exclusao",
+    endpoint="impacto_materia",
+    view_func=MateriaController.impacto,
+    methods=["GET"],
 )
 
 for acao_materia in ("inativar", "arquivar", "reativar"):
@@ -112,13 +138,17 @@ blueprint.add_url_rule(
 )
 
 blueprint.add_url_rule(
-    "/admin/assuntos", endpoint="listar_assuntos_admin",
-    view_func=AssuntoController.listar_admin, methods=["GET"],
+    "/admin/assuntos",
+    endpoint="listar_assuntos_admin",
+    view_func=AssuntoController.listar_admin,
+    methods=["GET"],
 )
 
 blueprint.add_url_rule(
-    "/assuntos/<int:assunto_id>/impacto-exclusao", endpoint="impacto_assunto",
-    view_func=AssuntoController.impacto, methods=["GET"],
+    "/assuntos/<int:assunto_id>/impacto-exclusao",
+    endpoint="impacto_assunto",
+    view_func=AssuntoController.impacto,
+    methods=["GET"],
 )
 
 blueprint.add_url_rule(
@@ -129,8 +159,10 @@ blueprint.add_url_rule(
 )
 
 blueprint.add_url_rule(
-    "/assuntos/<int:assunto_id>/transferir", endpoint="transferir_assunto",
-    view_func=AssuntoController.transferir, methods=["POST"],
+    "/assuntos/<int:assunto_id>/transferir",
+    endpoint="transferir_assunto",
+    view_func=AssuntoController.transferir,
+    methods=["POST"],
 )
 
 for acao_assunto in ("inativar", "arquivar", "reativar"):

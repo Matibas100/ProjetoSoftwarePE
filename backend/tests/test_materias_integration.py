@@ -34,7 +34,8 @@ class MateriasApiIntegrationTest(MySQLIntegrationTestCase):
 
     def test_post_sem_nome(self):
         resposta = self.client.post(
-            "/api/materias", json={"descricao": "Sem nome", "area_enem_id": 4}
+            "/api/materias",
+            json={"descricao": "Sem nome", "area_enem_id": 4}
         )
         self.assertEqual(resposta.status_code, 400)
         self.assertIn("erro", resposta.get_json())
