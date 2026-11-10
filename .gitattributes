@@ -1,3 +1,2 @@
-.githooks/* text eol=lf
 backend/database/**/*.sql text eol=lf
 frontend/legal/*.html text eol=lf

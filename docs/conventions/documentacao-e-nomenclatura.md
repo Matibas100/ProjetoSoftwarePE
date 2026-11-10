@@ -30,7 +30,7 @@
 
 ## Formatação do código
 
-- Python usa 4 espaços; JavaScript, CSS, HTML e SVG usam 2 espaços. Receitas do Makefile preservam tabulações.
+- Python usa 4 espaços; JavaScript, CSS, HTML e SVG usam 2 espaços.
 - Separe instruções e blocos para facilitar a leitura; use uma declaração CSS por linha e linhas em branco entre regras, métodos e declarações de topo.
 - Prefira linhas de aproximadamente 100 caracteres quando a quebra for segura. Não há obrigação de reduzir linhas nem de reescrever arquivos já legíveis.
 - Preserve nomes, imports, comentários, diretivas, aspas, literais e ordem de operações, atributos e propriedades. Formatar não autoriza refatorar.

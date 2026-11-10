@@ -28,21 +28,19 @@ permitidos somente nos testes unitários; nunca substituem as integrações.
 
 - Python 3.10 ou superior e `backend/requirements-dev.txt`.
 - Node `>=22.9.0` e npm `11.6.2`; use `npm ci` com o lockfile.
-- GNU Make opcional para os atalhos. Confirme com `make --version`.
 
 ## Comandos
 
-| Alvo Make | Comando equivalente |
+| Finalidade | Comando direto |
 | --- | --- |
-| `make test-unit` | `python backend/tests/run_unit.py` e `npm run test:unit` |
-| `make test-integration` | `python backend/tests/run_integration.py` |
-| `make test-backend` | `python backend/tests/run_backend_coverage.py` |
-| `make test-frontend` | `npm run test:coverage` |
-| `make test-coverage` | runner backend e `npm run test:coverage` |
-| `make test` | igual a `make test-coverage` |
-| `make test-e2e` | `python scripts/run_e2e.py` |
+| Unitários Python e frontend | `python backend/tests/run_unit.py` e `npm run test:unit` |
+| Integrações MySQL | `python backend/tests/run_integration.py` |
+| Cobertura backend | `python backend/tests/run_backend_coverage.py` |
+| Cobertura frontend | `npm run test:coverage` |
+| Cobertura das duas pilhas | `python backend/tests/run_backend_coverage.py` e `npm run test:coverage` |
+| Navegador | `python scripts/run_e2e.py` ou `npm run test:e2e` |
 
-As integrações e qualquer alvo que as inclua exigem opt-in somente no processo:
+As integrações e qualquer comando que as inclua exigem opt-in somente no processo:
 
 ```powershell
 $env:RUN_MYSQL_INTEGRATION = "1"

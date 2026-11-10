@@ -7,7 +7,6 @@
   },
   "packageManager": "npm@11.6.2",
   "scripts": {
-    "hooks:install": "node scripts/install-git-hooks.mjs",
     "test": "vitest run",
     "test:unit": "vitest run --coverage=false",
     "test:frontend": "vitest run --coverage=false",

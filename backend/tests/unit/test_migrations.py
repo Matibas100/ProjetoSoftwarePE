@@ -584,7 +584,7 @@ class CliTest(unittest.TestCase):
     @patch("database.migrate.connect")
     @patch("database.migrate.discover_migrations", return_value=[migration()])
     @patch("database.migrate.load_database_settings")
-    def test_baseline_reconcile_e_atalhos_make(self, settings, _discover, connection):
+    def test_baseline_e_reconcile(self, settings, _discover, connection):
         settings.return_value = migrate.DatabaseSettings("db", 3306, "enem", "u", "p")
         connection.return_value = MagicMock()
         output = io.StringIO()
@@ -596,10 +596,6 @@ class CliTest(unittest.TestCase):
             self.assertEqual(migrate.main(["reconcile", "001", "--confirm"]), 0)
         reconcile.assert_called_once()
         self.assertIn("001 reconciliada", output.getvalue())
-
-        makefile = (migrate.PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")
-        for target in ("db-status:", "db-up:", "db-baseline:", "db-reconcile:"):
-            self.assertIn(target, makefile)
 
     @patch("database.migrate.load_database_settings", side_effect=RuntimeError("senha-sentinela"))
     def test_falha_inesperada_nao_expoe_segredo(self, _settings):
